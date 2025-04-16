@@ -1,6 +1,15 @@
-# REACHER Suite Operant Conditioning Projects
+<div align="center">
+    <img src="assets/reacher-icon-banner.png" alt="REACHER logo">
+</div>
+<br>
 
-[![Documentation](https://img.shields.io/badge/Documentation-grey?style=for-the-badge)](https://otis-lab-musc.github.io/REACHER-Firmware/)
+*Written by*: Joshua Boquiren
+
+[![](https://img.shields.io/badge/@thejoshbq-grey?style=for-the-badge&logo=github)](https://github.com/thejoshbq) [![](https://img.shields.io/badge/@thejoshbq-grey?style=for-the-badge&logo=X)](https://x.com/thejoshbq) 
+ 
+<br>
+
+---
 
 ## Overview
 
@@ -27,11 +36,11 @@ The REACHER Suite (Rodent Experiment Application Controls and Handling Ecosystem
 
 | Project          | Paradigm Description                                      | Download Link                                                                 |
 |------------------|----------------------------------------------------------|--------------------------------------------------------------------------------|
-| Operant FR       | Fixed-ratio: Rewards after a set number of presses       | [![Download](https://img.shields.io/badge/Download-blue?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_FR.zip) |
-| Omission         | Contingency-based: Rewards withheld under conditions     | [![Download](https://img.shields.io/badge/Download-blue?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/omission.zip) |
-| Operant PR       | Progressive-ratio: Press requirement increases           | [![Download](https://img.shields.io/badge/Download-blue?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_PR.zip) |
-| Operant VI       | Variable-interval: Reward available once per interval    | [![Download](https://img.shields.io/badge/Download-blue?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_VI.zip) |
-| All Projects     | Combined archive of all four paradigms                   | [![Download](https://img.shields.io/badge/Download-blue?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_suite.zip) |
+| Operant FR       | Fixed-ratio: Rewards after a set number of presses       | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_FR.zip) |
+| Omission         | Contingency-based: Rewards withheld under conditions     | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/omission.zip) |
+| Operant PR       | Progressive-ratio: Press requirement increases           | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_PR.zip) |
+| Operant VI       | Variable-interval: Reward available once per interval    | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_VI.zip) |
+| All Projects     | Combined archive of all four paradigms                   | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_suite.zip) |
 
 ## Project Details
 
