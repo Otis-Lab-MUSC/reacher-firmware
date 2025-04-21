@@ -110,7 +110,7 @@ void definePressActivity(bool programRunning, Lever*& lever, Cue* cue, Pump* pum
  */
 void monitorPressing(bool programRunning, Lever*& lever, Cue* cue, Pump* pump, Laser* laser) {
     static uint32_t lastDebounceTime = 0; // Last time the lever input was toggled
-    const uint32_t debounceDelay = 100;   // Debounce time in milliseconds
+    const uint32_t debounceDelay = 50;   // Debounce time in milliseconds
     manageCue(cue);                       // Manage cue delivery
     managePump(pump);                     // Manage infusion delivery
     if (lever->isArmed()) {
