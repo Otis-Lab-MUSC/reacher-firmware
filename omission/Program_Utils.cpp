@@ -13,6 +13,9 @@ extern Cue cs;                           ///< Cue object.
 extern Pump pump;                        ///< Pump object.
 extern LickCircuit lickCircuit;          ///< Lick circuit object.
 extern Laser laser;                      ///< Laser object.
+extern uint32_t lastInfusionTime;        ///< Marker for the last infusion timestamp. 
+extern bool programIsRunning;            ///< Boolean flag if program is running.
+extern uint32_t omissionInterval;        ///< Interval for omission duration.
 
 /**
  * @brief Starts the program and triggers imaging.
@@ -30,6 +33,7 @@ void startProgram(byte pin) {
     delay(50);                          // Ensure data transmission
     digitalWrite(pin, LOW);             // Finish trigger
     differenceFromStartTime = millis(); // Set program start offset
+    lastInfusionTime = millis();        // Initialize last infusion time
 }
 
 /**
@@ -55,26 +59,24 @@ void endProgram(byte pin) {
 }
 
 /**
- * @brief Delivers a reward by activating cue, pump, and laser if armed.
+ * @brief Triggers a pump infusion after an omission interval.
  * 
- * Triggers a reward sequence based on the current timestamp and device states.
- * 
- * @param lever Reference to a pointer to the Lever object triggering the reward.
- * @param cue Pointer to the Cue object (optional).
- * @param pump Pointer to the Pump object (optional).
- * @param laser Pointer to the Laser object (optional).
+ * Delivers an infusion and cue tone if the omission interval has elapsed without an active press.
  */
-void deliverReward(Lever*& lever, Cue* cue, Pump* pump, Laser* laser) {
-    int32_t timestamp = static_cast<int32_t>(millis());
-    if (cue && cue->isArmed()) {
-        cue->setOnTimestamp(timestamp);
-        cue->setOffTimestamp(timestamp);
-    }
-    if (pump && pump->isArmed()) {
-        pump->setInfusionPeriod(cue->getOffTimestamp(), traceIntervalLength);
-    }
-    if (laser && laser->isArmed()) {
-        laser->setStimPeriod(timestamp);
-        laser->setStimState(ACTIVE);
+void triggerInfusion() {
+    uint32_t currentMillis = millis();
+    if (programIsRunning && (currentMillis - lastInfusionTime >= omissionInterval)) {
+        if (pump.isArmed() && cs.isArmed()) {
+            int32_t timestamp = millis();
+            pump.setInfusionPeriod(timestamp, 0); // Start infusion immediately
+            cs.setOnTimestamp(timestamp);         // Set cue tone period
+            cs.setOffTimestamp(timestamp);
+            String infusionEntry = "PUMP,INFUSION,";
+            infusionEntry += differenceFromStartTime ? String(pump.getInfusionStartTimestamp() - differenceFromStartTime) : String(pump.getInfusionStartTimestamp());
+            infusionEntry += ",";
+            infusionEntry += differenceFromStartTime ? String(pump.getInfusionEndTimestamp() - differenceFromStartTime) : String(pump.getInfusionEndTimestamp());
+            Serial.println(infusionEntry);
+            lastInfusionTime = currentMillis;
+        }
     }
 }

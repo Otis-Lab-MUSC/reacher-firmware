@@ -60,10 +60,17 @@
 #include <ArduinoJson.h>
 #include "Device.h"
 #include "Laser.h"
+#include "Laser_Utils.h"
 #include "Lever.h"
+#include "Lever_Utils.h"
 #include "Cue.h"
+#include "Cue_Utils.h"
 #include "Pump.h"
+#include "Pump_Utils.h"
 #include "LickCircuit.h"
+#include "LickCircuit_Utils.h"
+#include "Utils.h"
+#include "Program_Utils.h"
 
 // Pin definitions
 const byte RH_LEVER_PIN = 10;        ///< Right-hand lever pin.
@@ -89,6 +96,7 @@ Laser laser(LASER_PIN);              ///< Laser object.
 bool setupFinished = false;          ///< Indicates if setup is complete.
 bool programIsRunning = false;       ///< Indicates if the program is running.
 bool linkedToGUI = false;            ///< Indicates if connected to the GUI.
+bool collectFrames = false;          ///< Indicates if frame signals are collected.
 volatile bool frameSignalReceived = false; ///< Indicates if a frame signal was received.
 
 // Global variables
@@ -122,6 +130,8 @@ void setup() {
     // Laser setup
     pinMode(laser.getPin(), OUTPUT);
     laser.disarm();
+    laser.setDuration(30);  // 30 seconds -> 30000 ms
+    laser.setFrequency(20); // 20 Hz
 
     // RH lever setup
     pinMode(leverRH.getPin(), INPUT_PULLUP);
@@ -160,114 +170,6 @@ void loop() {
     monitorSerialCommands();
 }
 
-// =======================================================
-// ====================== SECTION 3 ======================
-// =======================================================
-
-/**
- * @brief Logs lever press and release data to the serial monitor.
- * 
- * Records press and release timestamps, adjusted by program start time if applicable.
- * 
- * @param lever Reference to a pointer to the Lever object being monitored.
- */
-void pressingDataEntry(Lever*& lever) {
-    String pressEntry;
-    lever->setReleaseTimestamp(millis()); // Set press release timestamp
-    pressEntry = lever->getOrientation() + "_LEVER,";
-    pressEntry += lever->getPressType() + "_PRESS,";
-    if (differenceFromStartTime) {
-        pressEntry += String(lever->getPressTimestamp() - differenceFromStartTime) + ",";
-        pressEntry += String(lever->getReleaseTimestamp() - differenceFromStartTime);
-    } else {
-        pressEntry += String(lever->getPressTimestamp()) + ",";
-        pressEntry += String(lever->getReleaseTimestamp());
-    }
-    Serial.println(pressEntry); // Send data to serial connection
-}
-
-/**
- * @brief Defines the type of lever press.
- * 
- * Labels the press as "ACTIVE" if it’s the active lever, otherwise "INACTIVE".
- * 
- * @param programRunning Boolean indicating if the program is running.
- * @param lever Reference to a pointer to the Lever object being pressed.
- */
-void definePressActivity(bool programRunning, Lever*& lever) {
-    if (lever == activeLever) {
-        lever->setPressType("ACTIVE");
-    } else {
-        lever->setPressType("INACTIVE");
-    }
-}
-
-/**
- * @brief Starts the program and triggers imaging.
- * 
- * Signals the start of the program, sets the time offset, and initializes infusion timing.
- * 
- * @param pin The digital pin to trigger imaging.
- */
-void startProgram(byte pin) {
-    Serial.println();
-    Serial.println("========== PROGRAM START ==========");
-    Serial.println();
-    digitalWrite(pin, HIGH);            // Trigger imaging start
-    delay(50);                          // Ensure data transmission
-    digitalWrite(pin, LOW);             // Finish trigger
-    differenceFromStartTime = millis(); // Set program start offset
-    lastInfusionTime = millis();        // Initialize last infusion time
-}
-
-/**
- * @brief Ends the program and signals imaging stop.
- * 
- * @param pin The digital pin to trigger imaging end.
- */
-void endProgram(byte pin) {
-    Serial.println();
-    Serial.println("========== PROGRAM END ==========");
-    Serial.println();
-    digitalWrite(pin, HIGH); // Trigger imaging end
-    delay(50);
-    digitalWrite(pin, LOW);
-}
-
-/**
- * @brief Plays a jingle to indicate GUI connection status.
- * 
- * Plays an ascending tone for "LINK" and descending for "UNLINK".
- * 
- * @param connected String indicating "LINK" or "UNLINK".
- * @param cue Cue object to play the tone.
- */
-void connectionJingle(String connected, Cue cue) {
-    if (connected == "LINK") {
-        linkedToGUI = true;
-        static int pitch = 500; // Starting tone frequency
-        for (int i = 0; i < 3; i++) {
-            tone(cue.getPin(), pitch, 100);
-            delay(100);
-            noTone(cue.getPin());
-            pitch += 500; // Increase frequency
-        }
-        pitch = 500;              // Reset frequency
-        Serial.println("LINKED"); // Output status
-    } else if (connected == "UNLINK") {
-        linkedToGUI = false;
-        static int pitch = 1500; // Starting tone frequency
-        for (int i = 0; i < 3; i++) {
-            tone(cue.getPin(), pitch, 100);
-            delay(100);
-            noTone(cue.getPin());
-            pitch -= 500; // Decrease frequency
-        }
-        pitch = 1500;               // Reset frequency
-        Serial.println("UNLINKED"); // Output status
-    }
-}
-
 /**
  * @brief Sends setup configuration as JSON to the serial monitor.
  */
@@ -283,265 +185,382 @@ void sendSetupJSON() {
     doc["CS DURATION"] = cs.getDuration();
     doc["CS FREQUENCY"] = cs.getFrequency();
     doc["PUMP INFUSION LENGTH"] = pump.getInfusionDuration();
-    doc["LASER STIM LENGTH"] = laser.getStimDuration();
+    doc["LASER STIM LENGTH"] = laser.getDuration();
+    doc["LASER STIM FREQUENCY"] = laser.getFrequency();
+    doc["LASER STIM MODE"] = laser.getStimMode();
 
     serializeJson(doc, Serial);
     Serial.println('\n');
 }
 
 // =======================================================
-// ====================== SECTION 4 ======================
+// ====================== SECTION 3 ======================
 // =======================================================
 
+#define COMMAND_BUFFER_SIZE 32 ///< Size of the command buffer.
+char commandBuffer[COMMAND_BUFFER_SIZE]; ///< Buffer for incoming serial commands.
+
 /**
- * @brief Triggers a pump infusion after an omission interval.
+ * @brief Extracts a numeric parameter from a command string.
  * 
- * Delivers an infusion and cue tone if the omission interval has elapsed without an active press.
+ * @param cmd Command string (e.g., "SET_RATIO:5").
+ * @param prefix Prefix to match (e.g., "SET_RATIO:").
+ * @return Extracted value as a long integer, or 0 if not found.
  */
-void triggerInfusion() {
-    uint32_t currentMillis = millis();
-    if (programIsRunning && (currentMillis - lastInfusionTime >= omissionInterval)) {
-        if (pump.isArmed() && cs.isArmed()) {
-            int32_t timestamp = millis();
-            pump.setInfusionPeriod(timestamp, 0); // Start infusion immediately
-            cs.setOnTimestamp(timestamp);         // Set cue tone period
-            cs.setOffTimestamp(timestamp);
-            String infusionEntry = "PUMP,INFUSION,";
-            infusionEntry += differenceFromStartTime ? String(pump.getInfusionStartTimestamp() - differenceFromStartTime) : String(pump.getInfusionStartTimestamp());
-            infusionEntry += ",";
-            infusionEntry += differenceFromStartTime ? String(pump.getInfusionEndTimestamp() - differenceFromStartTime) : String(pump.getInfusionEndTimestamp());
-            Serial.println(infusionEntry);
-            lastInfusionTime = currentMillis;
-        }
+int32_t extractParam(const char* cmd, const char* prefix) {
+    size_t prefixLen = strlen(prefix);
+    if (strncmp(cmd, prefix, prefixLen) == 0) {
+        const char* paramStart = cmd + prefixLen;
+        return atol(paramStart);
     }
+    return 0;
 }
 
 /**
- * @brief Sends a periodic ping to ensure serial connection.
+ * @brief Handles the "LINK" command to connect to the GUI.
+ * @param cmd Command string.
  */
-void pingDevice() {
-    uint32_t currentMillis = millis();
-    if (currentMillis - previousPing >= pingInterval) {
-        previousPing = currentMillis;
-        Serial.println("ping");
-    }
+void handleLink(const char* cmd) {
+    connectionJingle("LINK", cs, linkedToGUI);
 }
 
 /**
- * @brief Controls pump operation based on infusion timestamps.
- * 
- * Turns the pump on during the infusion period and off otherwise, if armed.
- * 
- * @param pump Reference to the Pump object.
+ * @brief Handles the "UNLINK" command to disconnect from the GUI.
+ * @param cmd Command string.
  */
-void managePump(Pump& pump) {
-    int32_t timestamp = millis();
-    if (pump.isArmed()) {
-        if (timestamp <= pump.getInfusionEndTimestamp() && timestamp >= pump.getInfusionStartTimestamp()) {
-            pump.on(); // Turn the pump on
-            pump.setRunning(true);
-        } else {
-            pump.off(); // Turn the pump off
-            pump.setRunning(false);
-        }
-    }
+void handleUnlink(const char* cmd) {
+    connectionJingle("UNLINK", cs, linkedToGUI);
 }
 
 /**
- * @brief Controls cue tone operation based on timestamps.
- * 
- * Turns the cue tone on during its assigned period and off otherwise, if armed.
- * 
- * @param cue Reference to the Cue object.
+ * @brief Handles the "START-PROGRAM" command to begin the program.
+ * @param cmd Command string.
  */
-void manageCue(Cue& cue) {
-    int32_t timestamp = millis();
-    if (cue.isArmed()) {
-        if (timestamp <= cue.getOffTimestamp() && timestamp >= cue.getOnTimestamp()) {
-            cue.on(); // Turn on cue
-            cue.setRunning(true);
-        } else {
-            cue.off(); // Turn cue off
-            cue.setRunning(false);
-        }
-    }
+void handleStartProgram(const char* cmd) {
+    startProgram(IMAGING_TRIGGER);
+    sendSetupJSON();
+    programIsRunning = true;
 }
 
 /**
- * @brief Monitors lever pressing with debouncing and resets omission timer.
- * 
- * Detects lever presses, applies debouncing, and resets the infusion timer on active presses.
- * 
- * @param programRunning Boolean indicating if the program is running.
- * @param lever Reference to a pointer to the Lever object.
+ * @brief Handles the "END-PROGRAM" command to stop the program.
+ * @param cmd Command string.
  */
-void monitorPressing(bool programRunning, Lever*& lever) {
-    static uint32_t lastDebounceTime = 0; // Last time the lever input was toggled
-    const uint32_t debounceDelay = 100;   // Debounce time in milliseconds
-    if (lever->isArmed()) {
-        bool currentLeverState = digitalRead(lever->getPin()); // Read current state
-        if (currentLeverState != lever->getPreviousLeverState()) {
-            lastDebounceTime = millis(); // Reset debouncing timer
-        }
-        if ((millis() - lastDebounceTime) > debounceDelay) {
-            if (currentLeverState != lever->getStableLeverState()) {
-                lever->setStableLeverState(currentLeverState); // Update stable state
-                if (currentLeverState == LOW) { // Lever press detected
-                    lever->setPressTimestamp(millis());
-                    definePressActivity(programRunning, lever);
-                    if (lever->getPressType() == "ACTIVE") {
-                        lastInfusionTime = millis(); // Reset omission timer
-                    }
-                } else { // Lever release detected
-                    lever->setReleaseTimestamp(millis());
-                    pressingDataEntry(lever);
-                }
-            }
-        }
-        lever->setPreviousLeverState(currentLeverState); // Update previous state
-    }
+void handleEndProgram(const char* cmd) {
+    endProgram(IMAGING_TRIGGER);
+    programIsRunning = false;
+    delay(1000);
 }
 
 /**
- * @brief Monitors licking activity with debouncing.
- * 
- * Detects lick events, applies debouncing, and logs timestamps.
- * 
- * @param lickSpout Reference to the LickCircuit object.
+ * @brief Handles the "SET_TIMEOUT_PERIOD_LENGTH:" command to set timeout length.
+ * @param cmd Command string with parameter.
  */
-void monitorLicking(LickCircuit& lickSpout) {
-    static uint32_t lastDebounceTime = 0; // Last time the lick input was toggled
-    const uint32_t debounceDelay = 25;    // Debounce time in milliseconds
-    if (lickSpout.isArmed()) {
-        bool currentLickState = digitalRead(lickSpout.getPin());
-        if (currentLickState != lickSpout.getPreviousLickState()) {
-            lastDebounceTime = millis();
-        }
-        if ((millis() - lastDebounceTime) > debounceDelay) {
-            if (currentLickState != lickSpout.getStableLickState()) {
-                lickSpout.setStableLickState(currentLickState);
-                if (currentLickState == HIGH) {
-                    lickSpout.setLickTouchTimestamp(millis());
-                } else {
-                    lickSpout.setLickReleaseTimestamp(millis());
-                    String lickEntry = "LICK_CIRCUIT,LICK," +
-                                       String(lickSpout.getLickTouchTimestamp() - differenceFromStartTime) + "," +
-                                       String(lickSpout.getLickReleaseTimestamp() - differenceFromStartTime);
-                    Serial.println(lickEntry);
-                }
-            }
-        }
-        lickSpout.setPreviousLickState(currentLickState);
-    }
+void handleSetOmissionInterval(const char* cmd) {
+  int32_t initOmissionInterval = extractParam(cmd, "SET_OMISSION_INTERVAL:");
+  omissionInterval = initOmissionInterval;
 }
+
+/**
+ * @brief Handles the "ARM_FRAME" command to enable frame collection.
+ * @param cmd Command string.
+ */
+void handleArmFrame(const char* cmd) {
+    collectFrames = true;
+}
+
+/**
+ * @brief Handles the "DISARM_FRAME" command to disable frame collection.
+ * @param cmd Command string.
+ */
+void handleDisarmFrame(const char* cmd) {
+    collectFrames = false;
+}
+
+/**
+ * @brief Handles the "ARM_LEVER_RH" command to arm the right-hand lever.
+ * @param cmd Command string.
+ */
+void handleArmLeverRH(const char* cmd) {
+    leverRH.arm();
+}
+
+/**
+ * @brief Handles the "DISARM_LEVER_RH" command to disarm the right-hand lever.
+ * @param cmd Command string.
+ */
+void handleDisarmLeverRH(const char* cmd) {
+    leverRH.disarm();
+}
+
+/**
+ * @brief Handles the "ACTIVE_LEVER_RH" command to set RH as active lever.
+ * @param cmd Command string.
+ */
+void handleActiveLeverRH(const char* cmd) {
+    activeLever = &leverRH;
+    inactiveLever = &leverLH;
+    Serial.print(F("ACTIVE LEVER: "));
+    Serial.println(activeLever->getOrientation());
+}
+
+/**
+ * @brief Handles the "ARM_LEVER_LH" command to arm the left-hand lever.
+ * @param cmd Command string.
+ */
+void handleArmLeverLH(const char* cmd) {
+    leverLH.arm();
+}
+
+/**
+ * @brief Handles the "DISARM_LEVER_LH" command to disarm the left-hand lever.
+ * @param cmd Command string.
+ */
+void handleDisarmLeverLH(const char* cmd) {
+    leverLH.disarm();
+}
+
+/**
+ * @brief Handles the "ACTIVE_LEVER_LH" command to set LH as active lever.
+ * @param cmd Command string.
+ */
+void handleActiveLeverLH(const char* cmd) {
+    activeLever = &leverLH;
+    inactiveLever = &leverRH;
+    Serial.print(F("ACTIVE LEVER: "));
+    Serial.println(activeLever->getOrientation());
+}
+
+/**
+ * @brief Handles the "ARM_CS" command to arm the cue speaker.
+ * @param cmd Command string.
+ */
+void handleArmCS(const char* cmd) {
+    cs.arm();
+}
+
+/**
+ * @brief Handles the "DISARM_CS" command to disarm the cue speaker.
+ * @param cmd Command string.
+ */
+void handleDisarmCS(const char* cmd) {
+    cs.disarm();
+}
+
+/**
+ * @brief Handles the "SET_FREQUENCY_CS:" command to set cue frequency.
+ * @param cmd Command string with parameter.
+ */
+void handleSetFrequencyCS(const char* cmd) {
+    int32_t frequency = extractParam(cmd, "SET_FREQUENCY_CS:");
+    cs.setFrequency(frequency);
+}
+
+/**
+ * @brief Handles the "SET_DURATION_CS:" command to set cue duration.
+ * @param cmd Command string with parameter.
+ */
+void handleSetDurationCS(const char* cmd) {
+    int32_t duration = extractParam(cmd, "SET_DURATION_CS:");
+    cs.setDuration(duration);
+}
+
+/**
+ * @brief Handles the "ARM_PUMP" command to arm the pump.
+ * @param cmd Command string.
+ */
+void handleArmPump(const char* cmd) {
+    pump.arm();
+}
+
+/**
+ * @brief Handles the "DISARM_PUMP" command to disarm the pump.
+ * @param cmd Command string.
+ */
+void handleDisarmPump(const char* cmd) {
+    pump.disarm();
+}
+
+/**
+ * @brief Handles the "PUMP_TEST_ON" command to turn the pump on for testing.
+ * @param cmd Command string.
+ */
+void handlePumpTestOn(const char* cmd) {
+    pump.on();
+}
+
+/**
+ * @brief Handles the "PUMP_TEST_OFF" command to turn the pump off for testing.
+ * @param cmd Command string.
+ */
+void handlePumpTestOff(const char* cmd) {
+    pump.off();
+}
+
+/**
+ * @brief Handles the "ARM_LASER" command to arm the laser.
+ * @param cmd Command string.
+ */
+void handleArmLaser(const char* cmd) {
+    laser.arm();
+}
+
+/**
+ * @brief Handles the "DISARM_LASER" command to disarm the laser.
+ * @param cmd Command string.
+ */
+void handleDisarmLaser(const char* cmd) {
+    laser.disarm();
+}
+
+/**
+ * @brief Handles the "LASER_TEST_ON" command to turn the laser on for testing.
+ * @param cmd Command string.
+ */
+void handleLaserTestOn(const char* cmd) {
+    laser.on();
+}
+
+/**
+ * @brief Handles the "LASER_TEST_OFF" command to turn the laser off for testing.
+ * @param cmd Command string.
+ */
+void handleLaserTestOff(const char* cmd) {
+    laser.off();
+}
+
+/**
+ * @brief Handles the "LASER_STIM_MODE_CYCLE" command to set laser to CYCLE mode.
+ * @param cmd Command string.
+ */
+void handleLaserStimModeCycle(const char* cmd) {
+    laser.setStimMode(CYCLE);
+}
+
+/**
+ * @brief Handles the "LASER_STIM_MODE_ACTIVE-PRESS" command to set laser mode.
+ * @param cmd Command string.
+ */
+void handleLaserStimModeActivePress(const char* cmd) {
+    laser.setStimMode(ACTIVE_PRESS);
+}
+
+/**
+ * @brief Handles the "LASER_DURATION:" command to set laser duration.
+ * @param cmd Command string with parameter.
+ */
+void handleLaserDuration(const char* cmd) {
+    int32_t duration = extractParam(cmd, "LASER_DURATION:");
+    laser.setDuration(duration);
+}
+
+/**
+ * @brief Handles the "LASER_FREQUENCY:" command to set laser frequency.
+ * @param cmd Command string with parameter.
+ */
+void handleLaserFrequency(const char* cmd) {
+    int32_t frequency = extractParam(cmd, "LASER_FREQUENCY:");
+    laser.setFrequency(frequency);
+}
+
+/**
+ * @brief Handles the "ARM_LICK_CIRCUIT" command to arm the lick circuit.
+ * @param cmd Command string.
+ */
+void handleArmLickCircuit(const char* cmd) {
+    lickCircuit.arm();
+}
+
+/**
+ * @brief Handles the "DISARM_LICK_CIRCUIT" command to disarm the lick circuit.
+ * @param cmd Command string.
+ */
+void handleDisarmLickCircuit(const char* cmd) {
+    lickCircuit.disarm();
+}
+
+typedef void (*CommandHandler)(const char*); ///< Function pointer type for command handlers.
+
+struct Command {
+    const char* prefix;     ///< Command prefix to match.
+    CommandHandler handler; ///< Handler function for the command.
+};
+
+/**
+ * @brief Array of supported commands and their handlers.
+ */
+Command commands[] = {
+    {"LINK", handleLink},
+    {"UNLINK", handleUnlink},
+    {"START-PROGRAM", handleStartProgram},
+    {"END-PROGRAM", handleEndProgram},
+    {"SET_OMISSION_INTERVAL:", handleSetOmissionInterval},
+    {"ARM_FRAME", handleArmFrame},
+    {"DISARM_FRAME", handleDisarmFrame},
+    {"ARM_LEVER_RH", handleArmLeverRH},
+    {"DISARM_LEVER_RH", handleDisarmLeverRH},
+    {"ACTIVE_LEVER_RH", handleActiveLeverRH},
+    {"ARM_LEVER_LH", handleArmLeverLH},
+    {"DISARM_LEVER_LH", handleDisarmLeverLH},
+    {"ACTIVE_LEVER_LH", handleActiveLeverLH},
+    {"ARM_CS", handleArmCS},
+    {"DISARM_CS", handleDisarmCS},
+    {"SET_FREQUENCY_CS:", handleSetFrequencyCS},
+    {"SET_DURATION_CS:", handleSetDurationCS},
+    {"ARM_PUMP", handleArmPump},
+    {"DISARM_PUMP", handleDisarmPump},
+    {"PUMP_TEST_ON", handlePumpTestOn},
+    {"PUMP_TEST_OFF", handlePumpTestOff},
+    {"ARM_LASER", handleArmLaser},
+    {"DISARM_LASER", handleDisarmLaser},
+    {"LASER_TEST_ON", handleLaserTestOn},
+    {"LASER_TEST_OFF", handleLaserTestOff},
+    {"LASER_STIM_MODE_CYCLE", handleLaserStimModeCycle},
+    {"LASER_STIM_MODE_ACTIVE-PRESS", handleLaserStimModeActivePress},
+    {"LASER_DURATION:", handleLaserDuration},
+    {"LASER_FREQUENCY:", handleLaserFrequency},
+    {"ARM_LICK_CIRCUIT", handleArmLickCircuit},
+    {"DISARM_LICK_CIRCUIT", handleDisarmLickCircuit},
+};
 
 /**
  * @brief Monitors and processes incoming serial commands.
  * 
- * Handles commands from the GUI to control the program and devices.
+ * Reads commands from the serial buffer and executes the corresponding handler.
  */
 void monitorSerialCommands() {
-    if (Serial.available() > 0) {
-        String command = Serial.readStringUntil('\n');
-        command.trim();
-
-        if (command == "LINK") {
-            connectionJingle("LINK", cs);
-        } else if (command == "UNLINK") {
-            connectionJingle("UNLINK", cs);
-        } else if (command == "START-PROGRAM") {
-            startProgram(IMAGING_TRIGGER);
-            sendSetupJSON();
-            programIsRunning = true;
-        } else if (command == "END-PROGRAM") {
-            endProgram(IMAGING_TRIGGER);
-            programIsRunning = false;
-            delay(1000);
-        } else if (command.startsWith("SET_OMISSION_INTERVAL:")) {
-            int32_t initOmissionInterval = command.substring(String("SET_OMISSION_INTERVAL:").length()).toInt();
-            omissionInterval = initOmissionInterval;
-        } else if (command == "ARM_LEVER_RH") {
-            leverRH.arm();
-        } else if (command == "DISARM_LEVER_RH") {
-            leverRH.disarm();
-        } else if (command == "ACTIVE_LEVER_RH") {
-            activeLever = &leverRH;
-            inactiveLever = &leverLH;
-            Serial.print("ACTIVE LEVER: ");
-            Serial.println(activeLever->getOrientation());
-        } else if (command == "ARM_LEVER_LH") {
-            leverLH.arm();
-        } else if (command == "DISARM_LEVER_LH") {
-            leverLH.disarm();
-        } else if (command == "ACTIVE_LEVER_LH") {
-            activeLever = &leverLH;
-            inactiveLever = &leverRH;
-            Serial.print("ACTIVE LEVER: ");
-            Serial.println(activeLever->getOrientation());
-        } else if (command == "ARM_CS") {
-            cs.arm();
-        } else if (command == "DISARM_CS") {
-            cs.disarm();
-        } else if (command.startsWith("SET_FREQUENCY_CS:")) {
-            int32_t frequency = command.substring(String("SET_FREQUENCY_CS:").length()).toInt();
-            cs.setFrequency(frequency);
-        } else if (command.startsWith("SET_DURATION_CS:")) {
-            int32_t duration = command.substring(String("SET_DURATION_CS:").length()).toInt();
-            cs.setDuration(duration);
-        } else if (command == "ARM_PUMP") {
-            pump.arm();
-        } else if (command == "DISARM_PUMP") {
-            pump.disarm();
-        } else if (command == "PUMP_TEST_ON") {
-            pump.on();
-        } else if (command == "PUMP_TEST_OFF") {
-            pump.off();
-        } else if (command == "ARM_LASER") {
-            laser.arm();
-        } else if (command == "DISARM_LASER") {
-            laser.disarm();
-        } else if (command == "ARM_LICK_CIRCUIT") {
-            lickCircuit.arm();
-        } else if (command == "DISARM_LICK_CIRCUIT") {
-            lickCircuit.disarm();
-        } else {
-            Serial.println(">>> command " + command + " is invalid.");
+    if (setupFinished && Serial.available() > 0) {
+        size_t bytesRead = Serial.readBytesUntil('\n', commandBuffer, COMMAND_BUFFER_SIZE - 1);
+        commandBuffer[bytesRead] = '\0'; // Null-terminate the string
+        bool commandHandled = false;
+        for (size_t i = 0; i < sizeof(commands) / sizeof(commands[0]); i++) {
+            const Command& cmd = commands[i];
+            size_t prefixLen = strlen(cmd.prefix);
+            if (cmd.prefix[prefixLen - 1] == ':') {
+                if (strncmp(commandBuffer, cmd.prefix, prefixLen) == 0) {
+                    cmd.handler(commandBuffer);
+                    commandHandled = true;
+                    break;
+                }
+            } else {
+                if (strcmp(commandBuffer, cmd.prefix) == 0) {
+                    cmd.handler(commandBuffer);
+                    commandHandled = true;
+                    break;
+                }
+            }
+        }
+        if (!commandHandled) {
+            Serial.print(F(">>> Command ["));
+            Serial.print(commandBuffer);
+            Serial.println(F("] is invalid."));
         }
         delay(50); // Short delay for command processing
     }
 }
 
 // =======================================================
-// ====================== SECTION 5 ======================
-// =======================================================
-
-/**
- * @brief Interrupt service routine for frame signal detection.
- * 
- * Captures the timestamp of a frame signal, adjusted by the program start time.
- */
-void frameSignalISR() {
-    frameSignalReceived = true;
-    frameSignalTimestamp = millis() - differenceFromStartTime;
-}
-
-/**
- * @brief Handles frame signal logging.
- * 
- * Logs the frame timestamp to serial when a signal is received.
- */
-void handleFrameSignal() {
-    if (frameSignalReceived) {
-        noInterrupts(); // Disable interrupts for safe access
-        frameSignalReceived = false;
-        int32_t timestamp = frameSignalTimestamp;
-        interrupts();   // Re-enable interrupts
-        Serial.println("FRAME_TIMESTAMP," + String(timestamp));
-    }
-}
-
-// =======================================================
-// ====================== SECTION 6 ======================
+// ====================== SECTION 4 ======================
 // =======================================================
 
 /**
@@ -555,10 +574,9 @@ void PROGRAM() {
         monitorPressing(programIsRunning, activeLever);
         monitorPressing(programIsRunning, inactiveLever);
         monitorLicking(lickCircuit);
-        manageCue(cs);
-        managePump(pump);
+        manageStim(laser);
         triggerInfusion();
         handleFrameSignal();
-        pingDevice();
+        pingDevice(previousPing, pingInterval);
     }
 }
