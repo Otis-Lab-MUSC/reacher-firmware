@@ -77,6 +77,11 @@ void triggerInfusion() {
             infusionEntry += differenceFromStartTime ? String(pump.getInfusionEndTimestamp() - differenceFromStartTime) : String(pump.getInfusionEndTimestamp());
             Serial.println(infusionEntry);
             lastInfusionTime = currentMillis;
+            if (laser.isArmed() && laser.getStimMode() == ACTIVE_PRESS) {
+              laser.setStimPeriod(currentMillis);
+              laser.setStimState(ACTIVE);
+            }
         }
+
     }
 }

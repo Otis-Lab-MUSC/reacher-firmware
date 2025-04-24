@@ -88,7 +88,7 @@ void stim(Laser& laser, uint32_t currentMillis) {
 
 /**
  * @brief Oversees the laser's stimulation mode and timing.
- * 
+ * a
  * Manages the laser’s stimulation based on its mode (CYCLE or ACTIVE_PRESS),
  * updating periods and states if the device is armed and the program is running.
  * 

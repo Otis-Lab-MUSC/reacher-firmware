@@ -73,7 +73,7 @@ void deliverReward(Lever*& lever, Cue* cue, Pump* pump, Laser* laser) {
     if (pump && pump->isArmed()) {
         pump->setInfusionPeriod(cue->getOffTimestamp(), traceIntervalLength);
     }
-    if (laser && laser->isArmed()) {
+    if (laser && laser->isArmed() && laser->getStimMode() != CYCLE) {
         laser->setStimPeriod(timestamp);
         laser->setStimState(ACTIVE);
     }

@@ -532,6 +532,13 @@ void monitorSerialCommands() {
     if (setupFinished && Serial.available() > 0) {
         size_t bytesRead = Serial.readBytesUntil('\n', commandBuffer, COMMAND_BUFFER_SIZE - 1);
         commandBuffer[bytesRead] = '\0'; // Null-terminate the string
+        
+        int i = bytesRead - 1;
+        while (i >= 0 && (commandBuffer[i] == ' ' || commandBuffer[i] == '\r' || commandBuffer[i] == '\t')) {
+            commandBuffer[i] = '\0'; // Replace whitespace with null terminator
+            i--;
+        }
+        
         bool commandHandled = false;
         for (size_t i = 0; i < sizeof(commands) / sizeof(commands[0]); i++) {
             const Command& cmd = commands[i];
