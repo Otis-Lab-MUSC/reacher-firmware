@@ -3,8 +3,11 @@
 #include "Lever.h"
 #include "LickCircuit.h"
 #include "Laser.h"
+#include "Laser_Utils.h"
 #include "Pump.h"
+#include "Pump_Utils.h"
 #include "Cue.h"
+#include "Cue_Utils.h"
 
 extern uint32_t traceIntervalLength;     ///< Length of the trace interval (ms).
 extern uint32_t differenceFromStartTime; ///< Offset from program start time (ms).
@@ -59,29 +62,44 @@ void endProgram(byte pin) {
 }
 
 /**
+ * @brief Method to encapsulate all managed devices.
+ * 
+ * Loop calls managing functions for selected devices.
+ */
+void manageDevices() {
+  manageCue(&cs);
+  managePump(&pump);
+  manageStim(laser);
+}
+
+/**
  * @brief Triggers a pump infusion after an omission interval.
  * 
  * Delivers an infusion and cue tone if the omission interval has elapsed without an active press.
  */
 void triggerInfusion() {
     uint32_t currentMillis = millis();
-    if (programIsRunning && (currentMillis - lastInfusionTime >= omissionInterval)) {
-        if (pump.isArmed() && cs.isArmed()) {
-            int32_t timestamp = millis();
-            pump.setInfusionPeriod(timestamp, 0); // Start infusion immediately
-            cs.setOnTimestamp(timestamp);         // Set cue tone period
-            cs.setOffTimestamp(timestamp);
-            String infusionEntry = "PUMP,INFUSION,";
-            infusionEntry += differenceFromStartTime ? String(pump.getInfusionStartTimestamp() - differenceFromStartTime) : String(pump.getInfusionStartTimestamp());
-            infusionEntry += ",";
-            infusionEntry += differenceFromStartTime ? String(pump.getInfusionEndTimestamp() - differenceFromStartTime) : String(pump.getInfusionEndTimestamp());
-            Serial.println(infusionEntry);
-            lastInfusionTime = currentMillis;
-            if (laser.isArmed() && laser.getStimMode() == ACTIVE_PRESS) {
-              laser.setStimPeriod(currentMillis);
-              laser.setStimState(ACTIVE);
-            }
-        }
+    if (!programIsRunning || (currentMillis - lastInfusionTime < omissionInterval)) {
+        return;
+    }
+    if (pump.isArmed()) {
+        uint32_t timestamp = currentMillis;
+
+        pump.setInfusionPeriod(timestamp, 0);
+        String infusionEntry = "PUMP,INFUSION,";
+        infusionEntry += differenceFromStartTime ? String(pump.getInfusionStartTimestamp() - differenceFromStartTime) : String(pump.getInfusionStartTimestamp());
+        infusionEntry += ",";
+        infusionEntry += differenceFromStartTime ? String(pump.getInfusionEndTimestamp() - differenceFromStartTime) : String(pump.getInfusionEndTimestamp());
+        Serial.println(infusionEntry);
+        lastInfusionTime = currentMillis;
 
     }
-}
+    if (cs.isArmed()) {    
+        cs.setOnTimestamp(currentMillis);
+        cs.setOffTimestamp(currentMillis);
+    }
+    if (laser.isArmed() && laser.getStimMode() == ACTIVE_PRESS) {
+        laser.setStimPeriod(currentMillis);
+        laser.setStimState(ACTIVE);
+    }
+};

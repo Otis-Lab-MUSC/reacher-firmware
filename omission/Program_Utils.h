@@ -35,6 +35,13 @@ void endProgram(byte pin);
 void deliverReward(Lever*& lever, Cue* cue, Pump* pump, Laser* laser);
 
 /**
+ * @brief Method to encapsulate all managed devices.
+ * 
+ * Loop calls managing functions for selected devices.
+ */
+void manageDevices();
+
+/**
  * @brief Triggers a pump infusion after an omission interval.
  * 
  * Delivers an infusion and cue tone if the omission interval has elapsed without an active press.
