@@ -206,7 +206,7 @@ ACTION Laser::getStimAction() {
  */
 void Laser::on() {
     digitalWrite(pin, HIGH);  // Turn the laser ON
-    // Serial.println("ON, " + String(laserAction) + ", " + String(cycleUp) + ", " + String(laserState)); // Uncomment for debugging
+//     Serial.println("ON, " + String(laserAction) + ", " + String(cycleUp) + ", " + String(laserState)); // Uncomment for debugging
 }
 
 /**
