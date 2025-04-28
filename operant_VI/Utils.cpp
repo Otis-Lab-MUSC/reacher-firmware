@@ -33,18 +33,16 @@ void frameSignalISR() {
 }
 
 /**
- * @brief Handles frame signal logging when collection is active.
+ * @brief Handles frame signal logging.
  * 
  * Logs the frame timestamp to serial when a signal is received.
  */
 void handleFrameSignal() {
-    if (collectFrames) {
-        if (frameSignalReceived) {
-            noInterrupts(); // Disable interrupts for safe access
-            frameSignalReceived = false;
-            int32_t timestamp = frameSignalTimestamp;
-            interrupts();   // Re-enable interrupts
-            Serial.println("FRAME_TIMESTAMP," + String(timestamp));
-        }
+    if (frameSignalReceived) {
+        noInterrupts(); // Disable interrupts for safe access
+        frameSignalReceived = false;
+        int32_t timestamp = frameSignalTimestamp;
+        interrupts();   // Re-enable interrupts
+        Serial.println("FRAME_TIMESTAMP," + String(timestamp));
     }
 }
