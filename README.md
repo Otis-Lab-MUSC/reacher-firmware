@@ -13,7 +13,7 @@
 
 ## Overview
 
-The REACHER Suite (Rodent Experiment Application Controls and Handling Ecosystem for Research) is a framework for Arduino-based behavioral experiments, developed by Josh Boquiren ([***@thejoshbq***](https://github.com/thejoshbq/thejoshbq/) on GitHub) as part of the Otis Lab at MUSC. This repository contains four operant conditioning paradigms implemented as Arduino sketches: `operant_FR.ino`, `omission.ino`, `operant_PR.ino`, and `operant_VI.ino`. Each sketch controls hardware components (levers, cues, pumps, lasers, etc.) via serial commands from the REACHER Suite Python framework, collects real-time data, and ensures data integrity through immediate serial logging.
+This repository contains operant conditioning paradigms implemented as Arduino sketches: `operant_FR.ino`, `omission.ino`, `operant_PR.ino`, and `operant_VI.ino`, each compatible with the [REACHER Suite](https://github.com/Otis-Lab-MUSC/reacher). Each sketch controls hardware components (levers, cues, pumps, lasers, etc.) via serial commands from the REACHER Suite Python framework, collects real-time data, and ensures data integrity through immediate serial logging.
 
 ## System Requirements
 
