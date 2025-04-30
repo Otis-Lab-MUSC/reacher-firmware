@@ -47,7 +47,7 @@ void startProgram(byte pin) {
  * @param pin The digital pin to trigger imaging end.
  */
 void endProgram(byte pin) {
-    long terminus = millis();
+    int32_t terminus = millis() - differenceFromStartTime;
     String message = "END-TIME,TERMINUS," + String(terminus) + "," + String(terminus);
     Serial.println(message);
     Serial.println();
