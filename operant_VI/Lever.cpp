@@ -66,10 +66,10 @@ void Lever::setPressType(String initPressType) {
  * 
  * Sets a new start time and generates a random interval between 0 and 15000 ms.
  */
-void Lever::resetInterval() {
-    intervalStartTime = millis();
-    randomInterval = random(0, 15000);
-    activePressOccurred = false;
+void Lever::resetInterval(int32_t interval, int32_t newStartTime) {
+    intervalStartTime = newStartTime;
+    randomInterval = random(0, interval);
+    activePressOccurred = false;    
 }
 
 /**

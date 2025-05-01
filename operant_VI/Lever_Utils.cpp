@@ -86,28 +86,30 @@ void definePressActivity(bool programRunning, Lever*& lever, Cue* cue, Pump* pum
 void monitorPressing(bool programRunning, Lever*& lever, Cue* cue, Pump* pump, Laser* laser) {
     static uint32_t lastDebounceTime = 0; // Last time the lever input was toggled
     const uint32_t debounceDelay = 100;   // Debounce time in milliseconds
+    int32_t timestamp = millis();
     manageCue(cue);                       // Manage cue delivery
     managePump(pump);                     // Manage infusion delivery
     if (lever->isArmed()) {
         bool currentLeverState = digitalRead(lever->getPin()); // Read current state
         if (currentLeverState != lever->getPreviousLeverState()) {
-            lastDebounceTime = millis(); // Reset debouncing timer
+            lastDebounceTime = timestamp; // Reset debouncing timer
         }
-        if ((millis() - lastDebounceTime) > debounceDelay) {
+        if ((timestamp - lastDebounceTime) > debounceDelay) {
             if (currentLeverState != lever->getStableLeverState()) {
                 lever->setStableLeverState(currentLeverState); // Update stable state
                 if (currentLeverState == LOW) { // Lever press detected
-                    lever->setPressTimestamp(millis());
+                    lever->setPressTimestamp(timestamp);
                     definePressActivity(programRunning, lever, cue, pump, laser);
                 } else { // Lever release detected
-                    lever->setReleaseTimestamp(millis());
+                    lever->setReleaseTimestamp(timestamp);
                     pressingDataEntry(lever, pump);
                 }
             }
         }
         lever->setPreviousLeverState(currentLeverState); // Update previous state
     }
-    if (millis() - lever->getIntervalStartTime() >= variableInterval) {
-        lever->resetInterval();
+    if (timestamp - lever->getIntervalStartTime() >= variableInterval) {
+        long int newStartTime = timestamp;
+        lever->resetInterval(variableInterval, newStartTime);
     }
 }

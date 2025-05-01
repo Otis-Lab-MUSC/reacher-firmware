@@ -72,8 +72,9 @@ public:
 
     /**
      * @brief Resets the variable interval.
+     * @param Variable interval length.
      */
-    void resetInterval();
+    void resetInterval(int32_t interval, int32_t newStartTime);
 
     /**
      * @brief Sets whether an active press has occurred.
