@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write  # Required for managing releases and assets
+
 jobs:
   create-and-update-release:
     runs-on: ubuntu-latest
@@ -39,15 +42,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Get the release ID for the v1.0.1 tag
-          RELEASE_ID=$(gh release view v1.0.1 --json id --jq .id)
-          
-          # Get the list of all asset names for the release
-          ASSET_NAMES=$(gh release view v1.0.1 --json assets --jq '.assets[].name')
+          # Get the list of all asset IDs for the v1.0.1 release
+          ASSET_IDS=$(gh release view v1.0.1 --repo Otis-Lab-MUSC/reacher-firmware --json assets --jq '.assets[].id' || true)
           
           # Delete each existing asset
-          for ASSET in $ASSET_NAMES; do
-            gh release delete-asset v1.0.1 "$ASSET" --yes || true
+          for ASSET_ID in $ASSET_IDS; do
+            echo "Deleting asset ID: $ASSET_ID"
+            gh api \
+              -X DELETE \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              "https://api.github.com/repos/Otis-Lab-MUSC/reacher-firmware/releases/assets/$ASSET_ID" || true
           done
           
           # Upload new assets
@@ -56,4 +60,6 @@ jobs:
             operant_FR.zip \
             operant_VI.zip \
             operant_PR.zip \
-            operant_suite.zip
+            operant_suite.zip \
+            --clobber \
+            --repo Otis-Lab-MUSC/reacher-firmware
