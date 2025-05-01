@@ -10,14 +10,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout the repository code
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Set up the environment
       - name: Set up environment
         run: |
           sudo apt-get update
           sudo apt-get install -y zip
 
+      # Create ZIP files for individual directories and the combined operant_suite
       - name: Create ZIP files
         run: |
           # Create ZIP for individual directories
@@ -31,6 +34,7 @@ jobs:
           cp -r omission operant_FR operant_VI operant_PR operant_suite/
           zip -r operant_suite.zip operant_suite
 
+      # Delete all existing assets and upload new ones
       - name: Update release assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -38,12 +42,13 @@ jobs:
           # Get the release ID for the v1.0.1 tag
           RELEASE_ID=$(gh release view v1.0.1 --json id --jq .id)
           
-          # Delete existing assets for the release (if any)
-          gh release delete-asset v1.0.1 omission.zip --yes || true
-          gh release delete-asset v1.0.1 operant_FR.zip --yes || true
-          gh release delete-asset v1.0.1 operant_VI.zip --yes || true
-          gh release delete-asset v1.0.1 operant_PR.zip --yes || true
-          gh release delete-asset v1.0.1 operant_suite.zip --yes || true
+          # Get the list of all asset names for the release
+          ASSET_NAMES=$(gh release view v1.0.1 --json assets --jq '.assets[].name')
+          
+          # Delete each existing asset
+          for ASSET in $ASSET_NAMES; do
+            gh release delete-asset v1.0.1 "$ASSET" --yes || true
+          done
           
           # Upload new assets
           gh release upload v1.0.1 \
