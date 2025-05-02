@@ -52,7 +52,7 @@ void Lever::setOrientation(String initOrientation) {
 }
 
 /**
- * @brief Sets the type of press (e.g., "ACTIVE", "INACTIVE").
+ * @brief Sets the type of press (e.g., "ACTIVE", "INACTIVE", "TIMEOUT").
  * @param initPressType String indicating the press type.
  */
 void Lever::setPressType(String initPressType) {

@@ -22,7 +22,7 @@ public:
     int32_t pressTimestamp;      ///< Timestamp of the lever press (ms).
     int32_t releaseTimestamp;    ///< Timestamp of the lever release (ms).
     String orientation;          ///< Lever orientation (e.g., "RH" or "LH").
-    String pressType;            ///< Type of press (e.g., "ACTIVE", "INACTIVE").
+    String pressType;            ///< Type of press (e.g., "ACTIVE", "INACTIVE", "TIMEOUT").
 
     /**
      * @brief Constructor for the Lever class.

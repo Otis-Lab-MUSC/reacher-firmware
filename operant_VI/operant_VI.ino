@@ -175,19 +175,23 @@ void loop() {
    @brief Sends setup configuration as JSON to the serial monitor.
 */
 void sendSetupJSON() {
-  StaticJsonDocument<200> doc;
-  doc["DOC"] = SKETCH_NAME;
-  doc["VERSION"] = VERSION;
+    StaticJsonDocument<200> doc;
+    doc["DOC"] = SKETCH_NAME;
+    doc["VERSION"] = VERSION;
 
-  doc["TRACE INTERVAL LENGTH"] = traceIntervalLength;
-  doc["TIMEOUT INTERVAL LENGTH"] = timeoutIntervalLength;
-  doc["DELTA START TIME"] = differenceFromStartTime;
-  doc["BAUDRATE"] = baudrate;
+    doc["VARIABLE INTERVAL"] = variableInterval;
+    doc["ACTIVE LEVER"] = activeLever->getOrientation();
+    doc["TRACE INTERVAL LENGTH"] = traceIntervalLength;
+    doc["TIMEOUT INTERVAL LENGTH"] = timeoutIntervalLength;
+    doc["DELTA START TIME"] = differenceFromStartTime;
+    doc["BAUDRATE"] = baudrate;
 
-  doc["CS DURATION"] = cs.getDuration();
-  doc["CS FREQUENCY"] = cs.getFrequency();
-  doc["PUMP INFUSION LENGTH"] = pump.getInfusionDuration();
-  doc["LASER STIM LENGTH"] = laser.getDuration();
+    doc["CS DURATION"] = cs.getDuration();
+    doc["CS FREQUENCY"] = cs.getFrequency();
+    doc["PUMP INFUSION LENGTH"] = pump.getInfusionDuration();
+    doc["LASER STIM LENGTH"] = laser.getDuration();
+    doc["LASER STIM FREQUENCY"] = laser.getFrequency();
+    doc["LASER STIM MODE"] = laser.getStimMode();
 
   serializeJson(doc, Serial);
   Serial.println('\n');

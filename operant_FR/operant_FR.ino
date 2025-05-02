@@ -176,6 +176,8 @@ void sendSetupJSON() {
     doc["DOC"] = SKETCH_NAME;
     doc["VERSION"] = VERSION;
 
+    doc["FIXED RATIO"] = fRatio;
+    doc["ACTIVE LEVER"] = activeLever->getOrientation();
     doc["TRACE INTERVAL LENGTH"] = traceIntervalLength;
     doc["TIMEOUT INTERVAL LENGTH"] = timeoutIntervalLength;
     doc["DELTA START TIME"] = differenceFromStartTime;

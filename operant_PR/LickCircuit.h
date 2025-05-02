@@ -1,5 +1,5 @@
-#ifndef LICK_CIRCUIT_H
-#define LICK_CIRCUIT_H
+#ifndef LICKCIRCUIT_H
+#define LICKCIRCUIT_H
 
 #include "Arduino.h"
 #include "Device.h"
@@ -78,4 +78,4 @@ public:
     int32_t getLickReleaseTimestamp() const;
 };
 
-#endif // LICK_CIRCUIT_H
+#endif // LICKCIRCUIT_H

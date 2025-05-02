@@ -179,6 +179,9 @@ void sendSetupJSON() {
     doc["VERSION"] = VERSION;
 
     doc["OMISSION INTERVAL"] = omissionInterval;
+    doc["ACTIVE LEVER"] = activeLever->getOrientation();
+    doc["TRACE INTERVAL LENGTH"] = traceIntervalLength;
+    doc["TIMEOUT INTERVAL LENGTH"] = timeoutIntervalLength;
     doc["DELTA START TIME"] = differenceFromStartTime;
     doc["BAUDRATE"] = baudrate;
 
