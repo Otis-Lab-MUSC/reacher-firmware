@@ -176,3 +176,16 @@ The REACHER Suite (Rodent Experiment Application Controls and Handling Ecosystem
 5. Configure and start your experiment using the provided serial commands.
 
 This suite provides a robust foundation for operant conditioning research, integrating seamlessly with the REACHER ecosystem.
+
+<br><br>
+<div align="center">
+  <h2>Copyright & License</h2>
+  <p>© 2025 <a href="http://www.otis-lab.org">Otis Lab</a>. All rights reserved.</p>
+  <p>This project is licensed under the <a href=""><strong>LICENSE</strong></a>.</p>
+  <p>For more information, please contact the author at <a href="mailto:thejoshbq@proton.me"><i>thejoshbq@proton.me</i></a>
+</div>
+
+<div align="center", style="padding: 10px; background-color: #333; color: white;">
+    <p><i>"The heavens declare the glory of God, and the sky above proclaims his handiwork."</i>
+    <p>Psalm 19:1</p>
+</div>
