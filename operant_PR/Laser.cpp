@@ -1,75 +1,218 @@
 #include "Laser.h"
-#include "Device.h"
 
 /**
  * @brief Constructs a Laser object with an initial pin and default settings.
  * 
- * Initializes a Laser object as a subclass of Device with default stimulation settings.
+ * Initializes a Laser object as a subclass of Device, setting the pin and default
+ * values for stimulation duration, frequency, timing, and state variables.
  * 
  * @param initPin The digital pin (byte) to which the laser is connected.
- * @warning This implementation is in testing and not fully verified.
  */
 Laser::Laser(byte initPin) 
-    : Device(initPin), stimDuration(30000), previousStim(0), isRunning(false) {}
+    : Device(initPin), duration(30000), frequency(20), stimStart(0), stimEnd(0), 
+      halfCycleStart(0), halfCycleEnd(0), logged(true), cycleUp(false), 
+      laserMode(CYCLE), laserState(INACTIVE), laserAction(OFF) {}
 
 /**
- * @brief Sets the duration of the laser stimulation.
- * @param initDuration Duration in milliseconds for the laser stimulation.
+ * @brief Sets the stimulation duration in milliseconds.
+ * 
+ * Converts the input duration from seconds to milliseconds.
+ * 
+ * @param initDuration Duration in seconds to set for the stimulation period.
  */
-void Laser::setStimDuration(int32_t initDuration) {
-    stimDuration = initDuration;
+void Laser::setDuration(uint32_t initDuration) {
+    duration = initDuration * 1000;
 }
 
 /**
- * @brief Sets the timestamp of the previous stimulation.
- * @param timestamp Time in milliseconds of the last stimulation.
+ * @brief Sets the frequency of the laser pulses.
+ * 
+ * @param initFrequency Frequency in Hz to set for the laser pulses.
  */
-void Laser::setPreviousStim(int32_t timestamp) {
-    previousStim = timestamp;
+void Laser::setFrequency(uint32_t initFrequency) {
+    frequency = initFrequency;
 }
 
 /**
- * @brief Sets the running state of the laser.
- * @param initRunning Boolean indicating if the laser is running.
+ * @brief Sets the stimulation period start and end times.
+ * 
+ * @param currentMillis Current time in milliseconds to base the period on.
  */
-void Laser::setIsRunning(bool initRunning) {
-    isRunning = initRunning;
+void Laser::setStimPeriod(uint32_t currentMillis) {
+    stimStart = currentMillis;
+    stimEnd = currentMillis + duration;
 }
 
 /**
- * @brief Turns the laser on.
+ * @brief Sets the half-cycle period for laser oscillation.
+ * 
+ * Calculates the half-cycle duration based on the frequency and updates the start
+ * and end times accordingly.
+ * 
+ * @param currentMillis Current time in milliseconds to base the half-cycle on.
  */
-void Laser::on() {
-    digitalWrite(pin, HIGH);
+void Laser::setStimHalfCyclePeriod(uint32_t currentMillis) {
+    float halfCycleLength = (1.0f / frequency) / 2.0f * 1000.0f; // Half-cycle in ms
+    halfCycleStart = currentMillis;
+    halfCycleEnd = currentMillis + static_cast<uint32_t>(halfCycleLength);
 }
 
 /**
- * @brief Turns the laser off.
+ * @brief Sets the logged state of the stimulation event.
+ * 
+ * @param log Boolean indicating if the stimulation has been logged.
  */
-void Laser::off() {
-    digitalWrite(pin, LOW);
+void Laser::setStimLogged(bool log) {
+    logged = log;
 }
 
 /**
- * @brief Retrieves the timestamp of the previous stimulation.
- * @return Time in milliseconds.
+ * @brief Sets the cycle-up state for stimulation cycling.
+ * 
+ * @param cycle Boolean indicating if the laser is in the active cycle phase.
  */
-int32_t Laser::getPreviousStim() {
-    return previousStim;
+void Laser::setCycleUp(bool cycle) {
+    cycleUp = cycle;
+}
+
+/**
+ * @brief Sets the stimulation mode (CYCLE or ACTIVE_PRESS).
+ * 
+ * @param mode The MODE enum value to set (CYCLE or ACTIVE_PRESS).
+ */
+void Laser::setStimMode(MODE mode) {
+    laserMode = mode;
+}
+
+/**
+ * @brief Sets the stimulation state (ACTIVE or INACTIVE).
+ * 
+ * @param state The STATE enum value to set (ACTIVE or INACTIVE).
+ */
+void Laser::setStimState(STATE state) {
+    laserState = state;
+}
+
+/**
+ * @brief Sets the laser action (ON or OFF).
+ * 
+ * @param action The ACTION enum value to set (ON or OFF).
+ */
+void Laser::setStimAction(ACTION action) {
+    laserAction = action;
 }
 
 /**
  * @brief Retrieves the stimulation duration.
+ * 
  * @return Duration in milliseconds.
  */
-int32_t Laser::getStimDuration() {
-    return stimDuration;
+uint32_t Laser::getDuration() {
+    return duration;
 }
 
 /**
- * @brief Checks if the laser is running.
- * @return Boolean indicating running state.
+ * @brief Retrieves the laser pulse frequency.
+ * 
+ * @return Frequency in Hz.
  */
-bool Laser::getIsRunning() {
-    return isRunning;
+uint32_t Laser::getFrequency() {
+    return frequency;
+}
+
+/**
+ * @brief Retrieves the stimulation start time.
+ * 
+ * @return Start time in milliseconds.
+ */
+uint32_t Laser::getStimStart() {
+    return stimStart;
+}
+
+/**
+ * @brief Retrieves the stimulation end time.
+ * 
+ * @return End time in milliseconds.
+ */
+uint32_t Laser::getStimEnd() {
+    return stimEnd;
+}
+
+/**
+ * @brief Retrieves the half-cycle start time.
+ * 
+ * @return Half-cycle start time in milliseconds.
+ */
+uint32_t Laser::getStimHalfCycleStart() {
+    return halfCycleStart;
+}
+
+/**
+ * @brief Retrieves the half-cycle end time.
+ * 
+ * @return Half-cycle end time in milliseconds.
+ */
+uint32_t Laser::getStimHalfCycleEnd() {
+    return halfCycleEnd;
+}
+
+/**
+ * @brief Checks if the stimulation has been logged.
+ * 
+ * @return Boolean indicating logged state.
+ */
+bool Laser::getStimLog() {
+    return logged;
+}
+
+/**
+ * @brief Checks if the laser is in the active cycle phase.
+ * 
+ * @return Boolean indicating cycle-up state.
+ */
+bool Laser::getCycleUp() {
+    return cycleUp;
+}
+
+/**
+ * @brief Retrieves the current stimulation mode.
+ * 
+ * @return MODE enum value (CYCLE or ACTIVE_PRESS).
+ */
+MODE Laser::getStimMode() {
+    return laserMode;
+}
+
+/**
+ * @brief Retrieves the current stimulation state.
+ * 
+ * @return STATE enum value (ACTIVE or INACTIVE).
+ */
+STATE Laser::getStimState() {
+    return laserState;
+}
+
+/**
+ * @brief Retrieves the current laser action.
+ * 
+ * @return ACTION enum value (ON or OFF).
+ */
+ACTION Laser::getStimAction() {
+    return laserAction;
+}
+
+/**
+ * @brief Turns the laser on by setting the pin high.
+ */
+void Laser::on() {
+    digitalWrite(pin, HIGH);  // Turn the laser ON
+    // Serial.println("ON, " + String(laserAction) + ", " + String(cycleUp) + ", " + String(laserState)); // Uncomment for debugging
+}
+
+/**
+ * @brief Turns the laser off by setting the pin low.
+ */
+void Laser::off() {
+    digitalWrite(pin, LOW);   // Turn the laser OFF
+    // Serial.println("OFF, " + String(laserAction) + ", " + String(cycleUp) + ", " + String(laserState)); // Uncomment for debugging
 }

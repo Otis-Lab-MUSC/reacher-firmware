@@ -14,7 +14,7 @@ Device::Device(byte initPin) : pin(initPin), armed(false) {}
 /**
  * @brief Arms the device and logs the action.
  * 
- * Sets the armed state to true, enabling the device to perform its function.
+ * Sets the armed state to true, enabling the device to perform its intended function.
  */
 void Device::arm() {
     armed = true;
