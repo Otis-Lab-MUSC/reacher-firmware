@@ -1,6 +1,3 @@
-#define SKETCH_NAME "operant_FR.ino" ///< Name of the sketch.
-#define VERSION "v1.0.0"             ///< Version of the sketch.
-
 /* ++++++++++++++++++++ INFORMATION ++++++++++++++++++++
   Meta data:
   Josh Boquiren (@thejoshbq on GitHub), Otis Lab
@@ -67,6 +64,9 @@
 #include "LickCircuit_Utils.h"
 #include "Utils.h"
 #include "Program_Utils.h"
+
+#define SKETCH_NAME "operant_FR.ino" ///< Name of the sketch.
+#define VERSION "v1.0.0"             ///< Version of the sketch.
 
 // Pin definitions
 const byte RH_LEVER_PIN = 10;        ///< Right-hand lever pin.
