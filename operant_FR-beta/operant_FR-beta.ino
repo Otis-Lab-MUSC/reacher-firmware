@@ -8,6 +8,8 @@
 
 #define RH_LEVER_PIN 10
 
+
+
 SwitchLever rLever(RH_LEVER_PIN, INPUT_PULLUP);
 
 void setup() {
@@ -18,5 +20,5 @@ void setup() {
 }
 
 void loop() {
-
+  rLever.Monitor();
 }

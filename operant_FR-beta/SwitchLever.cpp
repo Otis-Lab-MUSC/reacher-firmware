@@ -3,8 +3,12 @@
 
 #include "SwitchLever.h"
 
-SwitchLever::SwitchLever(byte pin, int8_t mode) : Device(pin, mode) {
+SwitchLever::SwitchLever(int8_t _pin, int8_t _mode) : Device(_pin, _mode) {
+  pin = _pin;
+  mode = _mode;
   armed = false;
+  previousState = digitalRead(pin);
+  stableState = digitalRead(pin);
   pinMode(pin, mode);
 }
 
@@ -31,6 +35,30 @@ void SwitchLever::SetOrientation(char _orientation[2]) {
   
 }
 
+void SwitchLever::Monitor() {
+  static uint32_t lastDebounceTimestamp = 0;
+  const uint8_t debounceDelay = 50;
+  uint32_t currentTimestamp = millis();
+  if (armed) {
+    bool currentState = digitalRead(pin);
+    if (currentState != previousState) {
+      lastDebounceTimestamp = currentTimestamp;
+    }
+    if ((currentTimestamp - lastDebounceTimestamp) > debounceDelay) {
+      stableState = currentState;
+      if (stableState == LOW) {
+        pressTimestamp = currentTimestamp;
+        // FIXME: define press type here
+      }
+      else if (stableState == HIGH) {
+        releaseTimestamp = currentTimestamp;
+        // FIXME: send output here
+      }
+    }
+    previousState = currentState;
+  }
+}
+
 bool SwitchLever::PreviousState() const {
   return previousState;
 }
@@ -39,6 +67,6 @@ bool SwitchLever::StableState() const {
   return stableState;
 }
 
-char SwitchLever::Orientation() const {
+const char* SwitchLever::Orientation() const {
   return orientation;
 }

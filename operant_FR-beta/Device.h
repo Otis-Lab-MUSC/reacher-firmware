@@ -5,13 +5,13 @@
 
 class Device {
   protected:
-    byte pin;
+    int8_t pin;
     uint8_t mode;
     bool armed;
   public:
-    Device(byte pin, uint8_t mode);
+    Device(int8_t _pin, uint8_t _mode);
     virtual void ArmToggle();
-    virtual byte Pin() const;
+    virtual int8_t Pin() const;
     virtual bool Armed() const; 
 };
 

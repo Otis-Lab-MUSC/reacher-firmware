@@ -3,7 +3,9 @@
 
 #include "Device.h"
 
-Device::Device(byte pin, uint8_t mode) {
+Device::Device(int8_t _pin, uint8_t _mode) {
+  pin = _pin;
+  mode = _mode;
   armed = false;
   pinMode(pin, mode);
 }
@@ -16,7 +18,7 @@ void Device::ArmToggle() {
   Serial.println(pin);
 }
 
-byte Device::Pin() const {
+int8_t Device::Pin() const {
   return pin;
 }
 
