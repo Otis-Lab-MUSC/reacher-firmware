@@ -126,6 +126,8 @@ void setup() {
     // Laser setup
     pinMode(laser.getPin(), OUTPUT);
     laser.disarm();
+    laser.setStimState(INACTIVE);
+    laser.setStimAction(OFF);
     laser.setDuration(30);  // 30 seconds -> 30000 ms
     laser.setFrequency(20); // 20 Hz
 

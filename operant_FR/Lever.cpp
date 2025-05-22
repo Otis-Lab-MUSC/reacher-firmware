@@ -12,7 +12,7 @@ Lever::Lever(byte initPin)
       pressTimestamp(0), releaseTimestamp(0), orientation(""), pressType("NO CONDITION") {}
 
 /**
- * @brief Sets the previous lever state for debouncing.
+ * @brief Sets the previous lever state for debouncing
  * @param initState Boolean indicating the previous state.
  */
 void Lever::setPreviousLeverState(bool initState) {
