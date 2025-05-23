@@ -1,15 +1,20 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
+#include <ArduinoJson.h>
 
 #include "SwitchLever.h"
 
-SwitchLever::SwitchLever(int8_t _pin, int8_t _mode) : Device(_pin, _mode) {
+SwitchLever::SwitchLever(int8_t _pin, int8_t _mode, const char* _orientation) : Device(_pin, _mode) {
+  armed = false;
   pin = _pin;
   mode = _mode;
-  armed = false;
-  previousState = digitalRead(pin);
-  stableState = digitalRead(pin);
   pinMode(pin, mode);
+  previousState = HIGH;
+  stableState = HIGH;
+  strncpy(orientation, _orientation, sizeof(orientation) - 1);
+  orientation[sizeof(orientation) - 1] = '\0';
+  debounceDelay = 50;
+  timeoutInterval = 20000;
 }
 
 void SwitchLever::ArmToggle() {
@@ -28,45 +33,41 @@ void SwitchLever::SetStableState(bool _stableState) {
   stableState = _stableState; 
 }
 
-void SwitchLever::SetOrientation(char _orientation[2]) {
-  Serial.print(F("Switch lever orientation set to: "));
-  strcpy(orientation, _orientation);
-  Serial.println(orientation);
-  
-}
-
 void SwitchLever::Monitor() {
-  static uint32_t lastDebounceTimestamp = 0;
-  const uint8_t debounceDelay = 50;
   uint32_t currentTimestamp = millis();
+  JsonDocument json;
   if (armed) {
     bool currentState = digitalRead(pin);
     if (currentState != previousState) {
       lastDebounceTimestamp = currentTimestamp;
     }
     if ((currentTimestamp - lastDebounceTimestamp) > debounceDelay) {
-      stableState = currentState;
-      if (stableState == LOW) {
-        pressTimestamp = currentTimestamp;
-        // FIXME: define press type here
+      if (currentState != stableState) {
+        stableState = currentState;
+        if (stableState == LOW) {
+          pressTimestamp = currentTimestamp;
+//          if (pressTimestamp <= timeoutIntervalEnd) {
+//            pressType = PressType::TIMEOUT;
+//          } else {
+//            pressType = PressType::ACTIVE;
+//            timeoutIntervalEnd = pressTimestamp + timeoutInterval;
+//          }
+        } else {
+          releaseTimestamp = currentTimestamp;
+          json["device"] = F("SWITCH_LEVER");
+          json["orientation"] = orientation;
+//          json["classification"] = (pressType == PressType::ACTIVE) ? "ACTIVE" : "TIMEOUT";
+          json["press_timestamp"] = pressTimestamp;
+          json["release_timestamp"] = releaseTimestamp;
+          serializeJsonPretty(json, Serial);
+          Serial.println();
+        }
       }
-      else if (stableState == HIGH) {
-        releaseTimestamp = currentTimestamp;
-        // FIXME: send output here
-      }
-    }
+    }   
     previousState = currentState;
   }
 }
 
-bool SwitchLever::PreviousState() const {
-  return previousState;
-}
-
-bool SwitchLever::StableState() const {
-  return stableState;
-}
-
-const char* SwitchLever::Orientation() const {
-  return orientation;
+SwitchLever::PressType SwitchLever::ClassifyPress(uint32_t _pressTimestamp) {
+  
 }
