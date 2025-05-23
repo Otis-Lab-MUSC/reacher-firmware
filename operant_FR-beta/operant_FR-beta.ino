@@ -9,8 +9,8 @@
 #define RH_LEVER_PIN 10
 #define LH_LEVER_PIN 13
 
-SwitchLever rLever(RH_LEVER_PIN, INPUT_PULLUP, "RH");
-SwitchLever lLever(LH_LEVER_PIN, INPUT_PULLUP, "LH");
+SwitchLever rLever(RH_LEVER_PIN, "RH", true);
+SwitchLever lLever(LH_LEVER_PIN, "LH", false);
 
 void setup() {
   Serial.begin(BAUDRATE);

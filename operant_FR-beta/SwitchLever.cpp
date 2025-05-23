@@ -4,15 +4,16 @@
 
 #include "SwitchLever.h"
 
-SwitchLever::SwitchLever(int8_t _pin, int8_t _mode, const char* _orientation) : Device(_pin, _mode) {
+SwitchLever::SwitchLever(int8_t _pin, const char* _orientation, bool _reinforced) : Device(_pin, INPUT_PULLUP) {
   armed = false;
   pin = _pin;
-  mode = _mode;
-  pinMode(pin, mode);
-  previousState = HIGH;
-  stableState = HIGH;
+  pinMode(pin, INPUT_PULLUP);
+  initState = digitalRead(pin);
+  previousState = digitalRead(pin);
+  stableState = digitalRead(pin);
   strncpy(orientation, _orientation, sizeof(orientation) - 1);
   orientation[sizeof(orientation) - 1] = '\0';
+  reinforced = _reinforced;
   debounceDelay = 50;
   timeoutInterval = 20000;
 }
@@ -23,14 +24,6 @@ void SwitchLever::ArmToggle() {
   Serial.print(armed ? F("armed") : F("disarmed"));
   Serial.print(F(" at pin: "));
   Serial.println(pin);
-}
-
-void SwitchLever::SetPreviousState(bool _previousState) {
-  previousState = _previousState;  
-}
-
-void SwitchLever::SetStableState(bool _stableState) {
-  stableState = _stableState; 
 }
 
 void SwitchLever::Monitor() {
@@ -44,19 +37,24 @@ void SwitchLever::Monitor() {
     if ((currentTimestamp - lastDebounceTimestamp) > debounceDelay) {
       if (currentState != stableState) {
         stableState = currentState;
-        if (stableState == LOW) {
+        if (stableState != initState) {
           pressTimestamp = currentTimestamp;
-//          if (pressTimestamp <= timeoutIntervalEnd) {
-//            pressType = PressType::TIMEOUT;
-//          } else {
-//            pressType = PressType::ACTIVE;
-//            timeoutIntervalEnd = pressTimestamp + timeoutInterval;
-//          }
+          if (reinforced) {
+            if (pressTimestamp <= timeoutIntervalEnd) {
+              pressType = PressType::TIMEOUT;
+            } else {
+              pressType = PressType::ACTIVE;
+              timeoutIntervalEnd = pressTimestamp + timeoutInterval;
+              // FIXME: add event handler for reward delivery
+            }
+          } else {
+            pressType = PressType::INDEPENDENT;
+          }
         } else {
           releaseTimestamp = currentTimestamp;
           json["device"] = F("SWITCH_LEVER");
           json["orientation"] = orientation;
-//          json["classification"] = (pressType == PressType::ACTIVE) ? "ACTIVE" : "TIMEOUT";
+          json["classification"] = (reinforced) ? ((pressType == PressType::ACTIVE) ? F("ACTIVE") : F("TIMEOUT")) : F("INDEPENDENT"); 
           json["press_timestamp"] = pressTimestamp;
           json["release_timestamp"] = releaseTimestamp;
           serializeJsonPretty(json, Serial);
@@ -66,8 +64,4 @@ void SwitchLever::Monitor() {
     }   
     previousState = currentState;
   }
-}
-
-SwitchLever::PressType SwitchLever::ClassifyPress(uint32_t _pressTimestamp) {
-  
 }

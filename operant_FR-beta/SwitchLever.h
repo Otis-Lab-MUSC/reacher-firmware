@@ -6,17 +6,16 @@
 
 class SwitchLever : public Device {
 public:
-  SwitchLever(int8_t _pin, int8_t _mode, const char* _orientation);
+  SwitchLever(int8_t _pin, const char* _orientation, bool _reinforced);
   void ArmToggle();
-  void SetActiveLever();
-  void SetPreviousState(bool _previousState);
-  void SetStableState(bool _stableState);
   void Monitor();
   
 private:
+  bool initState;
   bool previousState;
   bool stableState;
   char orientation[3];
+  bool reinforced;
   uint32_t timeoutInterval;
   uint32_t timeoutIntervalEnd;
   uint32_t lastDebounceTimestamp;
@@ -25,11 +24,10 @@ private:
   uint32_t releaseTimestamp;
   enum class PressType {
     ACTIVE,
-    INACTIVE,
     TIMEOUT,
     INDEPENDENT
   };
-  PressType ClassifyPress(uint32_t _pressTimestamp);
+  PressType pressType;
   
 protected:
 };
