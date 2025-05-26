@@ -45,7 +45,7 @@ void SwitchLever::Monitor() {
             } else {
               pressType = PressType::ACTIVE;
               timeoutIntervalEnd = pressTimestamp + timeoutInterval;
-              // FIXME: add event handler for reward delivery
+              // FIXME: potentially add event handler here
             }
           } else {
             pressType = PressType::INDEPENDENT;
