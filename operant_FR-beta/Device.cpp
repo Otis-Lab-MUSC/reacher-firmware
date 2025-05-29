@@ -1,21 +1,48 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
+#include <ArduinoJson.h>
 
 #include "Device.h"
 
-Device::Device(int8_t _pin, uint8_t _mode) {
-  pin = _pin;
-  mode = _mode;
+Device::Device(int8_t pin, uint8_t mode) {
+  this->pin = pin;
+  this->mode = mode;
   armed = false;
   pinMode(pin, mode);
 }
 
-void Device::ArmToggle() {
+void Device::ArmToggle(bool arm) {
+  JsonDocument json;
+  String desc;
+  
+  this->armed = armed;
+  
+  desc = F("Device ");
+  desc += armed ? F("armed") : F("disarmed");
+  desc += F(" at pin ");
+  desc += pin;
+
+  json["level"] = F("info");
+  json["desc"] = desc;
+
+  serializeJsonPretty(json, Serial);
+  Serial.println();
+}
+
+void Device::EventHandler() {
+  JsonDocument json;
+  String desc;
+  
   armed = !armed;
-  Serial.print(F("Device "));
-  Serial.print(armed ? F("armed") : F("disarmed"));
-  Serial.print(F(" at pin: "));
-  Serial.println(pin);
+  
+  desc = F("Event occured at pin ");
+  desc += pin;
+
+  json["level"] = F("info");
+  json["desc"] = desc;
+
+  serializeJsonPretty(json, Serial);
+  Serial.println();
 }
 
 int8_t Device::Pin() const {

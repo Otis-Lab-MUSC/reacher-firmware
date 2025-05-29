@@ -1,14 +1,19 @@
 #include <Arduino.h>
 #include "Device.h"
+#include "Cue.h"
+#include "Pump.h"
 
 #ifndef SWITCHLEVER_H
 #define SWITCHLEVER_H
 
 class SwitchLever : public Device {
 public:
-  SwitchLever(int8_t _pin, const char* _orientation, bool _reinforced);
-  void ArmToggle();
+  SwitchLever(int8_t pin, const char* orientation, bool reinforced);
+  void ArmToggle(bool armed);
   void Monitor();
+
+  void SetCue(Cue* cue);
+  void SetPump(Pump* cue);
   
 private:
   bool initState;
@@ -28,8 +33,12 @@ private:
     INDEPENDENT
   };
   PressType pressType;
+  Cue* cue;
+  Pump* pump;
+
+  void Classify(uint32_t pressTimestamp);
+  void LogOutput();
   
-protected:
 };
 
 #endif // SWITCHLEVER_H

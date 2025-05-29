@@ -5,8 +5,11 @@
 
 class Device {
 public:
-  Device(int8_t _pin, uint8_t _mode);
-  virtual void ArmToggle();
+  Device(int8_t pin, uint8_t mode);
+  
+  virtual void ArmToggle(bool arm);
+  virtual void EventHandler();
+  
   virtual int8_t Pin() const;
   virtual bool Armed() const; 
   

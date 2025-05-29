@@ -3,32 +3,42 @@
 #include <ArduinoJson.h>
 
 #include "SwitchLever.h"
+#include "Cue.h"
 
-SwitchLever::SwitchLever(int8_t _pin, const char* _orientation, bool _reinforced) : Device(_pin, INPUT_PULLUP) {
+SwitchLever::SwitchLever(int8_t pin, const char* orientation, bool reinforced) : Device(pin, INPUT_PULLUP) {
   armed = false;
-  pin = _pin;
+  this->pin = pin;
   pinMode(pin, INPUT_PULLUP);
   initState = digitalRead(pin);
   previousState = digitalRead(pin);
   stableState = digitalRead(pin);
-  strncpy(orientation, _orientation, sizeof(orientation) - 1);
-  orientation[sizeof(orientation) - 1] = '\0';
-  reinforced = _reinforced;
+  strncpy(this->orientation, orientation, sizeof(this->orientation) - 1);
+  this->orientation[sizeof(this->orientation) - 1] = '\0';
+  this->reinforced = reinforced;
   debounceDelay = 50;
   timeoutInterval = 20000;
 }
 
-void SwitchLever::ArmToggle() {
-  armed = !armed;
-  Serial.print(F("Switch lever "));
-  Serial.print(armed ? F("armed") : F("disarmed"));
-  Serial.print(F(" at pin: "));
-  Serial.println(pin);
+void SwitchLever::ArmToggle(bool armed) {
+  JsonDocument json;
+  String desc;
+  
+  this->armed = armed;
+  
+  desc = F("Switch lever ");
+  desc += armed ? F("armed") : F("disarmed");
+  desc += F(" at pin ");
+  desc += pin;
+
+  json["level"] = F("info");
+  json["desc"] = desc;
+
+  serializeJsonPretty(json, Serial);
+  Serial.println();
 }
 
 void SwitchLever::Monitor() {
   uint32_t currentTimestamp = millis();
-  JsonDocument json;
   if (armed) {
     bool currentState = digitalRead(pin);
     if (currentState != previousState) {
@@ -39,29 +49,60 @@ void SwitchLever::Monitor() {
         stableState = currentState;
         if (stableState != initState) {
           pressTimestamp = currentTimestamp;
-          if (reinforced) {
-            if (pressTimestamp <= timeoutIntervalEnd) {
-              pressType = PressType::TIMEOUT;
-            } else {
-              pressType = PressType::ACTIVE;
-              timeoutIntervalEnd = pressTimestamp + timeoutInterval;
-              // FIXME: potentially add event handler here
-            }
-          } else {
-            pressType = PressType::INDEPENDENT;
-          }
+          Classify(pressTimestamp);
         } else {
           releaseTimestamp = currentTimestamp;
-          json["device"] = F("SWITCH_LEVER");
-          json["orientation"] = orientation;
-          json["classification"] = (reinforced) ? ((pressType == PressType::ACTIVE) ? F("ACTIVE") : F("TIMEOUT")) : F("INDEPENDENT"); 
-          json["press_timestamp"] = pressTimestamp;
-          json["release_timestamp"] = releaseTimestamp;
-          serializeJsonPretty(json, Serial);
-          Serial.println();
+          LogOutput();
         }
       }
     }   
     previousState = currentState;
   }
+}
+
+void SwitchLever::SetCue(Cue* cue) {
+  this->cue = cue;
+}
+
+void SwitchLever::SetPump(Pump* pump) {
+  this->pump = pump;
+}
+
+void SwitchLever::Classify(uint32_t pressTimestamp) {
+  JsonDocument json;
+  String desc;
+  
+  if (reinforced) {
+    if (pressTimestamp <= timeoutIntervalEnd) {
+      pressType = PressType::TIMEOUT;
+    } else {
+      pressType = PressType::ACTIVE;
+      timeoutIntervalEnd = pressTimestamp + timeoutInterval;
+      
+      cue->SetEvent();
+      pump->SetEvent();
+    }
+  } else {
+    pressType = PressType::INDEPENDENT;
+  }  
+}
+
+void SwitchLever::LogOutput() {
+  JsonDocument json;
+  String desc;
+
+  desc = (reinforced) ? ((pressType == PressType::ACTIVE) ? F("Active") : F("Timeout")) : F("Independent");
+  desc += F(" press occurred for ");
+  desc += orientation;
+  desc += F(" lever");
+
+  json["level"] = F("output");
+  json["desc"] = desc;
+  json["device"] = F("SWITCH_LEVER");
+  json["orientation"] = orientation;
+  json["classification"] = (reinforced) ? ((pressType == PressType::ACTIVE) ? F("ACTIVE") : F("TIMEOUT")) : F("INDEPENDENT"); 
+  json["press_timestamp"] = pressTimestamp;
+  json["release_timestamp"] = releaseTimestamp;
+  serializeJsonPretty(json, Serial);
+  Serial.println();
 }
