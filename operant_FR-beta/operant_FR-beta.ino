@@ -6,6 +6,7 @@
 #include "SwitchLever.h"
 #include "Cue.h"
 #include "Pump.h"
+#include "LickCircuit.h"
 
 #define SKETCH_NAME "operant_FR.ino"
 #define VERSION "v1.0.1"
@@ -24,6 +25,7 @@ SwitchLever rLever(RH_LEVER_PIN, "RH", true);
 SwitchLever lLever(LH_LEVER_PIN, "LH", false);
 Cue cue(CUE_PIN, DEFAULT_CUE_FREQUENCY, DEFAULT_CUE_DURATION);
 Pump pump(PUMP_PIN, cue.Duration(), DEFAULT_PUMP_DURATION);
+LickCircuit lickCircuit(6);
 
 uint32_t SESSION_START_TIMESTAMP;
 uint32_t SESSION_END_TIMESTAMP;
@@ -34,6 +36,7 @@ void setup() {
   
   rLever.SetCue(&cue);
   rLever.SetPump(&pump);
+  rLever.SetTimeoutIntervalLength(DEFAULT_CUE_DURATION + DEFAULT_PUMP_DURATION);
 
   cue.Jingle();
   
@@ -44,6 +47,7 @@ void setup() {
 void loop() {
   rLever.Monitor();
   lLever.Monitor();
+  lickCircuit.Monitor();
   cue.Await();
   pump.Await();
   ParseCommands();
@@ -75,6 +79,9 @@ void ParseCommands() {
       else if (json["cmd"] == 1000) {
         rLever.ArmToggle(false);
       }
+      else if (json["cmd"] == 1011) {
+        rLever.SetTimeoutIntervalLength(json["timeout"]);
+      }
 
       /* LH Lever Commands */
       else if (json["cmd"] == 1301) {
@@ -100,10 +107,18 @@ void ParseCommands() {
         pump.ArmToggle(false);
       }
 
+      /* Lick Circuit Commands */
+      else if (json["cmd"] == 501) {
+        lickCircuit.ArmToggle(true);
+      } 
+      else if (json["cmd"] == 500) {
+        lickCircuit.ArmToggle(false);
+      }
+
       /* Session Commands */
       else if (json["cmd"] == 11) {
         StartSession();
-        SetOutputTimestampOffset(SESSION_END_TIMESTAMP);
+        SetOutputTimestampOffset(SESSION_START_TIMESTAMP);
       }
       else if (json["cmd"] == 10) {
         SESSION_END_TIMESTAMP = millis();
@@ -112,6 +127,7 @@ void ParseCommands() {
       /* Exception */
       else {
         desc = F("Command does not exist");
+        
         json["level"] = F("error");
         json["desc"] = desc;
 
@@ -149,4 +165,5 @@ void SetOutputTimestampOffset(uint32_t ts) {
   lLever.SetOffset(ts);
   cue.SetOffset(ts);
   pump.SetOffset(ts);
+  lickCircuit.SetOffset(ts);
 }

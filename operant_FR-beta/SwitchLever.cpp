@@ -87,6 +87,23 @@ void SwitchLever::Classify(uint32_t pressTimestamp) {
   }  
 }
 
+void SwitchLever::SetTimeoutIntervalLength(uint32_t timeoutInterval) {
+  JsonDocument json;
+  String desc;
+  this->timeoutInterval = timeoutInterval*1000;
+
+  desc = F("Timeout interval length set to ");
+  desc += this->timeoutInterval;
+  desc += F("ms for switch lever at pin ");
+  desc += pin;
+
+  json["level"] = F("info");
+  json["desc"] = desc;
+
+  serializeJsonPretty(json, Serial);
+  Serial.println();
+}
+
 void SwitchLever::LogOutput() {
   JsonDocument json;
   String desc;

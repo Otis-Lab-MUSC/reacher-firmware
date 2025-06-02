@@ -14,6 +14,7 @@ public:
 
   void SetCue(Cue* cue);
   void SetPump(Pump* cue);
+  void SetTimeoutIntervalLength(uint32_t timeoutInterval);
   
 private:
   bool initState;
@@ -27,11 +28,7 @@ private:
   uint8_t debounceDelay;
   uint32_t pressTimestamp;
   uint32_t releaseTimestamp;
-  enum class PressType {
-    ACTIVE,
-    TIMEOUT,
-    INDEPENDENT
-  };
+  enum PressType { ACTIVE, TIMEOUT, INDEPENDENT };
   PressType pressType;
   Cue* cue;
   Pump* pump;
