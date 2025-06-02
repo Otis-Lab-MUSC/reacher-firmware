@@ -25,6 +25,9 @@ SwitchLever lLever(LH_LEVER_PIN, "LH", false);
 Cue cue(CUE_PIN, DEFAULT_CUE_FREQUENCY, DEFAULT_CUE_DURATION);
 Pump pump(PUMP_PIN, cue.Duration(), DEFAULT_PUMP_DURATION);
 
+uint32_t SESSION_START_TIMESTAMP;
+uint32_t SESSION_END_TIMESTAMP;
+
 void setup() {
   Serial.begin(BAUDRATE);
   delay(100);
@@ -98,11 +101,12 @@ void ParseCommands() {
       }
 
       /* Session Commands */
-      else if (json["cmd"] == 1) {
-        
+      else if (json["cmd"] == 11) {
+        StartSession();
+        SetOutputTimestampOffset(SESSION_END_TIMESTAMP);
       }
-      else if (json["cmd"] == 0) {
-        
+      else if (json["cmd"] == 10) {
+        SESSION_END_TIMESTAMP = millis();
       }
 
       /* Exception */
@@ -122,4 +126,27 @@ void ParseCommands() {
       serializeJsonPretty(json, Serial);
     }   
   }
+}
+
+void StartSession() {
+  JsonDocument json;
+  String desc;
+
+  SESSION_START_TIMESTAMP = millis();
+  
+  desc = F("Session started");
+
+  json["level"] = F("output");
+  json["desc"] = desc;
+  json["timestamp"] = SESSION_START_TIMESTAMP;
+
+  serializeJsonPretty(json, Serial);
+  Serial.println(); 
+}
+
+void SetOutputTimestampOffset(uint32_t ts) {
+  rLever.SetOffset(ts);
+  lLever.SetOffset(ts);
+  cue.SetOffset(ts);
+  pump.SetOffset(ts);
 }

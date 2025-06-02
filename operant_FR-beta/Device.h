@@ -9,12 +9,15 @@ public:
   
   virtual void ArmToggle(bool arm);
   virtual void EventHandler();
+  virtual void SetOffset(uint32_t offset);
   
   virtual int8_t Pin() const;
   virtual bool Armed() const; 
+  virtual uint32_t Offset() const;
   
 private:
-
+  uint32_t offset;
+  
 protected:
   int8_t pin;
   uint8_t mode;

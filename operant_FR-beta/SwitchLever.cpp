@@ -15,8 +15,8 @@ SwitchLever::SwitchLever(int8_t pin, const char* orientation, bool reinforced) :
   strncpy(this->orientation, orientation, sizeof(this->orientation) - 1);
   this->orientation[sizeof(this->orientation) - 1] = '\0';
   this->reinforced = reinforced;
-  debounceDelay = 50;
-  timeoutInterval = 20000;
+  debounceDelay = 20;
+  timeoutInterval = 0;
 }
 
 void SwitchLever::ArmToggle(bool armed) {
@@ -48,10 +48,10 @@ void SwitchLever::Monitor() {
       if (currentState != stableState) {
         stableState = currentState;
         if (stableState != initState) {
-          pressTimestamp = currentTimestamp;
+          pressTimestamp = currentTimestamp - Offset();
           Classify(pressTimestamp);
         } else {
-          releaseTimestamp = currentTimestamp;
+          releaseTimestamp = currentTimestamp - Offset();
           LogOutput();
         }
       }
