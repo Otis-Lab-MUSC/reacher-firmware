@@ -8,13 +8,14 @@
 
 class SwitchLever : public Device {
 public:
-  SwitchLever(int8_t pin, const char* orientation, bool reinforced);
+  SwitchLever(int8_t pin, const char* orientation);
   void ArmToggle(bool armed);
   void Monitor();
 
   void SetCue(Cue* cue);
   void SetPump(Pump* cue);
   void SetTimeoutIntervalLength(uint32_t timeoutInterval);
+  void SetReinforcement(bool reinforced);
   
 private:
   bool initState;
@@ -35,7 +36,6 @@ private:
 
   void Classify(uint32_t pressTimestamp);
   void LogOutput();
-  
 };
 
 #endif // SWITCHLEVER_H

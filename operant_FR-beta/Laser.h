@@ -18,7 +18,21 @@ public:
   uint32_t Frequency();
   
 private:
+  uint32_t duration;
+  uint32_t frequency;
+  uint32_t startTimestamp;
+  uint32_t endTimestamp;
+  uint32_t cycleStartTimestamp;
+  uint32_t cycleEndTimestamp;
+  bool cycle;
+  bool state;
+  bool action;
+  enum Mode { CYCLE, ACTIVE_PRESS };
+  Mode mode;
 
+  void Stim(uint32_t currentTimestamp);
+  void On();
+  void Off();
 };
 
 #endif // LASER_H

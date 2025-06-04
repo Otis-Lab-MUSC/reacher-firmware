@@ -21,8 +21,8 @@
 #define DEFAULT_CUE_DURATION 1600
 #define DEFAULT_PUMP_DURATION 2000
 
-SwitchLever rLever(RH_LEVER_PIN, "RH", true);
-SwitchLever lLever(LH_LEVER_PIN, "LH", false);
+SwitchLever rLever(RH_LEVER_PIN, "RH");
+SwitchLever lLever(LH_LEVER_PIN, "LH");
 Cue cue(CUE_PIN, DEFAULT_CUE_FREQUENCY, DEFAULT_CUE_DURATION);
 Pump pump(PUMP_PIN, cue.Duration(), DEFAULT_PUMP_DURATION);
 LickCircuit lickCircuit(6);
@@ -37,7 +37,8 @@ void setup() {
   rLever.SetCue(&cue);
   rLever.SetPump(&pump);
   rLever.SetTimeoutIntervalLength(DEFAULT_CUE_DURATION + DEFAULT_PUMP_DURATION);
-
+  rLever.SetReinforcement(true);
+  
   cue.Jingle();
   
   Serial.println(F("========== SESSION START =========="));

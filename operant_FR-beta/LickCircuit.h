@@ -21,7 +21,6 @@ private:
   uint32_t endTimestamp;
 
   void LogOutput();
-  
 };
 
 #endif // LICKCIRCUIT_H

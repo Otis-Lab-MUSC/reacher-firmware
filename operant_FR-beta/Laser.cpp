@@ -31,15 +31,59 @@ void Laser::Await() {
   uint32_t currentTimestamp = millis();
 
   if (armed) {
-    if (true) {
-      On();
-    } else {
-      Off();
+    if (mode == CYCLE) {
+      
+    }
+    else if (mode == ACTIVE_PRESS) {
+      
+    }
+  }
+  // stim()
+}
+
+void Laser::SetEvent() {
+  
+}
+
+void Laser::SetDuration(uint32_t duration) {
+  
+}
+
+void Laser::SetFrequency(uint32_t frequency) {
+  
+}
+
+uint32_t Laser::Duration() {
+  return duration; 
+}
+
+uint32_t Laser::Frequency() {
+  return frequency; 
+}
+
+void Laser::Stim(uint32_t currentTimestamp) {
+  if ((currentTimestamp > startTimestamp) && (currentTimestamp < endTimestamp) && cycle) {
+    state = true;
+    if (frequency == 1) {
+      action = true;  
+    }
+    else {
+      if (currentTimestamp > cycleEndTimestamp) {
+        cycleStartTimestamp = currentTimestamp;
+        cycleEndTimestamp = 0;
+        action = (action == true ? false : true);
+      }
     }
   }
 }
 
+void Laser::On() {
+  digitalWrite(pin, HIGH);
+}
 
+void Laser::Off() {
+  digitalWrite(pin, LOW);
+}
 
 
 
@@ -49,31 +93,25 @@ void Laser::Await() {
 
 //class Laser : public Device {
 //public:
-//  Pump(int8_t pin, uint32_t traceInterval, uint32_t duration);
+//  Laser(int8_t pin);
 //  void ArmToggle(bool armed);
 //  void Await();
 //
 //  void SetEvent();
 //  void SetDuration(uint32_t duration);
 //  void SetFrequency(uint32_t frequency);
-//  void SetMode(Mode mode);
 //
 //  uint32_t Duration();
 //  uint32_t Frequency();
-//  enum Mode { CYCLE, ACTIVE_PRESS };
-//  Mode mode;
 //  
 //private:
-//  uint32_t traceInterval;
 //  uint32_t duration;
+//  uint32_t frequency;
 //  uint32_t startTimestamp;
 //  uint32_t endTimestamp;
-//  enum State { INACTIVE, ACTIVE };
-//  State state;
-//  enum Action { OFF, ON };
-//  Action action;
-//  
+//  uint32_t cycleStartTimestamp;
+//  uint32_t cycleEndTimestamp;
+//
 //  void On();
 //  void Off();
-//
 //};

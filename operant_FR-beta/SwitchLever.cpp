@@ -5,7 +5,7 @@
 #include "SwitchLever.h"
 #include "Cue.h"
 
-SwitchLever::SwitchLever(int8_t pin, const char* orientation, bool reinforced) : Device(pin, INPUT_PULLUP) {
+SwitchLever::SwitchLever(int8_t pin, const char* orientation) : Device(pin, INPUT_PULLUP) {
   armed = false;
   this->pin = pin;
   pinMode(pin, INPUT_PULLUP);
@@ -14,7 +14,7 @@ SwitchLever::SwitchLever(int8_t pin, const char* orientation, bool reinforced) :
   stableState = digitalRead(pin);
   strncpy(this->orientation, orientation, sizeof(this->orientation) - 1);
   this->orientation[sizeof(this->orientation) - 1] = '\0';
-  this->reinforced = reinforced;
+  reinforced = false;
   debounceDelay = 20;
   timeoutInterval = 0;
 }
@@ -90,7 +90,7 @@ void SwitchLever::Classify(uint32_t pressTimestamp) {
 void SwitchLever::SetTimeoutIntervalLength(uint32_t timeoutInterval) {
   JsonDocument json;
   String desc;
-  this->timeoutInterval = timeoutInterval*1000;
+  this->timeoutInterval = timeoutInterval;
 
   desc = F("Timeout interval length set to ");
   desc += this->timeoutInterval;
@@ -103,6 +103,24 @@ void SwitchLever::SetTimeoutIntervalLength(uint32_t timeoutInterval) {
   serializeJsonPretty(json, Serial);
   Serial.println();
 }
+
+void SwitchLever::SetReinforcement(bool reinforced) {
+  JsonDocument json;
+  String desc;
+  this->reinforced = reinforced;
+
+  desc = F("Reinforcement set to ");
+  desc += (this->reinforced) ? F("true") : F("false");
+  desc += F(" for switch lever at pin ");
+  desc += pin;
+
+  json["level"] = F("info");
+  json["desc"] = desc;
+
+  serializeJsonPretty(json, Serial);
+  Serial.println();
+}
+ 
 
 void SwitchLever::LogOutput() {
   JsonDocument json;

@@ -70,7 +70,6 @@ void Pump::SetDuration(uint32_t duration) {
 
 void Pump::On() {
   digitalWrite(pin, HIGH);
-//  Serial.println(F("PUMP ON")); // uncomment for debugging
 }
 
 void Pump::Off() {

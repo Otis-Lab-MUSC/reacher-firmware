@@ -22,7 +22,6 @@ private:
 
   void On();
   void Off();
-
 };
 
 #endif // PUMP_H

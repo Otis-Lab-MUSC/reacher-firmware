@@ -26,10 +26,6 @@ private:
 
   void On();
   void Off();
-
-protected:
-  int8_t pin;
-  bool armed;
 };
 
 #endif // CUE_H
