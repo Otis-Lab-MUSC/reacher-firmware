@@ -28,8 +28,8 @@ void pressingDataEntry(Lever*& lever, Pump* pump) {
     String pressEntry;
     String infusionEntry;
     lever->setReleaseTimestamp(millis()); // Set press release timestamp
-    pressEntry = lever->getOrientation() + "_LEVER,";
-    pressEntry += lever->getPressType() + "_PRESS,";
+    pressEntry = lever->getOrientation() + F("_LEVER,");
+    pressEntry += lever->getPressType() + F("_PRESS,");
     if (differenceFromStartTime) {
         pressEntry += String(lever->getPressTimestamp() - differenceFromStartTime) + ",";
         pressEntry += String(lever->getReleaseTimestamp() - differenceFromStartTime);
@@ -39,7 +39,7 @@ void pressingDataEntry(Lever*& lever, Pump* pump) {
     }
     Serial.println(pressEntry); // Send press data to serial connection
     if (pump && pump->isArmed() && lever->getPressType() == "ACTIVE") {
-        infusionEntry = "PUMP,INFUSION,";
+        infusionEntry = F("PUMP,INFUSION,");
         infusionEntry += differenceFromStartTime ? String(pump->getInfusionStartTimestamp() - differenceFromStartTime) : String(pump->getInfusionStartTimestamp());
         infusionEntry += ",";
         infusionEntry += differenceFromStartTime ? String(pump->getInfusionEndTimestamp() - differenceFromStartTime) : String(pump->getInfusionEndTimestamp());
@@ -62,7 +62,7 @@ void definePressActivity(bool programRunning, Lever*& lever, Cue* cue, Pump* pum
     int32_t timestamp = millis();
     if (lever == activeLever && !lever->getActivePressOccurred() && 
         timestamp >= lever->getIntervalStartTime() + lever->getRandomInterval() && 
-        timestamp < lever->getIntervalStartTime() + 15000 && cue->isArmed()) {
+        timestamp < lever->getIntervalStartTime() + variableInterval && cue->isArmed()) {
         lever->setPressType("ACTIVE");
         lever->setActivePressOccurred(true);
         deliverReward(activeLever, cue, pump, laser);

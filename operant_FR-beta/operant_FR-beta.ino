@@ -1,0 +1,212 @@
+#include <Arduino.h>
+#include <SoftwareSerial.h>
+#include <ArduinoJson.h>
+
+#include "Device.h"
+#include "SwitchLever.h"
+#include "Cue.h"
+#include "Pump.h"
+#include "LickCircuit.h"
+#include "Laser.h"
+
+#define SKETCH_NAME F("operant_FR.ino")
+#define VERSION F("v1.0.1")
+#define BAUDRATE 115200
+
+#define RH_LEVER_PIN 10
+#define LH_LEVER_PIN 13
+#define CUE_PIN 3
+#define PUMP_PIN 4
+#define LICK_CIRCUIT_PIN 5
+#define LASER_PIN 6
+
+#define DEFAULT_CUE_FREQUENCY 8000
+#define DEFAULT_CUE_DURATION 1600
+#define DEFAULT_CUE_TRACE_INTERVAL 0
+
+#define DEFAULT_PUMP_DURATION 2000
+#define DEFAULT_PUMP_TRACE_INTERVAL DEFAULT_CUE_DURATION
+
+#define DEFAULT_LASER_DURATION 5000
+#define DEFAULT_LASER_TRACE_INTERVAL 0
+
+SwitchLever rLever(RH_LEVER_PIN, "RH");
+SwitchLever lLever(LH_LEVER_PIN, "LH");
+Cue cue(CUE_PIN, DEFAULT_CUE_FREQUENCY, DEFAULT_CUE_DURATION, DEFAULT_CUE_TRACE_INTERVAL);
+Pump pump(PUMP_PIN, cue.Duration(), DEFAULT_PUMP_DURATION);
+LickCircuit lickCircuit(LICK_CIRCUIT_PIN);
+Laser laser(LASER_PIN, cue.Duration(), DEFAULT_LASER_DURATION);
+
+uint32_t SESSION_START_TIMESTAMP;
+uint32_t SESSION_END_TIMESTAMP;
+
+void setup() {
+  delay(100);
+  Serial.begin(BAUDRATE);
+  delay(100);
+
+  Serial.println(F("********** SETUP START **********"));
+  Serial.println();
+  Serial.print(F("Working sketch: "));
+  Serial.println(SKETCH_NAME);
+  Serial.print(F("Version: "));
+  Serial.println(VERSION);
+  Serial.println();
+  
+  cue.Jingle();
+
+  rLever.SetCue(&cue);
+  rLever.SetPump(&pump);
+  rLever.SetLaser(&laser);
+  rLever.SetTimeoutIntervalLength(DEFAULT_CUE_DURATION + DEFAULT_PUMP_DURATION);
+  rLever.SetReinforcement(true);
+  rLever.ArmToggle(true);
+  lLever.ArmToggle(true);
+  cue.ArmToggle(true);
+  pump.ArmToggle(true);
+  lickCircuit.ArmToggle(true);
+  laser.ArmToggle(true);
+
+  Serial.println(F("********** SETUP END **********"));
+  Serial.println(F("|"));
+  Serial.println(F("|"));
+  Serial.println(F("|"));
+  Serial.println(F("|"));
+  Serial.println(F("|"));
+  
+  Serial.println(F("========== SESSION START =========="));
+  Serial.println();
+}
+
+void loop() {
+  rLever.Monitor();
+  lLever.Monitor();
+  lickCircuit.Monitor();
+  cue.Await();
+  pump.Await();
+  laser.Await();
+  ParseCommands();
+}
+
+void ParseCommands() {
+  if (Serial.available() > 0) {
+    JsonDocument json;
+    String cmd = Serial.readStringUntil('\n');
+    String desc;
+    DeserializationError error = deserializeJson(json, cmd);
+
+    if (error) {
+      desc = F("Command parsing failed: ");
+      desc += error.f_str();
+      
+      json["level"] = F("error");
+      json["desc"] = desc;
+
+      serializeJsonPretty(json, Serial);
+    } 
+    
+    else if(json["cmd"]) {
+
+      /* RH Lever Commands */
+      if (json["cmd"] == 1001) {
+        rLever.ArmToggle(true);
+      } 
+      else if (json["cmd"] == 1000) {
+        rLever.ArmToggle(false);
+      }
+      else if (json["cmd"] == 1011) {
+        rLever.SetTimeoutIntervalLength(json["timeout"]);
+      }
+
+      /* LH Lever Commands */
+      else if (json["cmd"] == 1301) {
+        lLever.ArmToggle(true);
+      } 
+      else if (json["cmd"] == 1300) {
+        lLever.ArmToggle(false);
+      }
+
+      /* Cue Commands */
+      else if (json["cmd"] == 301) {
+        cue.ArmToggle(true);
+      } 
+      else if (json["cmd"] == 300) {
+        cue.ArmToggle(false);
+      }
+
+      /* Pump Commands */
+      else if (json["cmd"] == 401) {
+        pump.ArmToggle(true);
+      } 
+      else if (json["cmd"] == 400) {
+        pump.ArmToggle(false);
+      }
+
+      /* Lick Circuit Commands */
+      else if (json["cmd"] == 501) {
+        lickCircuit.ArmToggle(true);
+      } 
+      else if (json["cmd"] == 500) {
+        lickCircuit.ArmToggle(false);
+      }
+
+      /* Laser Commands */
+      else if (json["cmd"] == 601) {
+        laser.ArmToggle(true);
+      } 
+      else if (json["cmd"] == 600) {
+        laser.ArmToggle(false);
+      }
+
+      /* Session Commands */
+      else if (json["cmd"] == 11) {
+        StartSession();
+        SetOutputTimestampOffset(SESSION_START_TIMESTAMP);
+      }
+      else if (json["cmd"] == 10) {
+        SESSION_END_TIMESTAMP = millis();
+      }
+
+      /* Exception */
+      else {
+        desc = F("Command does not exist");
+        
+        json["level"] = F("error");
+        json["desc"] = desc;
+
+        serializeJsonPretty(json, Serial);
+      }
+    } else {
+      desc = F("No valid JSON command exists");
+      
+      json["level"] = F("error");
+      json["desc"] = desc;  
+        
+      serializeJsonPretty(json, Serial);
+    }   
+  }
+}
+
+void StartSession() {
+  JsonDocument json;
+  String desc;
+
+  SESSION_START_TIMESTAMP = millis();
+  
+  desc = F("Session started");
+
+  json["level"] = F("output");
+  json["desc"] = desc;
+  json["timestamp"] = SESSION_START_TIMESTAMP;
+
+  serializeJsonPretty(json, Serial);
+  Serial.println(); 
+}
+
+void SetOutputTimestampOffset(uint32_t ts) {
+  rLever.SetOffset(ts);
+  lLever.SetOffset(ts);
+  cue.SetOffset(ts);
+  pump.SetOffset(ts);
+  lickCircuit.SetOffset(ts);
+}

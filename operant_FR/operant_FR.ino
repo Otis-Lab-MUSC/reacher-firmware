@@ -1,6 +1,3 @@
-#define SKETCH_NAME "operant_FR.ino" ///< Name of the sketch.
-#define VERSION "v1.0.0"             ///< Version of the sketch.
-
 /* ++++++++++++++++++++ INFORMATION ++++++++++++++++++++
   Meta data:
   Josh Boquiren (@thejoshbq on GitHub), Otis Lab
@@ -68,6 +65,9 @@
 #include "Utils.h"
 #include "Program_Utils.h"
 
+#define SKETCH_NAME "operant_FR.ino" ///< Name of the sketch.
+#define VERSION "v1.0.0"             ///< Version of the sketch.
+
 // Pin definitions
 const byte RH_LEVER_PIN = 10;        ///< Right-hand lever pin.
 const byte LH_LEVER_PIN = 13;        ///< Left-hand lever pin.
@@ -126,6 +126,8 @@ void setup() {
     // Laser setup
     pinMode(laser.getPin(), OUTPUT);
     laser.disarm();
+    laser.setStimState(INACTIVE);
+    laser.setStimAction(OFF);
     laser.setDuration(30);  // 30 seconds -> 30000 ms
     laser.setFrequency(20); // 20 Hz
 
