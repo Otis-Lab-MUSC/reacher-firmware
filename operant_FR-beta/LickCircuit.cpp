@@ -25,8 +25,11 @@ void LickCircuit::ArmToggle(bool armed) {
   desc += F(" at pin ");
   desc += pin;
 
-  json["level"] = F("info");
+  json["level"] = F("output");
   json["desc"] = desc;
+  json["device"] = F("LICK_CIRCUIT");
+  json["start_timestamp"] = startTimestamp;
+  json["end_timestamp"] = endTimestamp;
 
   serializeJsonPretty(json, Serial);
   Serial.println();
@@ -58,7 +61,7 @@ void LickCircuit::LogOutput() {
   JsonDocument json;
   String desc;
 
-  desc += F("Lick occurred for circuit at pin");
+  desc += F("Lick occurred for circuit at pin ");
   desc += pin;
 
   json["level"] = F("output");

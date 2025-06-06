@@ -52,8 +52,11 @@ void Pump::SetEvent() {
     desc = F("Pump infusion occurring at pin ");;
     desc += pin;
   
-    json["level"] = F("info");
+    json["level"] = F("output");
     json["desc"] = desc;
+    json["device"] = F("PUMP");
+    json["start_timestamp"] = startTimestamp;
+    json["end_timestamp"] = endTimestamp;
   
     serializeJsonPretty(json, Serial);
     Serial.println();
@@ -74,4 +77,12 @@ void Pump::On() {
 
 void Pump::Off() {
   digitalWrite(pin, LOW);
+}
+
+uint32_t Pump::TraceInterval() {
+  return traceInterval;
+}
+
+uint32_t Pump::Duration() {
+  return duration;
 }

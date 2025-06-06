@@ -18,7 +18,7 @@ Device::Device(byte initPin) : pin(initPin), armed(false) {}
  */
 void Device::arm() {
     armed = true;
-    Serial.print("DEVICE ARMED AT PIN ");
+    Serial.print(F("DEVICE ARMED AT PIN "));
     Serial.println(pin);
 }
 
@@ -29,7 +29,7 @@ void Device::arm() {
  */
 void Device::disarm() {
     armed = false;
-    Serial.print("DEVICE DISARMED AT PIN ");
+    Serial.print(F("DEVICE DISARMED AT PIN "));
     Serial.println(pin);
 }
 

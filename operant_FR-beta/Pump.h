@@ -13,6 +13,9 @@ public:
   void SetEvent();
   void SetTraceInterval(uint32_t traceInterval);
   void SetDuration(uint32_t duration);
+
+  uint32_t TraceInterval();
+  uint32_t Duration();
   
 private:
   uint32_t traceInterval;

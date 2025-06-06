@@ -3,17 +3,17 @@
 #include <ArduinoJson.h>
 
 #include "SwitchLever.h"
-#include "Cue.h"
 
 SwitchLever::SwitchLever(int8_t pin, const char* orientation) : Device(pin, INPUT_PULLUP) {
   armed = false;
   this->pin = pin;
+  strncpy(this->orientation, orientation, sizeof(this->orientation) - 1);
+  this->orientation[sizeof(this->orientation) - 1] = '\0';
   pinMode(pin, INPUT_PULLUP);
   initState = digitalRead(pin);
   previousState = digitalRead(pin);
   stableState = digitalRead(pin);
-  strncpy(this->orientation, orientation, sizeof(this->orientation) - 1);
-  this->orientation[sizeof(this->orientation) - 1] = '\0';
+
   reinforced = false;
   debounceDelay = 20;
   timeoutInterval = 0;
@@ -48,10 +48,10 @@ void SwitchLever::Monitor() {
       if (currentState != stableState) {
         stableState = currentState;
         if (stableState != initState) {
-          pressTimestamp = currentTimestamp - Offset();
-          Classify(pressTimestamp);
+          startTimestamp = currentTimestamp - Offset();
+          Classify(startTimestamp);
         } else {
-          releaseTimestamp = currentTimestamp - Offset();
+          endTimestamp = currentTimestamp - Offset();
           LogOutput();
         }
       }
@@ -68,19 +68,21 @@ void SwitchLever::SetPump(Pump* pump) {
   this->pump = pump;
 }
 
-void SwitchLever::Classify(uint32_t pressTimestamp) {
+void SwitchLever::SetLaser(Laser* laser) {
+  this->laser = laser;
+}
+
+void SwitchLever::Classify(uint32_t startTimestamp) {
   JsonDocument json;
   String desc;
   
   if (reinforced) {
-    if (pressTimestamp <= timeoutIntervalEnd) {
+    if (startTimestamp <= timeoutIntervalEnd) {
       pressType = PressType::TIMEOUT;
     } else {
       pressType = PressType::ACTIVE;
-      timeoutIntervalEnd = pressTimestamp + timeoutInterval;
-      
-      cue->SetEvent();
-      pump->SetEvent();
+      timeoutIntervalEnd = startTimestamp + timeoutInterval;
+      AddActions();
     }
   } else {
     pressType = PressType::INDEPENDENT;
@@ -136,8 +138,14 @@ void SwitchLever::LogOutput() {
   json["device"] = F("SWITCH_LEVER");
   json["orientation"] = orientation;
   json["classification"] = (reinforced) ? ((pressType == PressType::ACTIVE) ? F("ACTIVE") : F("TIMEOUT")) : F("INDEPENDENT"); 
-  json["press_timestamp"] = pressTimestamp;
-  json["release_timestamp"] = releaseTimestamp;
+  json["start_timestamp"] = startTimestamp;
+  json["end_timestamp"] = endTimestamp;
   serializeJsonPretty(json, Serial);
   Serial.println();
+}
+
+void SwitchLever::AddActions() {
+  if (cue) { cue->SetEvent(); }
+  if (pump) { pump->SetEvent(); }
+  if (laser) { laser->SetEvent(); } 
 }

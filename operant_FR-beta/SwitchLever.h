@@ -2,6 +2,7 @@
 #include "Device.h"
 #include "Cue.h"
 #include "Pump.h"
+#include "Laser.h"
 
 #ifndef SWITCHLEVER_H
 #define SWITCHLEVER_H
@@ -14,6 +15,7 @@ public:
 
   void SetCue(Cue* cue);
   void SetPump(Pump* cue);
+  void SetLaser(Laser* laser);
   void SetTimeoutIntervalLength(uint32_t timeoutInterval);
   void SetReinforcement(bool reinforced);
   
@@ -27,15 +29,17 @@ private:
   uint32_t timeoutIntervalEnd;
   uint32_t lastDebounceTimestamp;
   uint8_t debounceDelay;
-  uint32_t pressTimestamp;
-  uint32_t releaseTimestamp;
+  uint32_t startTimestamp;
+  uint32_t endTimestamp;
   enum PressType { ACTIVE, TIMEOUT, INDEPENDENT };
   PressType pressType;
   Cue* cue;
   Pump* pump;
+  Laser* laser;
 
   void Classify(uint32_t pressTimestamp);
   void LogOutput();
+  void AddActions();
 };
 
 #endif // SWITCHLEVER_H

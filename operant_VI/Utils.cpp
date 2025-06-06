@@ -18,7 +18,7 @@ void pingDevice(uint32_t& previousPing, const uint32_t pingInterval) {
     uint32_t currentMillis = millis();
     if (currentMillis - previousPing >= pingInterval) {
         previousPing = currentMillis;
-        Serial.println("PING");
+        Serial.println(F("*"));
     }
 }
 

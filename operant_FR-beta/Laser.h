@@ -6,7 +6,7 @@
 
 class Laser : public Device {
 public:
-  Laser(int8_t pin);
+  Laser(int8_t pin, uint32_t traceInterval, uint32_t duration);
   void ArmToggle(bool armed);
   void Await();
 
@@ -16,23 +16,22 @@ public:
 
   uint32_t Duration();
   uint32_t Frequency();
+  uint32_t TraceInterval();
   
 private:
   uint32_t duration;
   uint32_t frequency;
+  uint32_t traceInterval;
   uint32_t startTimestamp;
   uint32_t endTimestamp;
-  uint32_t cycleStartTimestamp;
-  uint32_t cycleEndTimestamp;
-  bool cycle;
-  bool state;
-  bool action;
-  enum Mode { CYCLE, ACTIVE_PRESS };
+  enum Mode { CONTINGENT, INDEPENDENT };
   Mode mode;
+  bool state;
 
-  void Stim(uint32_t currentTimestamp);
   void On();
   void Off();
+  void Cycle(uint32_t currentTimestamp);
+  void Oscillate();
 };
 
 #endif // LASER_H

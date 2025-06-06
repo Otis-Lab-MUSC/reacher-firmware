@@ -4,10 +4,11 @@
 
 #include "Cue.h"
 
-Cue::Cue(int8_t pin, uint32_t frequency, uint32_t duration) : Device(pin, OUTPUT) {
+Cue::Cue(int8_t pin, uint32_t frequency, uint32_t duration, uint32_t traceInterval) : Device(pin, OUTPUT) {
   this->pin = pin;
   this->frequency = frequency;
   this->duration = duration;
+  this->traceInterval = traceInterval;
   armed = false;
   pinMode(pin, OUTPUT);
 }
@@ -62,8 +63,11 @@ void Cue::SetEvent() {
     desc = F("Cue tone occurring at pin ");;
     desc += pin;
   
-    json["level"] = F("info");
+    json["level"] = F("output");
     json["desc"] = desc;
+    json["device"] = F("CUE");
+    json["start_timestamp"] = startTimestamp;
+    json["end_timestamp"] = endTimestamp;
   
     serializeJsonPretty(json, Serial);
     Serial.println();
@@ -78,12 +82,20 @@ void Cue::SetDuration(uint32_t duration) {
   this->duration = duration;
 }
 
+void Cue::SetTraceInterval(uint32_t traceInterval) {
+  this->traceInterval = traceInterval;
+}
+
 uint32_t Cue::Frequency() {
   return frequency;
 }
 
 uint32_t Cue::Duration() {
   return duration;
+}
+
+uint32_t Cue::TraceInterval() {
+  return traceInterval;
 }
 
 void Cue::On() {

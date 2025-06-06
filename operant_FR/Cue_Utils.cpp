@@ -14,7 +14,6 @@
  * @param linkedToGUI Reference to a boolean flag tracking GUI connection status.
  */
 void connectionJingle(String connected, Cue& cue, bool& linkedToGUI) {
-void connectionJingle(String connected, Cue& cue, bool& linkedToGUI) {
     if (connected == "LINK") {
         linkedToGUI = true;
         static int32_t pitch = 500; // Starting tone frequency in Hz
@@ -38,7 +37,6 @@ void connectionJingle(String connected, Cue& cue, bool& linkedToGUI) {
         pitch = 1500;                       // Reset pitch for next use
         Serial.println("UNLINKED");         // Log disconnection status
     }
-}
 }
 
 /**

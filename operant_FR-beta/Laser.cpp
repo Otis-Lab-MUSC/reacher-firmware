@@ -4,9 +4,13 @@
 
 #include "Laser.h"
 
-Laser::Laser(int8_t pin) : Device(pin, OUTPUT) {
+Laser::Laser(int8_t pin, uint32_t traceInterval, uint32_t duration) : Device(pin, OUTPUT) {
   this->pin = pin;
+  this->traceInterval = traceInterval;
+  this->duration = duration;
   armed = false;
+  mode = INDEPENDENT;
+  state = false;
   pinMode(pin, OUTPUT);
 }
 
@@ -30,27 +34,47 @@ void Laser::ArmToggle(bool armed) {
 void Laser::Await() {
   uint32_t currentTimestamp = millis();
 
+  if (mode == INDEPENDENT) {
+    Cycle(currentTimestamp);
+  }
+  
   if (armed) {
-    if (mode == CYCLE) {
-      
-    }
-    else if (mode == ACTIVE_PRESS) {
-      
+    if (currentTimestamp >= startTimestamp && currentTimestamp <= endTimestamp) {
+      On();
+    } else {
+      Off();
     }
   }
-  // stim()
 }
 
 void Laser::SetEvent() {
+  JsonDocument json;
+  String desc;
+
+  if (armed && (mode == CONTINGENT)) {
+    startTimestamp = traceInterval + millis();
+    endTimestamp = startTimestamp + duration;
+    
+    desc = F("Laser stimulation occurring at pin ");;
+    desc += pin;
   
+    json["level"] = F("output");
+    json["desc"] = desc;
+    json["device"] = F("LASER");
+    json["start_timestamp"] = startTimestamp;
+    json["end_timestamp"] = endTimestamp;
+  
+    serializeJsonPretty(json, Serial);
+    Serial.println();
+  }  
 }
 
 void Laser::SetDuration(uint32_t duration) {
-  
+  this->duration = duration;
 }
 
 void Laser::SetFrequency(uint32_t frequency) {
-  
+  this->traceInterval = traceInterval;
 }
 
 uint32_t Laser::Duration() {
@@ -61,57 +85,28 @@ uint32_t Laser::Frequency() {
   return frequency; 
 }
 
-void Laser::Stim(uint32_t currentTimestamp) {
-  if ((currentTimestamp > startTimestamp) && (currentTimestamp < endTimestamp) && cycle) {
-    state = true;
-    if (frequency == 1) {
-      action = true;  
-    }
-    else {
-      if (currentTimestamp > cycleEndTimestamp) {
-        cycleStartTimestamp = currentTimestamp;
-        cycleEndTimestamp = 0;
-        action = (action == true ? false : true);
-      }
-    }
-  }
+uint32_t Laser::TraceInterval() {
+  return traceInterval;
 }
 
 void Laser::On() {
-  digitalWrite(pin, HIGH);
+//  digitalWrite(pin, HIGH);
+  Serial.print(F("*"));
+  Serial.println(state);
 }
 
 void Laser::Off() {
-  digitalWrite(pin, LOW);
+//  digitalWrite(pin, LOW);
 }
 
+void Laser::Cycle(uint32_t currentTimestamp) {
+  if (currentTimestamp >= endTimestamp) {
+    startTimestamp = currentTimestamp;
+    endTimestamp = currentTimestamp + duration;
+    state = !state;
+  }
+}
 
-
-
-
-
-
-//class Laser : public Device {
-//public:
-//  Laser(int8_t pin);
-//  void ArmToggle(bool armed);
-//  void Await();
-//
-//  void SetEvent();
-//  void SetDuration(uint32_t duration);
-//  void SetFrequency(uint32_t frequency);
-//
-//  uint32_t Duration();
-//  uint32_t Frequency();
-//  
-//private:
-//  uint32_t duration;
-//  uint32_t frequency;
-//  uint32_t startTimestamp;
-//  uint32_t endTimestamp;
-//  uint32_t cycleStartTimestamp;
-//  uint32_t cycleEndTimestamp;
-//
-//  void On();
-//  void Off();
-//};
+void Laser::Oscillate() {
+  
+}
