@@ -37,8 +37,7 @@ void SwitchLever::ArmToggle(bool armed) {
   Serial.println();
 }
 
-void SwitchLever::Monitor() {
-  uint32_t currentTimestamp = millis();
+void SwitchLever::Monitor(uint32_t currentTimestamp) {
   if (armed) {
     bool currentState = digitalRead(pin);
     if (currentState != previousState) {
@@ -49,7 +48,7 @@ void SwitchLever::Monitor() {
         stableState = currentState;
         if (stableState != initState) {
           startTimestamp = currentTimestamp - Offset();
-          Classify(startTimestamp);
+          Classify(startTimestamp, currentTimestamp);
         } else {
           endTimestamp = currentTimestamp - Offset();
           LogOutput();
@@ -72,7 +71,7 @@ void SwitchLever::SetLaser(Laser* laser) {
   this->laser = laser;
 }
 
-void SwitchLever::Classify(uint32_t startTimestamp) {
+void SwitchLever::Classify(uint32_t startTimestamp, uint32_t currentTimestamp) {
   JsonDocument json;
   String desc;
   
@@ -82,7 +81,7 @@ void SwitchLever::Classify(uint32_t startTimestamp) {
     } else {
       pressType = PressType::ACTIVE;
       timeoutIntervalEnd = startTimestamp + timeoutInterval;
-      AddActions();
+      AddActions(currentTimestamp);
     }
   } else {
     pressType = PressType::INDEPENDENT;
@@ -138,14 +137,14 @@ void SwitchLever::LogOutput() {
   json["device"] = F("SWITCH_LEVER");
   json["orientation"] = orientation;
   json["classification"] = (reinforced) ? ((pressType == PressType::ACTIVE) ? F("ACTIVE") : F("TIMEOUT")) : F("INDEPENDENT"); 
-  json["start_timestamp"] = startTimestamp;
-  json["end_timestamp"] = endTimestamp;
+  json["start_timestamp"] = startTimestamp - Offset();
+  json["end_timestamp"] = endTimestamp - Offset();
   serializeJsonPretty(json, Serial);
   Serial.println();
 }
 
-void SwitchLever::AddActions() {
-  if (cue) { cue->SetEvent(); }
-  if (pump) { pump->SetEvent(); }
-  if (laser) { laser->SetEvent(); } 
+void SwitchLever::AddActions(uint32_t currentTimestamp) {
+  if (cue) { cue->SetEvent(currentTimestamp); }
+  if (pump) { pump->SetEvent(currentTimestamp); }
+  if (laser) { laser->SetEvent(currentTimestamp); }
 }

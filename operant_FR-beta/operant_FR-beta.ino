@@ -20,23 +20,23 @@
 #define LICK_CIRCUIT_PIN 5
 #define LASER_PIN 6
 
-#define DEFAULT_CUE_FREQUENCY 8000
-#define DEFAULT_CUE_DURATION 1600
-#define DEFAULT_CUE_TRACE_INTERVAL 0
+#define DEF_CUE_FREQ 8000
+#define DEF_CUE_DUR 1600
+#define DEF_CUE_TRACE 0
 
-#define DEFAULT_PUMP_DURATION 2000
-#define DEFAULT_PUMP_TRACE_INTERVAL DEFAULT_CUE_DURATION
+#define DEF_PUMP_DUR 2000
+#define DEF_PUMP_TRACE DEF_CUE_DUR
 
-#define DEFAULT_LASER_FREQUENCY 1
-#define DEFAULT_LASER_DURATION 5000
-#define DEFAULT_LASER_TRACE_INTERVAL 0
+#define DEF_LASER_FREQ 1
+#define DEF_LASER_DUR 5000
+#define DEF_LASER_TRACE 0
 
 SwitchLever rLever(RH_LEVER_PIN, "RH");
 SwitchLever lLever(LH_LEVER_PIN, "LH");
-Cue cue(CUE_PIN, DEFAULT_CUE_FREQUENCY, DEFAULT_CUE_DURATION, DEFAULT_CUE_TRACE_INTERVAL);
-Pump pump(PUMP_PIN, cue.Duration(), DEFAULT_PUMP_DURATION);
+Cue cue(CUE_PIN, DEF_CUE_FREQ, DEF_CUE_DUR, DEF_CUE_TRACE);
+Pump pump(PUMP_PIN, DEF_PUMP_DUR, cue.Duration());
 LickCircuit lickCircuit(LICK_CIRCUIT_PIN);
-Laser laser(LASER_PIN, 5, DEFAULT_LASER_DURATION, cue.Duration());
+Laser laser(LASER_PIN, 40, DEF_LASER_DUR, cue.Duration());
 
 uint32_t SESSION_START_TIMESTAMP;
 uint32_t SESSION_END_TIMESTAMP;
@@ -59,7 +59,7 @@ void setup() {
   rLever.SetCue(&cue);
   rLever.SetPump(&pump);
   rLever.SetLaser(&laser);
-  rLever.SetTimeoutIntervalLength(DEFAULT_CUE_DURATION + DEFAULT_PUMP_DURATION);
+  rLever.SetTimeoutIntervalLength(DEF_CUE_DUR + DEF_PUMP_DUR);
   rLever.SetReinforcement(true);
   rLever.ArmToggle(true);
   lLever.ArmToggle(true);
@@ -80,12 +80,14 @@ void setup() {
 }
 
 void loop() {
-  rLever.Monitor();
-  lLever.Monitor();
-  lickCircuit.Monitor();
-  cue.Await();
-  pump.Await();
-  laser.Await();
+  uint32_t currentTimestamp = millis();
+  
+  rLever.Monitor(currentTimestamp);
+  lLever.Monitor(currentTimestamp);
+  lickCircuit.Monitor(currentTimestamp);
+  cue.Await(currentTimestamp);
+  pump.Await(currentTimestamp);
+  laser.Await(currentTimestamp);
   ParseCommands();
 }
 
@@ -115,8 +117,14 @@ void ParseCommands() {
       else if (json["cmd"] == 1000) {
         rLever.ArmToggle(false);
       }
-      else if (json["cmd"] == 1011) {
+      else if (json["cmd"] == 1074) {
         rLever.SetTimeoutIntervalLength(json["timeout"]);
+      }
+      else if (json["cmd"] == 1081) {
+        rLever.SetReinforcement(true);
+      }
+      else if (json["cmd"] == 1080) {
+        rLever.SetReinforcement(false);
       }
 
       /* LH Lever Commands */
@@ -126,6 +134,15 @@ void ParseCommands() {
       else if (json["cmd"] == 1300) {
         lLever.ArmToggle(false);
       }
+      else if (json["cmd"] == 1374) {
+        lLever.SetTimeoutIntervalLength(json["timeout"]);
+      }
+      else if (json["cmd"] == 1381) {
+        lLever.SetReinforcement(true);
+      }
+      else if (json["cmd"] == 1380) {
+        lLever.SetReinforcement(false);
+      }
 
       /* Cue Commands */
       else if (json["cmd"] == 301) {
@@ -134,6 +151,15 @@ void ParseCommands() {
       else if (json["cmd"] == 300) {
         cue.ArmToggle(false);
       }
+      else if (json["cmd"] == 371) {
+        cue.SetFrequency(json["frequency"]);
+      }
+      else if (json["cmd"] == 372) {
+        cue.SetDuration(json["duration"]);
+      }
+      else if (json["cmd"] == 373) {
+        cue.SetTraceInterval(json["trace"]);
+      }
 
       /* Pump Commands */
       else if (json["cmd"] == 401) {
@@ -141,6 +167,12 @@ void ParseCommands() {
       } 
       else if (json["cmd"] == 400) {
         pump.ArmToggle(false);
+      }
+      else if (json["cmd"] == 472) {
+        pump.SetDuration(json["duration"]);
+      }
+      else if (json["cmd"] == 473) {
+        pump.SetTraceInterval(json["trace"]);
       }
 
       /* Lick Circuit Commands */
@@ -158,14 +190,24 @@ void ParseCommands() {
       else if (json["cmd"] == 600) {
         laser.ArmToggle(false);
       }
+      else if(json["cmd"] == 671) {
+        laser.SetFrequency(json["frequency"]);
+      }
+      else if(json["cmd"] == 672) {
+        laser.SetDuration(json["duration"]);
+      }
+      else if(json["cmd"] == 673) {
+        laser.SetTraceInterval(json["trace"]);
+      }
 
       /* Session Commands */
       else if (json["cmd"] == 11) {
         StartSession();
-        SetOutputTimestampOffset(SESSION_START_TIMESTAMP);
+        SetDeviceTimestampOffset(SESSION_START_TIMESTAMP);
       }
       else if (json["cmd"] == 10) {
-        SESSION_END_TIMESTAMP = millis();
+        EndSession();
+        ArmToggleDevices(false);
       }
 
       /* Exception */
@@ -204,10 +246,34 @@ void StartSession() {
   Serial.println(); 
 }
 
-void SetOutputTimestampOffset(uint32_t ts) {
+void EndSession() {
+  JsonDocument json;
+  String desc;
+
+  SESSION_END_TIMESTAMP = millis();  
+  desc = F("Session ended");
+
+  json["level"] = F("output");
+  json["desc"] = desc;
+  json["timestamp"] = SESSION_END_TIMESTAMP;
+
+  serializeJsonPretty(json, Serial);
+  Serial.println();   
+}
+
+void SetDeviceTimestampOffset(uint32_t ts) {
   rLever.SetOffset(ts);
   lLever.SetOffset(ts);
   cue.SetOffset(ts);
   pump.SetOffset(ts);
   lickCircuit.SetOffset(ts);
+  laser.SetOffset(ts);
 }
+
+void ArmToggleDevices(bool toggle) {
+  rLever.ArmToggle(toggle);
+  lLever.ArmToggle(toggle);
+  cue.ArmToggle(toggle);
+  pump.ArmToggle(toggle);
+  lickCircuit.ArmToggle(toggle);
+  laser.ArmToggle(toggle);}

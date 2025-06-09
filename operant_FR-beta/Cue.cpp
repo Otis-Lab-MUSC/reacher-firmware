@@ -30,9 +30,7 @@ void Cue::ArmToggle(bool armed) {
   Serial.println();
 }
 
-void Cue::Await() {
-  uint32_t currentTimestamp = millis();
-
+void Cue::Await(uint32_t currentTimestamp) {
   if (armed) {
     if (currentTimestamp >= startTimestamp && currentTimestamp <= endTimestamp) {
       On();
@@ -52,26 +50,12 @@ void Cue::Jingle() {
   }
 }
 
-void Cue::SetEvent() {
-  JsonDocument json;
-  String desc;
-  uint32_t currentTimestamp = millis();
-
+void Cue::SetEvent(uint32_t currentTimestamp) {
   if (armed) {
     startTimestamp = currentTimestamp;
     endTimestamp = startTimestamp + duration;
-    
-    desc = F("Cue tone occurring at pin ");;
-    desc += pin;
-  
-    json["level"] = F("output");
-    json["desc"] = desc;
-    json["device"] = F("CUE");
-    json["start_timestamp"] = startTimestamp;
-    json["end_timestamp"] = endTimestamp;
-  
-    serializeJsonPretty(json, Serial);
-    Serial.println();
+
+    LogOutput();
   }
 }
 
@@ -101,9 +85,25 @@ uint32_t Cue::TraceInterval() {
 
 void Cue::On() {
   tone(pin, frequency);
-//  Serial.println(F("CUE ON")); // uncomment for debugging
 }
 
 void Cue::Off() {
   noTone(pin);
+}
+
+void Cue::LogOutput() {
+  JsonDocument json;
+  String desc;
+  
+  desc = F("Cue tone occurring at pin ");;
+  desc += pin;
+
+  json["level"] = F("output");
+  json["desc"] = desc;
+  json["device"] = F("CUE");
+  json["start_timestamp"] = startTimestamp - Offset();
+  json["end_timestamp"] = endTimestamp - Offset();
+
+  serializeJsonPretty(json, Serial);
+  Serial.println();
 }

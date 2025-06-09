@@ -25,7 +25,7 @@ void LickCircuit::ArmToggle(bool armed) {
   desc += F(" at pin ");
   desc += pin;
 
-  json["level"] = F("output");
+  json["level"] = F("info");
   json["desc"] = desc;
   json["device"] = F("LICK_CIRCUIT");
   json["start_timestamp"] = startTimestamp;
@@ -35,8 +35,7 @@ void LickCircuit::ArmToggle(bool armed) {
   Serial.println();
 }
 
-void LickCircuit::Monitor() {
-  uint32_t currentTimestamp = millis();
+void LickCircuit::Monitor(uint32_t currentTimestamp) {
   if (armed) {
     bool currentState = digitalRead(pin);
     if (currentState != previousState) {
@@ -46,9 +45,9 @@ void LickCircuit::Monitor() {
       if (currentState != stableState) {
         stableState = currentState;
         if (stableState != initState) {
-          startTimestamp = currentTimestamp - Offset();
+          startTimestamp = currentTimestamp;
         } else {
-          endTimestamp = currentTimestamp - Offset();
+          endTimestamp = currentTimestamp;
           LogOutput();
         }
       }
@@ -67,8 +66,8 @@ void LickCircuit::LogOutput() {
   json["level"] = F("output");
   json["desc"] = desc;
   json["device"] = F("LICK_CIRCUIT");
-  json["onset_timestamp"] = startTimestamp;
-  json["offset_timestamp"] = endTimestamp;
+  json["onset_timestamp"] = startTimestamp - Offset();
+  json["Offset()_timestamp"] = endTimestamp - Offset();
   serializeJsonPretty(json, Serial);
   Serial.println();
 }

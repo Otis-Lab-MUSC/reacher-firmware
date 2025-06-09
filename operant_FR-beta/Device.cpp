@@ -30,22 +30,6 @@ void Device::ArmToggle(bool arm) {
   Serial.println();
 }
 
-void Device::EventHandler() {
-  JsonDocument json;
-  String desc;
-  
-  armed = !armed;
-  
-  desc = F("Event occured at pin ");
-  desc += pin;
-
-  json["level"] = F("info");
-  json["desc"] = desc;
-
-  serializeJsonPretty(json, Serial);
-  Serial.println();
-}
-
 void Device::SetOffset(uint32_t offset) {
   this->offset = offset;
 }
@@ -60,4 +44,18 @@ bool Device::Armed() const {
 
 uint32_t Device::Offset() const {
   return offset;
+}
+
+void Device::LogOutput() {
+  JsonDocument json;
+  String desc;
+    
+  desc = F("Event occurred for device at pin ");
+  desc += pin;
+
+  json["level"] = F("info");
+  json["desc"] = desc;
+
+  serializeJsonPretty(json, Serial);
+  Serial.println();  
 }

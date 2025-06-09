@@ -8,14 +8,15 @@ class Laser : public Device {
 public:
   Laser(int8_t pin, uint32_t frequency, uint32_t duration, uint32_t traceInterval);
   void ArmToggle(bool armed);
-  void Await();
+  void Await(uint32_t currentTimestamp);
 
-  void SetEvent();
-  void SetDuration(uint32_t duration);
+  void SetEvent(uint32_t currentTimestamp);
   void SetFrequency(uint32_t frequency);
+  void SetDuration(uint32_t duration);
+  void SetTraceInterval(uint32_t traceInterval);
 
-  uint32_t Duration();
   uint32_t Frequency();
+  uint32_t Duration();
   uint32_t TraceInterval();
   
 private:
@@ -36,6 +37,7 @@ private:
   void Off();
   void Cycle(uint32_t currentTimestamp);
   void Oscillate(uint32_t currentTimestamp);
+  void LogOutput();
 };
 
 #endif // LASER_H

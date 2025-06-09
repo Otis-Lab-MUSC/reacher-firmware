@@ -11,7 +11,7 @@ class SwitchLever : public Device {
 public:
   SwitchLever(int8_t pin, const char* orientation);
   void ArmToggle(bool armed);
-  void Monitor();
+  void Monitor(uint32_t currentTimestamp);
 
   void SetCue(Cue* cue);
   void SetPump(Pump* cue);
@@ -37,9 +37,9 @@ private:
   Pump* pump;
   Laser* laser;
 
-  void Classify(uint32_t pressTimestamp);
+  void Classify(uint32_t pressTimestamp, uint32_t currentTimestamp);
   void LogOutput();
-  void AddActions();
+  void AddActions(uint32_t currentTimestamp);
 };
 
 #endif // SWITCHLEVER_H
