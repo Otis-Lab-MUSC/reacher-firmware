@@ -4,13 +4,16 @@
 
 #include "Laser.h"
 
-Laser::Laser(int8_t pin, uint32_t traceInterval, uint32_t duration) : Device(pin, OUTPUT) {
+Laser::Laser(int8_t pin, uint32_t frequency, uint32_t duration, uint32_t traceInterval) : Device(pin, OUTPUT) {
   this->pin = pin;
-  this->traceInterval = traceInterval;
+  this->frequency = frequency;
   this->duration = duration;
+  this->traceInterval = traceInterval;
   armed = false;
   mode = INDEPENDENT;
   state = false;
+  halfState = false;
+  outputLogged = false;
   pinMode(pin, OUTPUT);
 }
 
@@ -39,33 +42,43 @@ void Laser::Await() {
   }
   
   if (armed) {
-    if (currentTimestamp >= startTimestamp && currentTimestamp <= endTimestamp) {
-      On();
-    } else {
-      Off();
-    }
+    Oscillate(currentTimestamp);
   }
 }
 
 void Laser::SetEvent() {
   JsonDocument json;
   String desc;
+  uint32_t currentTimestamp = millis();
 
-  if (armed && (mode == CONTINGENT)) {
-    startTimestamp = traceInterval + millis();
-    endTimestamp = startTimestamp + duration;
+  if (armed ) {
+    if (mode == CONTINGENT) {
+      startTimestamp = traceInterval + currentTimestamp;
+      endTimestamp = startTimestamp + duration;
+    }
+    else if (mode == INDEPENDENT) {
+      float halfCycleLength = (1.0f / frequency) / 2.0f * 1000.0f;
+      
+      halfCycleStartTimestamp = currentTimestamp;
+      halfCycleEndTimestamp = currentTimestamp + static_cast<uint32_t>(halfCycleLength);  
+      halfState = !halfState;       
+    }
+
+    if (!outputLogged) { // FIXME: not being called correctly...repeated calls instead of once
+      desc = F("Laser stimulation occurring at pin ");;
+      desc += pin;
     
-    desc = F("Laser stimulation occurring at pin ");;
-    desc += pin;
+      json["level"] = F("output");
+      json["desc"] = desc;
+      json["device"] = F("LASER");
+      json["start_timestamp"] = startTimestamp;
+      json["end_timestamp"] = endTimestamp;
+    
+      serializeJsonPretty(json, Serial);
+      Serial.println();
   
-    json["level"] = F("output");
-    json["desc"] = desc;
-    json["device"] = F("LASER");
-    json["start_timestamp"] = startTimestamp;
-    json["end_timestamp"] = endTimestamp;
-  
-    serializeJsonPretty(json, Serial);
-    Serial.println();
+      outputLogged = true;
+    }
   }  
 }
 
@@ -91,12 +104,14 @@ uint32_t Laser::TraceInterval() {
 
 void Laser::On() {
 //  digitalWrite(pin, HIGH);
-  Serial.print(F("*"));
-  Serial.println(state);
+//  Serial.print(F("* "));
+//  Serial.println(halfState);
 }
 
 void Laser::Off() {
 //  digitalWrite(pin, LOW);
+//  Serial.print(F("* "));
+//  Serial.println(halfState);
 }
 
 void Laser::Cycle(uint32_t currentTimestamp) {
@@ -107,6 +122,28 @@ void Laser::Cycle(uint32_t currentTimestamp) {
   }
 }
 
-void Laser::Oscillate() {
-  
+void Laser::Oscillate(uint32_t currentTimestamp) {
+  if (currentTimestamp >= startTimestamp && currentTimestamp <= endTimestamp && state) {
+    if (frequency == 1) {
+      On();
+    }
+    else {
+//      float halfCycleLength = (1.0f / frequency) / 2.0f * 1000.0f;
+      if (currentTimestamp >= halfCycleEndTimestamp) {
+//        halfCycleStartTimestamp = currentTimestamp;
+//        halfCycleEndTimestamp = currentTimestamp + static_cast<uint32_t>(halfCycleLength);  
+//        halfState = !halfState;    
+          SetEvent();  
+      }
+      if (halfState) {
+        On();
+      }
+      else {
+        Off();
+      }
+    }
+  }
+  else {
+    Off();
+  }
 }

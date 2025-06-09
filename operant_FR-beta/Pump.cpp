@@ -44,9 +44,10 @@ void Pump::Await() {
 void Pump::SetEvent() {  
   JsonDocument json;
   String desc;
+  uint32_t currentTimestamp = millis();
 
   if (armed) {
-    startTimestamp = traceInterval + millis();
+    startTimestamp = traceInterval + currentTimestamp;
     endTimestamp = startTimestamp + duration;
     
     desc = F("Pump infusion occurring at pin ");;

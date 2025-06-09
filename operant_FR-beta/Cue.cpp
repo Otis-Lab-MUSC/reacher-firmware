@@ -55,9 +55,10 @@ void Cue::Jingle() {
 void Cue::SetEvent() {
   JsonDocument json;
   String desc;
+  uint32_t currentTimestamp = millis();
 
   if (armed) {
-    startTimestamp = millis();
+    startTimestamp = currentTimestamp;
     endTimestamp = startTimestamp + duration;
     
     desc = F("Cue tone occurring at pin ");;
