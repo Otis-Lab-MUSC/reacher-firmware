@@ -23,10 +23,10 @@ void Device::ArmToggle(bool arm) {
   desc += F(" at pin ");
   desc += pin;
 
-  json["level"] = F("info");
+  json["level"] = F("PROGINFO");
   json["desc"] = desc;
 
-  serializeJsonPretty(json, Serial);
+  serializeJson(json, Serial);
   Serial.println();
 }
 
@@ -53,9 +53,10 @@ void Device::LogOutput() {
   desc = F("Event occurred for device at pin ");
   desc += pin;
 
-  json["level"] = F("info");
+  json["level"] = F("PROGINFO");
   json["desc"] = desc;
+  json["offset"] = Offset();
 
-  serializeJsonPretty(json, Serial);
+  serializeJson(json, Serial);
   Serial.println();  
 }

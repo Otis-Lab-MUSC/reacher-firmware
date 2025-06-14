@@ -27,10 +27,10 @@ void Laser::ArmToggle(bool armed) {
   desc += F(" at pin ");
   desc += pin;
 
-  json["level"] = F("info");
+  json["level"] = F("PROGINFO");
   json["desc"] = desc;
 
-  serializeJsonPretty(json, Serial);
+  serializeJson(json, Serial);
   Serial.println();
 }
 
@@ -41,37 +41,104 @@ void Laser::Await(uint32_t currentTimestamp) {
   
   if (armed) {
     Oscillate(currentTimestamp);
+  } else {
+    startTimestamp = currentTimestamp;
+    endTimestamp = currentTimestamp;
+    Off();
   }
 }
 
 void Laser::SetEvent(uint32_t currentTimestamp) {
-  if (mode == CONTINGENT) {
-    startTimestamp = traceInterval + currentTimestamp;
-    endTimestamp = startTimestamp + duration;
-  }
-  else if (mode == INDEPENDENT) {
-    float halfCycleLength = (1.0f / frequency) / 2.0f * 1000.0f;
-    
-    halfCycleStartTimestamp = currentTimestamp;
-    halfCycleEndTimestamp = currentTimestamp + static_cast<uint32_t>(halfCycleLength); 
-    halfState = !halfState;       
-  }
-
-  if (!outputLogged) {
-    LogOutput();
+  if (armed) {
+    if (mode == CONTINGENT) {
+      startTimestamp = traceInterval + currentTimestamp;
+      endTimestamp = startTimestamp + duration;
+    }
+    else if (mode == INDEPENDENT) {
+      float halfCycleLength = (1.0f / frequency) / 2.0f * 1000.0f;
+      
+      halfCycleStartTimestamp = currentTimestamp;
+      halfCycleEndTimestamp = currentTimestamp + static_cast<uint32_t>(halfCycleLength); 
+      halfState = !halfState;       
+    }
+  
+    if (!outputLogged) {
+      LogOutput();
+    }
   }
 }
 
 void Laser::SetFrequency(uint32_t frequency) {
-  this->traceInterval = traceInterval;
+  JsonDocument json;
+  String desc;
+  this->frequency = frequency;
+  
+  desc = F("Laser frequency set to ");
+  desc += this->duration;
+  desc += F("Hz for laser at pin ");
+  desc += pin;
+
+  json["level"] = F("PROGINFO");
+  json["desc"] = desc;
+
+  serializeJson(json, Serial);
+  Serial.println();
 }
 
 void Laser::SetDuration(uint32_t duration) {
+  JsonDocument json;
+  String desc;
   this->duration = duration;
+  
+  desc = F("Laser duration set to ");
+  desc += this->duration;
+  desc += F("ms for laser at pin ");
+  desc += pin;
+
+  json["level"] = F("PROGINFO");
+  json["desc"] = desc;
+
+  serializeJson(json, Serial);
+  Serial.println();
 }
 
 void Laser::SetTraceInterval(uint32_t traceInterval) {
+  JsonDocument json;
+  String desc;
   this->traceInterval = traceInterval;
+  
+  desc = F("Laser trace interval set to ");
+  desc += this->traceInterval;
+  desc += F("ms for laser at pin ");
+  desc += pin;
+
+  json["level"] = F("PROGINFO");
+  json["desc"] = desc;
+
+  serializeJson(json, Serial);
+  Serial.println();
+}
+
+void Laser::SetMode(bool mode) {
+  JsonDocument json;
+  String desc;
+  
+  if (mode) {
+    this->mode = CONTINGENT;
+  } else {
+    this->mode = INDEPENDENT;
+  }
+
+  desc = F("Laser mode set to ");
+  desc += (mode) ? F("CONTINGENT") : F("INDEPENDENT");
+  desc += F(" for laser at pin ");
+  desc += pin;
+
+  json["level"] = F("PROGINFO");
+  json["desc"] = desc;
+
+  serializeJson(json, Serial);
+  Serial.println();
 }
 
 uint32_t Laser::Frequency() {
@@ -133,13 +200,18 @@ void Laser::LogOutput() {
   desc = F("Laser stimulation occurring at pin ");;
   desc += pin;
 
-  json["level"] = F("output");
+  json["level"] = F("PROGOUT");
   json["desc"] = desc;
   json["device"] = F("LASER");
   json["start_timestamp"] = startTimestamp - Offset();
   json["end_timestamp"] = endTimestamp - Offset();
+  json["frequency"] = frequency;
+  json["duration"] = duration;
+  json["trace"] = traceInterval;
+  json["mode"] = (mode == INDEPENDENT) ? F("INDEPENDENT") : F("CONTINGENT");
+  json["offset"] = Offset();
 
-  serializeJsonPretty(json, Serial);
+  serializeJson(json, Serial);
   Serial.println();
 
   outputLogged = true;  

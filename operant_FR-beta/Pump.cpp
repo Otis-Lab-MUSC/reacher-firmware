@@ -22,10 +22,10 @@ void Pump::ArmToggle(bool armed) {
   desc += F(" at pin ");
   desc += pin;
 
-  json["level"] = F("info");
+  json["level"] = F("PROGINFO");
   json["desc"] = desc;
 
-  serializeJsonPretty(json, Serial);
+  serializeJson(json, Serial);
   Serial.println();
 }
 
@@ -49,12 +49,36 @@ void Pump::SetEvent(uint32_t currentTimestamp) {
 }
 
 void Pump::SetDuration(uint32_t duration) {
+  JsonDocument json;
+  String desc;
   this->duration = duration;
-}
+  
+  desc = F("Pump duration set to ");
+  desc += this->duration;
+  desc += F("ms for pump at pin ");
+  desc += pin;
+
+  json["level"] = F("PROGINFO");
+  json["desc"] = desc;
+
+  serializeJson(json, Serial);
+  Serial.println();}
 
 void Pump::SetTraceInterval(uint32_t traceInterval) {
+  JsonDocument json;
+  String desc;
   this->traceInterval = traceInterval;
-}
+  
+  desc = F("Pump trace interval set to ");
+  desc += this->traceInterval;
+  desc += F("ms for pump at pin ");
+  desc += pin;
+
+  json["level"] = F("PROGINFO");
+  json["desc"] = desc;
+
+  serializeJson(json, Serial);
+  Serial.println();}
 
 void Pump::On() {
   digitalWrite(pin, HIGH);
@@ -71,13 +95,16 @@ void Pump::LogOutput() {
   desc = F("Pump infusion occurring at pin ");;
   desc += pin;
 
-  json["level"] = F("output");
+  json["level"] = F("PROGOUT");
   json["desc"] = desc;
   json["device"] = F("PUMP");
   json["start_timestamp"] = startTimestamp - Offset();
   json["end_timestamp"] = endTimestamp - Offset();
+  json["duration"] = duration;
+  json["trace"] = traceInterval;
+  json["offset"] = Offset();
 
-  serializeJsonPretty(json, Serial);
+  serializeJson(json, Serial);
   Serial.println();  
 }
 

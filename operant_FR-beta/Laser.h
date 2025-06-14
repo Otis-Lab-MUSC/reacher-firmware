@@ -14,6 +14,7 @@ public:
   void SetFrequency(uint32_t frequency);
   void SetDuration(uint32_t duration);
   void SetTraceInterval(uint32_t traceInterval);
+  void SetMode(bool mode);
 
   uint32_t Frequency();
   uint32_t Duration();

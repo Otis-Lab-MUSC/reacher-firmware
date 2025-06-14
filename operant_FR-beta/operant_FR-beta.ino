@@ -8,10 +8,11 @@
 #include "Pump.h"
 #include "LickCircuit.h"
 #include "Laser.h"
+#include "Microscope.h"
 
 #define SKETCH_NAME F("operant_FR.ino")
-#define VERSION F("v1.0.1")
-#define BAUDRATE 115200
+#define VERSION F("v1.1.1")
+#define BAUD_RATE 115200
 
 #define RH_LEVER_PIN 10
 #define LH_LEVER_PIN 13
@@ -19,6 +20,8 @@
 #define PUMP_PIN 4
 #define LICK_CIRCUIT_PIN 5
 #define LASER_PIN 6
+#define MICROSCOPE_TRIGGER_PIN 9
+#define MICROSCOPE_TIMESTAMP_PIN 2
 
 #define DEF_CUE_FREQ 8000
 #define DEF_CUE_DUR 1600
@@ -37,21 +40,26 @@ Cue cue(CUE_PIN, DEF_CUE_FREQ, DEF_CUE_DUR, DEF_CUE_TRACE);
 Pump pump(PUMP_PIN, DEF_PUMP_DUR, cue.Duration());
 LickCircuit lickCircuit(LICK_CIRCUIT_PIN);
 Laser laser(LASER_PIN, 40, DEF_LASER_DUR, cue.Duration());
+Microscope microscope(MICROSCOPE_TRIGGER_PIN, MICROSCOPE_TIMESTAMP_PIN);
 
 uint32_t SESSION_START_TIMESTAMP;
 uint32_t SESSION_END_TIMESTAMP;
 
 void setup() {
   delay(100);
-  Serial.begin(BAUDRATE);
+  Serial.begin(BAUD_RATE);
   delay(100);
 
-  Serial.println(F("********** SETUP START **********"));
-  Serial.println();
-  Serial.print(F("Working sketch: "));
-  Serial.println(SKETCH_NAME);
-  Serial.print(F("Version: "));
-  Serial.println(VERSION);
+  JsonDocument json;
+
+  json["level"] = F("SETUP");
+  json["sketch"] = SKETCH_NAME;
+  json["version"] = VERSION;
+  json["baud_rate"] = BAUD_RATE;
+
+  // FIXME: add device pins here
+
+  serializeJson(json, Serial);
   Serial.println();
   
   cue.Jingle();
@@ -61,22 +69,13 @@ void setup() {
   rLever.SetLaser(&laser);
   rLever.SetTimeoutIntervalLength(DEF_CUE_DUR + DEF_PUMP_DUR);
   rLever.SetReinforcement(true);
-  rLever.ArmToggle(true);
-  lLever.ArmToggle(true);
-  cue.ArmToggle(true);
-  pump.ArmToggle(true);
-  lickCircuit.ArmToggle(true);
-  laser.ArmToggle(true);
-
-  Serial.println(F("********** SETUP END **********"));
-  Serial.println(F("|"));
-  Serial.println(F("|"));
-  Serial.println(F("|"));
-  Serial.println(F("|"));
-  Serial.println(F("|"));
   
-  Serial.println(F("========== SESSION START =========="));
-  Serial.println();
+//  rLever.ArmToggle(true);
+//  lLever.ArmToggle(true);
+//  cue.ArmToggle(true);
+//  pump.ArmToggle(true);
+//  lickCircuit.ArmToggle(true);
+//  laser.ArmToggle(true);
 }
 
 void loop() {
@@ -88,6 +87,7 @@ void loop() {
   cue.Await(currentTimestamp);
   pump.Await(currentTimestamp);
   laser.Await(currentTimestamp);
+  microscope.HandleFrameSignal();
   ParseCommands();
 }
 
@@ -102,10 +102,11 @@ void ParseCommands() {
       desc = F("Command parsing failed: ");
       desc += error.f_str();
       
-      json["level"] = F("error");
+      json["level"] = F("PROGERR");
       json["desc"] = desc;
 
-      serializeJsonPretty(json, Serial);
+      serializeJson(json, Serial);
+      Serial.println();
     } 
     
     else if(json["cmd"]) {
@@ -199,13 +200,19 @@ void ParseCommands() {
       else if(json["cmd"] == 673) {
         laser.SetTraceInterval(json["trace"]);
       }
+      else if (json["cmd"] == 681) {
+        laser.SetMode(true);
+      }
+      else if (json["cmd"] == 682) {
+        laser.SetMode(false);
+      }
 
       /* Session Commands */
-      else if (json["cmd"] == 11) {
+      else if (json["cmd"] == 101) {
         StartSession();
         SetDeviceTimestampOffset(SESSION_START_TIMESTAMP);
       }
-      else if (json["cmd"] == 10) {
+      else if (json["cmd"] == 100) {
         EndSession();
         ArmToggleDevices(false);
       }
@@ -214,18 +221,20 @@ void ParseCommands() {
       else {
         desc = F("Command does not exist");
         
-        json["level"] = F("error");
+        json["level"] = F("PROGERR");
         json["desc"] = desc;
 
-        serializeJsonPretty(json, Serial);
+        serializeJson(json, Serial);
+        Serial.println();
       }
     } else {
       desc = F("No valid JSON command exists");
       
-      json["level"] = F("error");
+      json["level"] = F("PROGERR");
       json["desc"] = desc;  
         
-      serializeJsonPretty(json, Serial);
+      serializeJson(json, Serial);
+      Serial.println();
     }   
   }
 }
@@ -238,11 +247,14 @@ void StartSession() {
   
   desc = F("Session started");
 
-  json["level"] = F("output");
+  json["level"] = F("PROGOUT");
   json["desc"] = desc;
-  json["timestamp"] = SESSION_START_TIMESTAMP;
+  json["device"] = F("CONTROLLER");
+  json["classification"] = F("START");
+  json["start_timestamp"] = 0;
+  json["end_timestamp"] = 0;
 
-  serializeJsonPretty(json, Serial);
+  serializeJson(json, Serial);
   Serial.println(); 
 }
 
@@ -253,11 +265,19 @@ void EndSession() {
   SESSION_END_TIMESTAMP = millis();  
   desc = F("Session ended");
 
-  json["level"] = F("output");
+  json["level"] = F("PROGOUT");
   json["desc"] = desc;
-  json["timestamp"] = SESSION_END_TIMESTAMP;
+  json["device"] = F("CONTROLLER");
+  json["classification"] = F("END");
+  json["start_timestamp"] = SESSION_END_TIMESTAMP - SESSION_START_TIMESTAMP;
+  json["end_timestamp"] = SESSION_END_TIMESTAMP - SESSION_START_TIMESTAMP;
 
-  serializeJsonPretty(json, Serial);
+  // manually write LOW signals before shut off
+  noTone(CUE_PIN);
+  digitalWrite(PUMP_PIN, LOW);
+  digitalWrite(LASER_PIN, LOW);
+
+  serializeJson(json, Serial);
   Serial.println();   
 }
 
@@ -268,6 +288,7 @@ void SetDeviceTimestampOffset(uint32_t ts) {
   pump.SetOffset(ts);
   lickCircuit.SetOffset(ts);
   laser.SetOffset(ts);
+  microscope.SetOffset(ts);
 }
 
 void ArmToggleDevices(bool toggle) {
@@ -276,4 +297,5 @@ void ArmToggleDevices(bool toggle) {
   cue.ArmToggle(toggle);
   pump.ArmToggle(toggle);
   lickCircuit.ArmToggle(toggle);
-  laser.ArmToggle(toggle);}
+  laser.ArmToggle(toggle);
+}

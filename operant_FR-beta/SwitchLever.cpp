@@ -30,10 +30,10 @@ void SwitchLever::ArmToggle(bool armed) {
   desc += F(" at pin ");
   desc += pin;
 
-  json["level"] = F("info");
+  json["level"] = F("PROGINFO");
   json["desc"] = desc;
 
-  serializeJsonPretty(json, Serial);
+  serializeJson(json, Serial);
   Serial.println();
 }
 
@@ -47,10 +47,10 @@ void SwitchLever::Monitor(uint32_t currentTimestamp) {
       if (currentState != stableState) {
         stableState = currentState;
         if (stableState != initState) {
-          startTimestamp = currentTimestamp - Offset();
+          startTimestamp = currentTimestamp;
           Classify(startTimestamp, currentTimestamp);
         } else {
-          endTimestamp = currentTimestamp - Offset();
+          endTimestamp = currentTimestamp;
           LogOutput();
         }
       }
@@ -98,10 +98,10 @@ void SwitchLever::SetTimeoutIntervalLength(uint32_t timeoutInterval) {
   desc += F("ms for switch lever at pin ");
   desc += pin;
 
-  json["level"] = F("info");
+  json["level"] = F("PROGINFO");
   json["desc"] = desc;
 
-  serializeJsonPretty(json, Serial);
+  serializeJson(json, Serial);
   Serial.println();
 }
 
@@ -115,14 +115,13 @@ void SwitchLever::SetReinforcement(bool reinforced) {
   desc += F(" for switch lever at pin ");
   desc += pin;
 
-  json["level"] = F("info");
+  json["level"] = F("PROGINFO");
   json["desc"] = desc;
 
-  serializeJsonPretty(json, Serial);
+  serializeJson(json, Serial);
   Serial.println();
 }
  
-
 void SwitchLever::LogOutput() {
   JsonDocument json;
   String desc;
@@ -132,14 +131,17 @@ void SwitchLever::LogOutput() {
   desc += orientation;
   desc += F(" lever");
 
-  json["level"] = F("output");
+  json["level"] = F("PROGOUT");
   json["desc"] = desc;
   json["device"] = F("SWITCH_LEVER");
-  json["orientation"] = orientation;
-  json["classification"] = (reinforced) ? ((pressType == PressType::ACTIVE) ? F("ACTIVE") : F("TIMEOUT")) : F("INDEPENDENT"); 
   json["start_timestamp"] = startTimestamp - Offset();
   json["end_timestamp"] = endTimestamp - Offset();
-  serializeJsonPretty(json, Serial);
+  json["orientation"] = orientation;
+  json["classification"] = (reinforced) ? ((pressType == PressType::ACTIVE) ? F("ACTIVE") : F("TIMEOUT")) : F("INDEPENDENT"); 
+  json["debounce"] = debounceDelay;
+  json["offset"] = Offset();
+  
+  serializeJson(json, Serial);
   Serial.println();
 }
 
