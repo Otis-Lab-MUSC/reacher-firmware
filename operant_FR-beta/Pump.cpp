@@ -14,16 +14,12 @@ Pump::Pump(int8_t pin, uint32_t duration, uint32_t traceInterval) : Device(pin, 
 
 void Pump::ArmToggle(bool armed) {
   JsonDocument json;
-  String desc;
   this->armed = armed;
   
-  desc = F("Pump ");
-  desc += armed ? F("armed") : F("disarmed");
-  desc += F(" at pin ");
-  desc += pin;
-
   json["level"] = F("PROGINFO");
-  json["desc"] = desc;
+  json["device"] = F("PUMP");
+  json["pin"] = pin;
+  json["desc"] = armed ? F("Pump armed") : F("Pump disarmed");
 
   serializeJson(json, Serial);
   Serial.println();
@@ -50,35 +46,31 @@ void Pump::SetEvent(uint32_t currentTimestamp) {
 
 void Pump::SetDuration(uint32_t duration) {
   JsonDocument json;
-  String desc;
   this->duration = duration;
-  
-  desc = F("Pump duration set to ");
-  desc += this->duration;
-  desc += F("ms for pump at pin ");
-  desc += pin;
 
   json["level"] = F("PROGINFO");
-  json["desc"] = desc;
+  json["device"] = F("PUMP");
+  json["pin"] = pin;
+  json["duration"] = this->duration;
+  json["desc"] = F("Duration changed");
 
   serializeJson(json, Serial);
-  Serial.println();}
+  Serial.println();
+}
 
 void Pump::SetTraceInterval(uint32_t traceInterval) {
   JsonDocument json;
-  String desc;
   this->traceInterval = traceInterval;
   
-  desc = F("Pump trace interval set to ");
-  desc += this->traceInterval;
-  desc += F("ms for pump at pin ");
-  desc += pin;
-
   json["level"] = F("PROGINFO");
-  json["desc"] = desc;
+  json["device"] = F("PUMP");
+  json["pin"] = pin;
+  json["trace"] = this->traceInterval;
+  json["desc"] = F("Trace interval changed");
 
   serializeJson(json, Serial);
-  Serial.println();}
+  Serial.println();
+}
 
 void Pump::On() {
   digitalWrite(pin, HIGH);
@@ -90,19 +82,14 @@ void Pump::Off() {
 
 void Pump::LogOutput() {
   JsonDocument json;
-  String desc;
-  
-  desc = F("Pump infusion occurring at pin ");;
-  desc += pin;
 
   json["level"] = F("PROGOUT");
-  json["desc"] = desc;
   json["device"] = F("PUMP");
+  json["pin"] = pin;
+  json["event"] = F("INFUSION");
   json["start_timestamp"] = startTimestamp - Offset();
   json["end_timestamp"] = endTimestamp - Offset();
-  json["duration"] = duration;
-  json["trace"] = traceInterval;
-  json["offset"] = Offset();
+  json["desc"] = F("Pump infusion occurred");
 
   serializeJson(json, Serial);
   Serial.println();  

@@ -15,16 +15,12 @@ Cue::Cue(int8_t pin, uint32_t frequency, uint32_t duration, uint32_t traceInterv
 
 void Cue::ArmToggle(bool armed) {
   JsonDocument json;
-  String desc;
   this->armed = armed;
   
-  desc = F("Cue ");
-  desc += armed ? F("armed") : F("disarmed");
-  desc += F(" at pin ");
-  desc += pin;
-
   json["level"] = F("PROGINFO");
-  json["desc"] = desc;
+  json["device"] = F("CUE");
+  json["pin"] = pin;
+  json["desc"] = armed ? F("Cue armed") : F("Cue disarmed");
 
   serializeJson(json, Serial);
   Serial.println();
@@ -62,16 +58,13 @@ void Cue::SetEvent(uint32_t currentTimestamp) {
 
 void Cue::SetFrequency(uint32_t frequency) {
   JsonDocument json;
-  String desc;
-  this->frequency =  frequency;
-
-  desc = F("Cue frequency set to ");
-  desc += this->frequency;
-  desc += F("Hz for cue at pin ");
-  desc += pin;
+  this->frequency = frequency;
 
   json["level"] = F("PROGINFO");
-  json["desc"] = desc;
+  json["device"] = F("CUE");
+  json["pin"] = pin;
+  json["frequency"] = this->frequency;
+  json["desc"] = F("Frequency changed");
 
   serializeJson(json, Serial);
   Serial.println();
@@ -79,16 +72,13 @@ void Cue::SetFrequency(uint32_t frequency) {
 
 void Cue::SetDuration(uint32_t duration) {
   JsonDocument json;
-  String desc;
   this->duration = duration;
-  
-  desc = F("Cue duration set to ");
-  desc += this->duration;
-  desc += F("ms for cue at pin ");
-  desc += pin;
 
   json["level"] = F("PROGINFO");
-  json["desc"] = desc;
+  json["device"] = F("CUE");
+  json["pin"] = pin;
+  json["duration"] = this->duration;
+  json["desc"] = F("Duration changed");
 
   serializeJson(json, Serial);
   Serial.println();
@@ -96,16 +86,13 @@ void Cue::SetDuration(uint32_t duration) {
 
 void Cue::SetTraceInterval(uint32_t traceInterval) {
   JsonDocument json;
-  String desc;
   this->traceInterval = traceInterval;
   
-  desc = F("Cue trace interval set to ");
-  desc += this->traceInterval;
-  desc += F("ms for cue at pin ");
-  desc += pin;
-
   json["level"] = F("PROGINFO");
-  json["desc"] = desc;
+  json["device"] = F("CUE");
+  json["pin"] = pin;
+  json["trace"] = this->traceInterval;
+  json["desc"] = F("Trace interval changed");
 
   serializeJson(json, Serial);
   Serial.println();
@@ -133,20 +120,18 @@ void Cue::Off() {
 
 void Cue::LogOutput() {
   JsonDocument json;
-  String desc;
-  
-  desc = F("Cue tone occurring at pin ");;
-  desc += pin;
 
   json["level"] = F("PROGOUT");
-  json["desc"] = desc;
   json["device"] = F("CUE");
+  json["pin"] = pin;
+  json["event"] = F("TONE");
   json["start_timestamp"] = startTimestamp - Offset();
   json["end_timestamp"] = endTimestamp - Offset();
-  json["frequency"] = frequency;
-  json["duration"] = duration;
-  json["trace"] = traceInterval;
-  json["offset"] = Offset();
+//  json["frequency"] = frequency;
+//  json["duration"] = duration;
+//  json["trace"] = traceInterval;
+//  json["offset"] = Offset();
+  json["desc"] = F("Cue tone occurred");
 
   serializeJson(json, Serial);
   Serial.println();

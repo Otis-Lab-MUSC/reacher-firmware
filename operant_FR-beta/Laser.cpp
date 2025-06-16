@@ -19,16 +19,12 @@ Laser::Laser(int8_t pin, uint32_t frequency, uint32_t duration, uint32_t traceIn
 
 void Laser::ArmToggle(bool armed) {
   JsonDocument json;
-  String desc;
   this->armed = armed;
   
-  desc = F("Laser ");
-  desc += armed ? F("armed") : F("disarmed");
-  desc += F(" at pin ");
-  desc += pin;
-
   json["level"] = F("PROGINFO");
-  json["desc"] = desc;
+  json["device"] = F("LASER");
+  json["pin"] = pin;
+  json["desc"] = armed ? F("Laser armed") : F("Laser disarmed");
 
   serializeJson(json, Serial);
   Serial.println();
@@ -70,16 +66,13 @@ void Laser::SetEvent(uint32_t currentTimestamp) {
 
 void Laser::SetFrequency(uint32_t frequency) {
   JsonDocument json;
-  String desc;
   this->frequency = frequency;
-  
-  desc = F("Laser frequency set to ");
-  desc += this->duration;
-  desc += F("Hz for laser at pin ");
-  desc += pin;
 
   json["level"] = F("PROGINFO");
-  json["desc"] = desc;
+  json["device"] = F("LASER");
+  json["pin"] = pin;
+  json["frequency"] = this->frequency;
+  json["desc"] = F("Frequency changed");
 
   serializeJson(json, Serial);
   Serial.println();
@@ -87,16 +80,13 @@ void Laser::SetFrequency(uint32_t frequency) {
 
 void Laser::SetDuration(uint32_t duration) {
   JsonDocument json;
-  String desc;
   this->duration = duration;
-  
-  desc = F("Laser duration set to ");
-  desc += this->duration;
-  desc += F("ms for laser at pin ");
-  desc += pin;
 
   json["level"] = F("PROGINFO");
-  json["desc"] = desc;
+  json["device"] = F("LASER");
+  json["pin"] = pin;
+  json["duration"] = this->duration;
+  json["desc"] = F("Duration changed");
 
   serializeJson(json, Serial);
   Serial.println();
@@ -104,16 +94,13 @@ void Laser::SetDuration(uint32_t duration) {
 
 void Laser::SetTraceInterval(uint32_t traceInterval) {
   JsonDocument json;
-  String desc;
   this->traceInterval = traceInterval;
   
-  desc = F("Laser trace interval set to ");
-  desc += this->traceInterval;
-  desc += F("ms for laser at pin ");
-  desc += pin;
-
   json["level"] = F("PROGINFO");
-  json["desc"] = desc;
+  json["device"] = F("LASER");
+  json["pin"] = pin;
+  json["trace"] = this->traceInterval;
+  json["desc"] = F("Trace interval changed");
 
   serializeJson(json, Serial);
   Serial.println();
@@ -121,7 +108,6 @@ void Laser::SetTraceInterval(uint32_t traceInterval) {
 
 void Laser::SetMode(bool mode) {
   JsonDocument json;
-  String desc;
   
   if (mode) {
     this->mode = CONTINGENT;
@@ -129,13 +115,11 @@ void Laser::SetMode(bool mode) {
     this->mode = INDEPENDENT;
   }
 
-  desc = F("Laser mode set to ");
-  desc += (mode) ? F("CONTINGENT") : F("INDEPENDENT");
-  desc += F(" for laser at pin ");
-  desc += pin;
-
   json["level"] = F("PROGINFO");
-  json["desc"] = desc;
+  json["device"] = F("LASER");
+  json["pin"] = pin;
+  json["mode"] = (mode) ? F("CONTINGENT") : F("INDEPENDENT");
+  json["desc"] = F("Mode changed");
 
   serializeJson(json, Serial);
   Serial.println();
@@ -195,21 +179,14 @@ void Laser::Oscillate(uint32_t currentTimestamp) {
 
 void Laser::LogOutput() {
   JsonDocument json;
-  String desc;
-  
-  desc = F("Laser stimulation occurring at pin ");;
-  desc += pin;
 
   json["level"] = F("PROGOUT");
-  json["desc"] = desc;
   json["device"] = F("LASER");
+  json["pin"] = pin;
+  json["event"] = F("STIM");
   json["start_timestamp"] = startTimestamp - Offset();
   json["end_timestamp"] = endTimestamp - Offset();
-  json["frequency"] = frequency;
-  json["duration"] = duration;
-  json["trace"] = traceInterval;
-  json["mode"] = (mode == INDEPENDENT) ? F("INDEPENDENT") : F("CONTINGENT");
-  json["offset"] = Offset();
+  json["desc"] = F("Laser stimulation occurred");
 
   serializeJson(json, Serial);
   Serial.println();

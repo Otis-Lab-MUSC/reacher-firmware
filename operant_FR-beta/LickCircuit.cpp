@@ -16,17 +16,12 @@ LickCircuit::LickCircuit(int8_t pin) : Device(pin, INPUT_PULLUP) {
 
 void LickCircuit::ArmToggle(bool armed) {
   JsonDocument json;
-  String desc;
-  
   this->armed = armed;
   
-  desc = F("Lick circuit ");
-  desc += armed ? F("armed") : F("disarmed");
-  desc += F(" at pin ");
-  desc += pin;
-
   json["level"] = F("PROGINFO");
-  json["desc"] = desc;
+  json["device"] = F("LICK_CIRCUIT");
+  json["pin"] = pin;
+  json["desc"] = armed ? F("Lick circuit armed") : F("Lick circuit disarmed");
 
   serializeJson(json, Serial);
   Serial.println();
@@ -55,18 +50,14 @@ void LickCircuit::Monitor(uint32_t currentTimestamp) {
 
 void LickCircuit::LogOutput() {
   JsonDocument json;
-  String desc;
-
-  desc += F("Lick occurred for circuit at pin ");
-  desc += pin;
 
   json["level"] = F("PROGOUT");
-  json["desc"] = desc;
   json["device"] = F("LICK_CIRCUIT");
+  json["pin"] = pin;
+  json["event"] = F("LICK");
   json["start_timestamp"] = startTimestamp - Offset();
   json["end_timestamp"] = endTimestamp - Offset();
-  json["debounce"] = debounceDelay;
-  json["offset"] = Offset();
+  json["desc"] = F("Lick occurred");
   
   serializeJson(json, Serial);
   Serial.println();

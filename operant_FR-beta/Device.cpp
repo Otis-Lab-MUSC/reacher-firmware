@@ -14,17 +14,12 @@ Device::Device(int8_t pin, uint8_t mode) {
 
 void Device::ArmToggle(bool arm) {
   JsonDocument json;
-  String desc;
-  
   this->armed = armed;
   
-  desc = F("Device ");
-  desc += armed ? F("armed") : F("disarmed");
-  desc += F(" at pin ");
-  desc += pin;
-
   json["level"] = F("PROGINFO");
-  json["desc"] = desc;
+  json["device"] = F("DEVICE");
+  json["pin"] = pin;
+  json["desc"] = armed ? F("Device armed") : F("Device disarmed");
 
   serializeJson(json, Serial);
   Serial.println();
@@ -48,14 +43,12 @@ uint32_t Device::Offset() const {
 
 void Device::LogOutput() {
   JsonDocument json;
-  String desc;
-    
-  desc = F("Event occurred for device at pin ");
-  desc += pin;
 
   json["level"] = F("PROGINFO");
-  json["desc"] = desc;
-  json["offset"] = Offset();
+  json["device"] = F("DEVICE");
+  json["pin"] = pin;
+  json["event"] = F("UNKNOWN");
+  json["desc"] = F("Event occurred");
 
   serializeJson(json, Serial);
   Serial.println();  

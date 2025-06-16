@@ -57,7 +57,14 @@ void setup() {
   json["version"] = VERSION;
   json["baud_rate"] = BAUD_RATE;
 
-  // FIXME: add device pins here
+//  json["rh_lever_pin"] = RH_LEVER_PIN;
+//  json["lh_lever_pin"] = LH_LEVER_PIN;
+//  json["cue_pin"] = CUE_PIN;
+//  json["pump_pin"] = PUMP_PIN;
+//  json["lick_circuit_pin"] = LICK_CIRCUIT_PIN;
+//  json["laser_pin"] = LASER_PIN;
+//  json["microscope_trigger_pin"] = MICROSCOPE_TRIGGER_PIN;
+//  json["microscope_timestamp_pin"] = MICROSCOPE_TIMESTAMP_PIN;
 
   serializeJson(json, Serial);
   Serial.println();
@@ -95,15 +102,11 @@ void ParseCommands() {
   if (Serial.available() > 0) {
     JsonDocument json;
     String cmd = Serial.readStringUntil('\n');
-    String desc;
     DeserializationError error = deserializeJson(json, cmd);
 
-    if (error) {
-      desc = F("Command parsing failed: ");
-      desc += error.f_str();
-      
+    if (error) {     
       json["level"] = F("PROGERR");
-      json["desc"] = desc;
+      json["desc"] = error.f_str();
 
       serializeJson(json, Serial);
       Serial.println();
@@ -207,6 +210,14 @@ void ParseCommands() {
         laser.SetMode(false);
       }
 
+      /* Microscope Commands */
+      else if (json["cmd"] == 901) {
+        microscope.ArmToggle(true);
+      }
+      else if (json["cmd"] == 900) {
+        microscope.ArmToggle(false);
+      }
+
       /* Session Commands */
       else if (json["cmd"] == 101) {
         StartSession();
@@ -218,20 +229,16 @@ void ParseCommands() {
       }
 
       /* Exception */
-      else {
-        desc = F("Command does not exist");
-        
+      else {       
         json["level"] = F("PROGERR");
-        json["desc"] = desc;
+        json["desc"] = F("Command does not exist");
 
         serializeJson(json, Serial);
         Serial.println();
       }
     } else {
-      desc = F("No valid JSON command exists");
-      
       json["level"] = F("PROGERR");
-      json["desc"] = desc;  
+      json["desc"] = F("No valid JSON command exists");
         
       serializeJson(json, Serial);
       Serial.println();
@@ -241,18 +248,15 @@ void ParseCommands() {
 
 void StartSession() {
   JsonDocument json;
-  String desc;
-
   SESSION_START_TIMESTAMP = millis();
-  
-  desc = F("Session started");
-
+ 
   json["level"] = F("PROGOUT");
-  json["desc"] = desc;
   json["device"] = F("CONTROLLER");
-  json["classification"] = F("START");
-  json["start_timestamp"] = 0;
-  json["end_timestamp"] = 0;
+  json["event"] = F("START");
+  json["timestamp"] = 0;
+  json["desc"] = F("Session started");
+
+  // FIXME: output device setting here -> make a function for this?
 
   serializeJson(json, Serial);
   Serial.println(); 
@@ -260,17 +264,13 @@ void StartSession() {
 
 void EndSession() {
   JsonDocument json;
-  String desc;
-
   SESSION_END_TIMESTAMP = millis();  
-  desc = F("Session ended");
 
   json["level"] = F("PROGOUT");
-  json["desc"] = desc;
   json["device"] = F("CONTROLLER");
-  json["classification"] = F("END");
-  json["start_timestamp"] = SESSION_END_TIMESTAMP - SESSION_START_TIMESTAMP;
-  json["end_timestamp"] = SESSION_END_TIMESTAMP - SESSION_START_TIMESTAMP;
+  json["event"] = F("END");
+  json["timestamp"] = SESSION_END_TIMESTAMP - SESSION_START_TIMESTAMP;
+  json["desc"] = F("Session ended");
 
   // manually write LOW signals before shut off
   noTone(CUE_PIN);
@@ -298,4 +298,5 @@ void ArmToggleDevices(bool toggle) {
   pump.ArmToggle(toggle);
   lickCircuit.ArmToggle(toggle);
   laser.ArmToggle(toggle);
+  microscope.ArmToggle(toggle);
 }

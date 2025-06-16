@@ -23,6 +23,8 @@ private:
     uint32_t offset;
 
     static Microscope* instance;
+
+    void LogOutput();
 };
 
 #endif // MICROSCOPE_H

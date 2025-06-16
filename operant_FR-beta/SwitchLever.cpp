@@ -21,17 +21,12 @@ SwitchLever::SwitchLever(int8_t pin, const char* orientation) : Device(pin, INPU
 
 void SwitchLever::ArmToggle(bool armed) {
   JsonDocument json;
-  String desc;
-  
   this->armed = armed;
   
-  desc = F("Switch lever ");
-  desc += armed ? F("armed") : F("disarmed");
-  desc += F(" at pin ");
-  desc += pin;
-
   json["level"] = F("PROGINFO");
-  json["desc"] = desc;
+  json["device"] = F("SWITCH_LEVER");
+  json["pin"] = pin;
+  json["desc"] = armed ? F("Switch lever armed") : F("Switch lever disarmed");
 
   serializeJson(json, Serial);
   Serial.println();
@@ -72,9 +67,6 @@ void SwitchLever::SetLaser(Laser* laser) {
 }
 
 void SwitchLever::Classify(uint32_t startTimestamp, uint32_t currentTimestamp) {
-  JsonDocument json;
-  String desc;
-  
   if (reinforced) {
     if (startTimestamp <= timeoutIntervalEnd) {
       pressType = PressType::TIMEOUT;
@@ -90,16 +82,13 @@ void SwitchLever::Classify(uint32_t startTimestamp, uint32_t currentTimestamp) {
 
 void SwitchLever::SetTimeoutIntervalLength(uint32_t timeoutInterval) {
   JsonDocument json;
-  String desc;
   this->timeoutInterval = timeoutInterval;
 
-  desc = F("Timeout interval length set to ");
-  desc += this->timeoutInterval;
-  desc += F("ms for switch lever at pin ");
-  desc += pin;
-
   json["level"] = F("PROGINFO");
-  json["desc"] = desc;
+  json["device"] = F("PUMP");
+  json["pin"] = pin;
+  json["timeout"] = this->timeoutInterval;
+  json["desc"] = F("Timeout interval changed");
 
   serializeJson(json, Serial);
   Serial.println();
@@ -107,16 +96,12 @@ void SwitchLever::SetTimeoutIntervalLength(uint32_t timeoutInterval) {
 
 void SwitchLever::SetReinforcement(bool reinforced) {
   JsonDocument json;
-  String desc;
   this->reinforced = reinforced;
 
-  desc = F("Reinforcement set to ");
-  desc += (this->reinforced) ? F("true") : F("false");
-  desc += F(" for switch lever at pin ");
-  desc += pin;
-
   json["level"] = F("PROGINFO");
-  json["desc"] = desc;
+  json["device"] = F("PUMP");
+  json["pin"] = pin;
+  json["desc"] = this->reinforced ? F("Switch lever set to be reinforced") : F("Switch lever set to be unenforced");
 
   serializeJson(json, Serial);
   Serial.println();
@@ -124,22 +109,16 @@ void SwitchLever::SetReinforcement(bool reinforced) {
  
 void SwitchLever::LogOutput() {
   JsonDocument json;
-  String desc;
-
-  desc = (reinforced) ? ((pressType == PressType::ACTIVE) ? F("Active") : F("Timeout")) : F("Independent");
-  desc += F(" press occurred for ");
-  desc += orientation;
-  desc += F(" lever");
 
   json["level"] = F("PROGOUT");
-  json["desc"] = desc;
   json["device"] = F("SWITCH_LEVER");
+  json["pin"] = pin;
+  json["event"] = F("PRESS");
   json["start_timestamp"] = startTimestamp - Offset();
   json["end_timestamp"] = endTimestamp - Offset();
   json["orientation"] = orientation;
   json["classification"] = (reinforced) ? ((pressType == PressType::ACTIVE) ? F("ACTIVE") : F("TIMEOUT")) : F("INDEPENDENT"); 
-  json["debounce"] = debounceDelay;
-  json["offset"] = Offset();
+  json["desc"] = (reinforced) ? ((pressType == PressType::ACTIVE) ? F("Active press occurred") : F("Timeout press occurred")) : F("Independent press occurred");;
   
   serializeJson(json, Serial);
   Serial.println();

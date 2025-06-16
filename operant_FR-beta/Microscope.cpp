@@ -31,17 +31,39 @@ void Microscope::HandleFrameSignal() {
         if (received) {
             noInterrupts();
             received = false;
-            int32_t t = timestamp;
+            LogOutput();
             interrupts(); 
-            Serial.println("FRAME_TIMESTAMP," + String(t));
         }
     }
 }
 
 void Microscope::ArmToggle(bool armed) {
-    this->armed = armed;
+  JsonDocument json;
+  this->armed = armed;
+  
+  json["level"] = F("PROGINFO");
+  json["device"] = F("MICROSCOPE");
+  json["pin"] = triggerPin;
+  json["desc"] = armed ? F("Microscope armed") : F("Microscope disarmed");
+
+  serializeJson(json, Serial);
+  Serial.println();
 }
 
 void Microscope::SetOffset(uint32_t offset) {
     this->offset = offset;
+}
+
+void Microscope::LogOutput() {
+  JsonDocument json;
+
+  json["level"] = F("PROGOUT");
+  json["device"] = F("MICROSCOPE");
+  json["pin"] = timestampPin;
+  json["event"] = F("FRAME");
+  json["timestamp"] = instance->timestamp;
+  json["desc"] = F("Frame timestamp collected");
+
+  serializeJson(json, Serial);
+  Serial.println();   
 }
