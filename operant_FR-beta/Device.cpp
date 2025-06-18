@@ -4,6 +4,9 @@
 
 #include "Device.h"
 
+#define deviceType "UNKNOWN"
+#define eventType "UNKNOWN"
+
 Device::Device(int8_t pin, uint8_t mode) {
   this->pin = pin;
   this->mode = mode;
@@ -13,16 +16,7 @@ Device::Device(int8_t pin, uint8_t mode) {
 }
 
 void Device::ArmToggle(bool arm) {
-  JsonDocument json;
   this->armed = armed;
-  
-  json["level"] = F("PROGINFO");
-  json["device"] = F("DEVICE");
-  json["pin"] = pin;
-  json["desc"] = armed ? F("Device armed") : F("Device disarmed");
-
-  serializeJson(json, Serial);
-  Serial.println();
 }
 
 void Device::SetOffset(uint32_t offset) {
@@ -42,14 +36,7 @@ uint32_t Device::Offset() const {
 }
 
 void Device::LogOutput() {
-  JsonDocument json;
+}
 
-  json["level"] = F("PROGINFO");
-  json["device"] = F("DEVICE");
-  json["pin"] = pin;
-  json["event"] = F("UNKNOWN");
-  json["desc"] = F("Event occurred");
-
-  serializeJson(json, Serial);
-  Serial.println();  
+void Device::Config(JsonDocument* json) {
 }

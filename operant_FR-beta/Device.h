@@ -13,6 +13,7 @@ public:
   virtual int8_t Pin() const;
   virtual bool Armed() const; 
   virtual uint32_t Offset() const;
+  virtual void Config(JsonDocument* json);
   
 private:
   uint32_t offset;

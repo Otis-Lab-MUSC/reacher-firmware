@@ -18,6 +18,7 @@ public:
   void SetLaser(Laser* laser);
   void SetTimeoutIntervalLength(uint32_t timeoutInterval);
   void SetReinforcement(bool reinforced);
+  void Config(JsonDocument* json);
   
 private:
   bool initState;

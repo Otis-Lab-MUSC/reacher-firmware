@@ -13,6 +13,7 @@ public:
   void SetEvent(uint32_t currentTimestamp);
   void SetDuration(uint32_t duration);
   void SetTraceInterval(uint32_t traceInterval);
+  void Config(JsonDocument* json);
 
   uint32_t Duration();
   uint32_t TraceInterval();

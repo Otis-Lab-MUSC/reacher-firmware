@@ -9,6 +9,7 @@ public:
   LickCircuit(int8_t pin);
   void ArmToggle(bool armed);
   void Monitor(uint32_t currentTimestamp);
+  void Config(JsonDocument* json);
   
 private:
   bool initState;

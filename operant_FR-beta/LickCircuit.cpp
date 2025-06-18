@@ -4,6 +4,9 @@
 
 #include "LickCircuit.h"
 
+#define deviceType "LICK_CIRCUIT"
+#define eventType "LICK"
+
 LickCircuit::LickCircuit(int8_t pin) : Device(pin, INPUT_PULLUP) {
   armed = false;
   this->pin = pin;
@@ -18,10 +21,11 @@ void LickCircuit::ArmToggle(bool armed) {
   JsonDocument json;
   this->armed = armed;
   
-  json["level"] = F("PROGINFO");
-  json["device"] = F("LICK_CIRCUIT");
+  json["level"] = 444;
+  json["device"] = deviceType;
   json["pin"] = pin;
-  json["desc"] = armed ? F("Lick circuit armed") : F("Lick circuit disarmed");
+  json["var"] = "armed";
+  json["val"] = this->armed;
 
   serializeJson(json, Serial);
   Serial.println();
@@ -51,14 +55,20 @@ void LickCircuit::Monitor(uint32_t currentTimestamp) {
 void LickCircuit::LogOutput() {
   JsonDocument json;
 
-  json["level"] = F("PROGOUT");
-  json["device"] = F("LICK_CIRCUIT");
+  json["level"] = 777;
+  json["device"] = deviceType;
   json["pin"] = pin;
-  json["event"] = F("LICK");
-  json["start_timestamp"] = startTimestamp - Offset();
-  json["end_timestamp"] = endTimestamp - Offset();
-  json["desc"] = F("Lick occurred");
+  json["event"] = eventType;
+  json["ts1"] = startTimestamp - Offset();
+  json["ts2"] = endTimestamp - Offset();
   
   serializeJson(json, Serial);
   Serial.println();
+}
+
+void LickCircuit::Config(JsonDocument* json) {
+  JsonObject conf = json->createNestedObject(deviceType);
+
+  conf["pin"] = pin;
+  conf["debounce"] = debounceDelay;
 }

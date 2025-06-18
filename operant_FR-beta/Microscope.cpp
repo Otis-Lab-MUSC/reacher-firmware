@@ -4,6 +4,9 @@
 
 #include "Microscope.h"
 
+#define deviceType "MICROSCOPE"
+#define eventType "FRAME"
+
 Microscope* Microscope::instance = nullptr;
 
 Microscope::Microscope(int8_t triggerPin, int8_t timestampPin) {
@@ -41,10 +44,11 @@ void Microscope::ArmToggle(bool armed) {
   JsonDocument json;
   this->armed = armed;
   
-  json["level"] = F("PROGINFO");
-  json["device"] = F("MICROSCOPE");
+  json["level"] = 444;
+  json["device"] = deviceType;
   json["pin"] = triggerPin;
-  json["desc"] = armed ? F("Microscope armed") : F("Microscope disarmed");
+  json["var"] = "armed";
+  json["val"] = this->armed;
 
   serializeJson(json, Serial);
   Serial.println();
@@ -57,13 +61,19 @@ void Microscope::SetOffset(uint32_t offset) {
 void Microscope::LogOutput() {
   JsonDocument json;
 
-  json["level"] = F("PROGOUT");
-  json["device"] = F("MICROSCOPE");
+  json["level"] = 777;
+  json["device"] = deviceType;
   json["pin"] = timestampPin;
-  json["event"] = F("FRAME");
-  json["timestamp"] = instance->timestamp;
-  json["desc"] = F("Frame timestamp collected");
+  json["event"] = eventType;
+  json["ts"] = instance->timestamp;
 
   serializeJson(json, Serial);
   Serial.println();   
+}
+
+void Microscope::Config(JsonDocument* json) {
+  JsonObject conf = json->createNestedObject(deviceType);
+
+  conf["trigger_pin"] = triggerPin;
+  conf["timestamp_pin"] = timestampPin;
 }

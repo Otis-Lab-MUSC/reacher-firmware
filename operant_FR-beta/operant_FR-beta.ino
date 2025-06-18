@@ -12,27 +12,28 @@
 
 #define SKETCH_NAME F("operant_FR.ino")
 #define VERSION F("v1.1.1")
-#define BAUD_RATE 115200
 
-#define RH_LEVER_PIN 10
-#define LH_LEVER_PIN 13
-#define CUE_PIN 3
-#define PUMP_PIN 4
-#define LICK_CIRCUIT_PIN 5
-#define LASER_PIN 6
-#define MICROSCOPE_TRIGGER_PIN 9
-#define MICROSCOPE_TIMESTAMP_PIN 2
+const uint32_t BAUD_RATE = 115200;
 
-#define DEF_CUE_FREQ 8000
-#define DEF_CUE_DUR 1600
-#define DEF_CUE_TRACE 0
+const uint8_t RH_LEVER_PIN = 10;
+const uint8_t LH_LEVER_PIN = 13;
+const uint8_t CUE_PIN = 3;
+const uint8_t PUMP_PIN = 4;
+const uint8_t LICK_CIRCUIT_PIN = 5;
+const uint8_t LASER_PIN = 6;
+const uint8_t MICROSCOPE_TRIGGER_PIN = 9;
+const uint8_t MICROSCOPE_TIMESTAMP_PIN = 2;
 
-#define DEF_PUMP_DUR 2000
-#define DEF_PUMP_TRACE DEF_CUE_DUR
+const uint32_t DEF_CUE_FREQ = 8000;
+const uint32_t DEF_CUE_DUR = 1600;
+const uint8_t DEF_CUE_TRACE = 0;
 
-#define DEF_LASER_FREQ 1
-#define DEF_LASER_DUR 5000
-#define DEF_LASER_TRACE 0
+const uint32_t DEF_PUMP_DUR = 2000;
+const uint8_t DEF_PUMP_TRACE = DEF_CUE_DUR;
+
+const uint8_t DEF_LASER_FREQ = 1;
+const uint32_t DEF_LASER_DUR = 5000;
+const uint8_t DEF_LASER_TRACE = 0;
 
 SwitchLever rLever(RH_LEVER_PIN, "RH");
 SwitchLever lLever(LH_LEVER_PIN, "LH");
@@ -52,19 +53,21 @@ void setup() {
 
   JsonDocument json;
 
-  json["level"] = F("SETUP");
+  json["level"] = 333;
   json["sketch"] = SKETCH_NAME;
   json["version"] = VERSION;
   json["baud_rate"] = BAUD_RATE;
 
-//  json["rh_lever_pin"] = RH_LEVER_PIN;
-//  json["lh_lever_pin"] = LH_LEVER_PIN;
-//  json["cue_pin"] = CUE_PIN;
-//  json["pump_pin"] = PUMP_PIN;
-//  json["lick_circuit_pin"] = LICK_CIRCUIT_PIN;
-//  json["laser_pin"] = LASER_PIN;
-//  json["microscope_trigger_pin"] = MICROSCOPE_TRIGGER_PIN;
-//  json["microscope_timestamp_pin"] = MICROSCOPE_TIMESTAMP_PIN;
+//  JsonObject pins = json.createNestedObject("pins");
+//
+//  pins["rh_lever"] = RH_LEVER_PIN;
+//  pins["lh_lever"] = LH_LEVER_PIN;
+//  pins["cue"] = CUE_PIN;
+//  pins["pump"] = PUMP_PIN;
+//  pins["lick_circuit"] = LICK_CIRCUIT_PIN;
+//  pins["laser"] = LASER_PIN;
+//  pins["microscope_trigger"] = MICROSCOPE_TRIGGER_PIN;
+//  pins["microscope_timestamp"] = MICROSCOPE_TIMESTAMP_PIN;
 
   serializeJson(json, Serial);
   Serial.println();
@@ -76,13 +79,6 @@ void setup() {
   rLever.SetLaser(&laser);
   rLever.SetTimeoutIntervalLength(DEF_CUE_DUR + DEF_PUMP_DUR);
   rLever.SetReinforcement(true);
-  
-//  rLever.ArmToggle(true);
-//  lLever.ArmToggle(true);
-//  cue.ArmToggle(true);
-//  pump.ArmToggle(true);
-//  lickCircuit.ArmToggle(true);
-//  laser.ArmToggle(true);
 }
 
 void loop() {
@@ -105,7 +101,7 @@ void ParseCommands() {
     DeserializationError error = deserializeJson(json, cmd);
 
     if (error) {     
-      json["level"] = F("PROGERR");
+      json["level"] = 666;
       json["desc"] = error.f_str();
 
       serializeJson(json, Serial);
@@ -227,22 +223,7 @@ void ParseCommands() {
         EndSession();
         ArmToggleDevices(false);
       }
-
-      /* Exception */
-      else {       
-        json["level"] = F("PROGERR");
-        json["desc"] = F("Command does not exist");
-
-        serializeJson(json, Serial);
-        Serial.println();
-      }
-    } else {
-      json["level"] = F("PROGERR");
-      json["desc"] = F("No valid JSON command exists");
-        
-      serializeJson(json, Serial);
-      Serial.println();
-    }   
+    } 
   }
 }
 
@@ -250,27 +231,27 @@ void StartSession() {
   JsonDocument json;
   SESSION_START_TIMESTAMP = millis();
  
-  json["level"] = F("PROGOUT");
+  json["level"] = 777;
   json["device"] = F("CONTROLLER");
   json["event"] = F("START");
-  json["timestamp"] = 0;
-  json["desc"] = F("Session started");
+  json["ts"] = 0;
 
   // FIXME: output device setting here -> make a function for this?
 
   serializeJson(json, Serial);
   Serial.println(); 
+
+  OutputDeviceConfig();
 }
 
 void EndSession() {
   JsonDocument json;
   SESSION_END_TIMESTAMP = millis();  
 
-  json["level"] = F("PROGOUT");
+  json["level"] = 777;
   json["device"] = F("CONTROLLER");
   json["event"] = F("END");
-  json["timestamp"] = SESSION_END_TIMESTAMP - SESSION_START_TIMESTAMP;
-  json["desc"] = F("Session ended");
+  json["ts"] = SESSION_END_TIMESTAMP - SESSION_START_TIMESTAMP;
 
   // manually write LOW signals before shut off
   noTone(CUE_PIN);
@@ -299,4 +280,21 @@ void ArmToggleDevices(bool toggle) {
   lickCircuit.ArmToggle(toggle);
   laser.ArmToggle(toggle);
   microscope.ArmToggle(toggle);
+}
+
+void OutputDeviceConfig() {
+  JsonDocument json;
+ 
+  json["level"] = 333;
+
+  rLever.Config(&json);
+  lLever.Config(&json);
+  cue.Config(&json);
+  pump.Config(&json);
+  lickCircuit.Config(&json);
+  laser.Config(&json);
+  microscope.Config(&json);
+
+  serializeJson(json, Serial);
+  Serial.println();   
 }
