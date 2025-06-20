@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 #include <ArduinoJson.h>
 
 #include "Device.h"
@@ -10,66 +9,43 @@
 #include "Laser.h"
 #include "Microscope.h"
 
-#define SKETCH_NAME F("operant_FR.ino")
-#define VERSION F("v1.1.1")
-
-const uint32_t BAUD_RATE = 115200;
-
-const uint8_t RH_LEVER_PIN = 10;
-const uint8_t LH_LEVER_PIN = 13;
-const uint8_t CUE_PIN = 3;
-const uint8_t PUMP_PIN = 4;
-const uint8_t LICK_CIRCUIT_PIN = 5;
-const uint8_t LASER_PIN = 6;
-const uint8_t MICROSCOPE_TRIGGER_PIN = 9;
-const uint8_t MICROSCOPE_TIMESTAMP_PIN = 2;
-
-const uint32_t DEF_CUE_FREQ = 8000;
-const uint32_t DEF_CUE_DUR = 1600;
-const uint8_t DEF_CUE_TRACE = 0;
-
-const uint32_t DEF_PUMP_DUR = 2000;
-const uint8_t DEF_PUMP_TRACE = DEF_CUE_DUR;
-
-const uint8_t DEF_LASER_FREQ = 1;
-const uint32_t DEF_LASER_DUR = 5000;
-const uint8_t DEF_LASER_TRACE = 0;
-
-SwitchLever rLever(RH_LEVER_PIN, "RH");
-SwitchLever lLever(LH_LEVER_PIN, "LH");
-Cue cue(CUE_PIN, DEF_CUE_FREQ, DEF_CUE_DUR, DEF_CUE_TRACE);
-Pump pump(PUMP_PIN, DEF_PUMP_DUR, cue.Duration());
-LickCircuit lickCircuit(LICK_CIRCUIT_PIN);
-Laser laser(LASER_PIN, 40, DEF_LASER_DUR, cue.Duration());
-Microscope microscope(MICROSCOPE_TRIGGER_PIN, MICROSCOPE_TIMESTAMP_PIN);
+SwitchLever rLever(10, "RH");
+SwitchLever lLever(13, "LH");
+Cue cue(3, 8000, 1600, 0);
+Pump pump(4, 2000, cue.Duration());
+LickCircuit lickCircuit(5);
+Laser laser(6, 40, 5000, cue.Duration());
+Microscope microscope(9, 2);
 
 uint32_t SESSION_START_TIMESTAMP;
 uint32_t SESSION_END_TIMESTAMP;
 
 void setup() {
+  const uint32_t baudrate = 115200;
+  
   delay(100);
-  Serial.begin(BAUD_RATE);
+  Serial.begin(baudrate);
   delay(100);
 
-  JsonDocument json;
+  StaticJsonDocument<128> doc;
 
-  json["level"] = 333;
-  json["sketch"] = SKETCH_NAME;
-  json["version"] = VERSION;
-  json["baud_rate"] = BAUD_RATE;
+  doc["level"] = F("000");
+  doc["sketch"] = F("operant_FR.ino");
+  doc["version"] = F("v1.1.1");
+  doc["baud_rate"] = baudrate;
 
-//  JsonObject pins = json.createNestedObject("pins");
-//
-//  pins["rh_lever"] = RH_LEVER_PIN;
-//  pins["lh_lever"] = LH_LEVER_PIN;
-//  pins["cue"] = CUE_PIN;
-//  pins["pump"] = PUMP_PIN;
-//  pins["lick_circuit"] = LICK_CIRCUIT_PIN;
-//  pins["laser"] = LASER_PIN;
-//  pins["microscope_trigger"] = MICROSCOPE_TRIGGER_PIN;
-//  pins["microscope_timestamp"] = MICROSCOPE_TIMESTAMP_PIN;
+  JsonObject pins = doc.createNestedObject("pins");
 
-  serializeJson(json, Serial);
+  pins["rh_lever"] = rLever.Pin();
+  pins["lh_lever"] = lLever.Pin();
+  pins["cue"] = cue.Pin();
+  pins["pump"] = pump.Pin();
+  pins["lick_circuit"] = lickCircuit.Pin();
+  pins["laser"] = laser.Pin();
+  pins["microscope_trigger"] = microscope.TriggerPin();
+  pins["microscope_timestamp"] = microscope.TimestampPin();
+
+  serializeJson(doc, Serial);
   Serial.println();
   
   cue.Jingle();
@@ -77,7 +53,7 @@ void setup() {
   rLever.SetCue(&cue);
   rLever.SetPump(&pump);
   rLever.SetLaser(&laser);
-  rLever.SetTimeoutIntervalLength(DEF_CUE_DUR + DEF_PUMP_DUR);
+  rLever.SetTimeoutIntervalLength(cue.Duration() + pump.Duration());
   rLever.SetReinforcement(true);
 }
 
@@ -96,169 +72,91 @@ void loop() {
 
 void ParseCommands() {
   if (Serial.available() > 0) {
-    JsonDocument json;
+    StaticJsonDocument<128> doc;
     String cmd = Serial.readStringUntil('\n');
-    DeserializationError error = deserializeJson(json, cmd);
+    DeserializationError error = deserializeJson(doc, cmd);
 
-    if (error) {     
-      json["level"] = 666;
-      json["desc"] = error.f_str();
-
-      serializeJson(json, Serial);
+    if (error) {
+      doc.clear();
+      doc["level"] = 666;
+      doc["desc"] = error.f_str();
+      serializeJson(doc, Serial);
       Serial.println();
-    } 
-    
-    else if(json["cmd"]) {
+      return;
+    }
 
-      /* RH Lever Commands */
-      if (json["cmd"] == 1001) {
-        rLever.ArmToggle(true);
-      } 
-      else if (json["cmd"] == 1000) {
-        rLever.ArmToggle(false);
+    if (!doc["cmd"].isNull()) {
+      int command = doc["cmd"];
+      switch (command) {
+        case 1001: rLever.ArmToggle(true); break;
+        case 1000: rLever.ArmToggle(false); break;
+        case 1074: rLever.SetTimeoutIntervalLength(doc["timeout"]); break;
+        case 1081: rLever.SetReinforcement(true); break;
+        case 1080: rLever.SetReinforcement(false); break;
+        case 1301: lLever.ArmToggle(true); break;
+        case 1300: lLever.ArmToggle(false); break;
+        case 1374: lLever.SetTimeoutIntervalLength(doc["timeout"]); break;
+        case 1381: lLever.SetReinforcement(true); break;
+        case 1380: lLever.SetReinforcement(false); break;
+        case 301: cue.ArmToggle(true); break;
+        case 300: cue.ArmToggle(false); break;
+        case 371: cue.SetFrequency(doc["frequency"]); break;
+        case 372: cue.SetDuration(doc["duration"]); break;
+        case 373: cue.SetTraceInterval(doc["trace"]); break;
+        case 401: pump.ArmToggle(true); break;
+        case 400: pump.ArmToggle(false); break;
+        case 472: pump.SetDuration(doc["duration"]); break;
+        case 473: pump.SetTraceInterval(doc["trace"]); break;
+        case 501: lickCircuit.ArmToggle(true); break;
+        case 500: lickCircuit.ArmToggle(false); break;
+        case 601: laser.ArmToggle(true); break;
+        case 600: laser.ArmToggle(false); break;
+        case 671: laser.SetFrequency(doc["frequency"]); break;
+        case 672: laser.SetDuration(doc["duration"]); break;
+        case 673: laser.SetTraceInterval(doc["trace"]); break;
+        case 681: laser.SetMode(true); break;
+        case 682: laser.SetMode(false); break;
+        case 901: microscope.ArmToggle(true); break;
+        case 900: microscope.ArmToggle(false); break;
+        case 101: StartSession(); SetDeviceTimestampOffset(SESSION_START_TIMESTAMP); break;
+        case 100: EndSession(); ArmToggleDevices(false); break;
       }
-      else if (json["cmd"] == 1074) {
-        rLever.SetTimeoutIntervalLength(json["timeout"]);
-      }
-      else if (json["cmd"] == 1081) {
-        rLever.SetReinforcement(true);
-      }
-      else if (json["cmd"] == 1080) {
-        rLever.SetReinforcement(false);
-      }
-
-      /* LH Lever Commands */
-      else if (json["cmd"] == 1301) {
-        lLever.ArmToggle(true);
-      } 
-      else if (json["cmd"] == 1300) {
-        lLever.ArmToggle(false);
-      }
-      else if (json["cmd"] == 1374) {
-        lLever.SetTimeoutIntervalLength(json["timeout"]);
-      }
-      else if (json["cmd"] == 1381) {
-        lLever.SetReinforcement(true);
-      }
-      else if (json["cmd"] == 1380) {
-        lLever.SetReinforcement(false);
-      }
-
-      /* Cue Commands */
-      else if (json["cmd"] == 301) {
-        cue.ArmToggle(true);
-      } 
-      else if (json["cmd"] == 300) {
-        cue.ArmToggle(false);
-      }
-      else if (json["cmd"] == 371) {
-        cue.SetFrequency(json["frequency"]);
-      }
-      else if (json["cmd"] == 372) {
-        cue.SetDuration(json["duration"]);
-      }
-      else if (json["cmd"] == 373) {
-        cue.SetTraceInterval(json["trace"]);
-      }
-
-      /* Pump Commands */
-      else if (json["cmd"] == 401) {
-        pump.ArmToggle(true);
-      } 
-      else if (json["cmd"] == 400) {
-        pump.ArmToggle(false);
-      }
-      else if (json["cmd"] == 472) {
-        pump.SetDuration(json["duration"]);
-      }
-      else if (json["cmd"] == 473) {
-        pump.SetTraceInterval(json["trace"]);
-      }
-
-      /* Lick Circuit Commands */
-      else if (json["cmd"] == 501) {
-        lickCircuit.ArmToggle(true);
-      } 
-      else if (json["cmd"] == 500) {
-        lickCircuit.ArmToggle(false);
-      }
-
-      /* Laser Commands */
-      else if (json["cmd"] == 601) {
-        laser.ArmToggle(true);
-      } 
-      else if (json["cmd"] == 600) {
-        laser.ArmToggle(false);
-      }
-      else if(json["cmd"] == 671) {
-        laser.SetFrequency(json["frequency"]);
-      }
-      else if(json["cmd"] == 672) {
-        laser.SetDuration(json["duration"]);
-      }
-      else if(json["cmd"] == 673) {
-        laser.SetTraceInterval(json["trace"]);
-      }
-      else if (json["cmd"] == 681) {
-        laser.SetMode(true);
-      }
-      else if (json["cmd"] == 682) {
-        laser.SetMode(false);
-      }
-
-      /* Microscope Commands */
-      else if (json["cmd"] == 901) {
-        microscope.ArmToggle(true);
-      }
-      else if (json["cmd"] == 900) {
-        microscope.ArmToggle(false);
-      }
-
-      /* Session Commands */
-      else if (json["cmd"] == 101) {
-        StartSession();
-        SetDeviceTimestampOffset(SESSION_START_TIMESTAMP);
-      }
-      else if (json["cmd"] == 100) {
-        EndSession();
-        ArmToggleDevices(false);
-      }
-    } 
+    }
   }
 }
 
 void StartSession() {
-  JsonDocument json;
+  JsonDocument doc;
   SESSION_START_TIMESTAMP = millis();
  
-  json["level"] = 777;
-  json["device"] = F("CONTROLLER");
-  json["event"] = F("START");
-  json["ts"] = 0;
+  doc["level"] = 777;
+  doc["device"] = F("CONTROLLER");
+  doc["event"] = F("START");
+  doc["ts"] = 0;
 
   // FIXME: output device setting here -> make a function for this?
 
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println(); 
 
   OutputDeviceConfig();
 }
 
 void EndSession() {
-  JsonDocument json;
+  JsonDocument doc;
   SESSION_END_TIMESTAMP = millis();  
 
-  json["level"] = 777;
-  json["device"] = F("CONTROLLER");
-  json["event"] = F("END");
-  json["ts"] = SESSION_END_TIMESTAMP - SESSION_START_TIMESTAMP;
+  doc["level"] = 777;
+  doc["device"] = F("CONTROLLER");
+  doc["event"] = F("END");
+  doc["ts"] = SESSION_END_TIMESTAMP - SESSION_START_TIMESTAMP;
 
   // manually write LOW signals before shut off
-  noTone(CUE_PIN);
-  digitalWrite(PUMP_PIN, LOW);
-  digitalWrite(LASER_PIN, LOW);
+  noTone(cue.Pin());
+  digitalWrite(pump.Pin(), LOW);
+  digitalWrite(laser.Pin(), LOW);
 
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println();   
 }
 
@@ -283,18 +181,18 @@ void ArmToggleDevices(bool toggle) {
 }
 
 void OutputDeviceConfig() {
-  JsonDocument json;
+  JsonDocument doc;
  
-  json["level"] = 333;
+  doc["level"] = 333;
 
-  rLever.Config(&json);
-  lLever.Config(&json);
-  cue.Config(&json);
-  pump.Config(&json);
-  lickCircuit.Config(&json);
-  laser.Config(&json);
-  microscope.Config(&json);
+  rLever.Config(&doc);
+  lLever.Config(&doc);
+  cue.Config(&doc);
+  pump.Config(&doc);
+  lickCircuit.Config(&doc);
+  laser.Config(&doc);
+  microscope.Config(&doc);
 
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println();   
 }

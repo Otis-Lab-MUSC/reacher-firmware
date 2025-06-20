@@ -1,13 +1,12 @@
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 #include <ArduinoJson.h>
 
 #include "Device.h"
 
-#define deviceType "UNKNOWN"
-#define eventType "UNKNOWN"
-
 Device::Device(int8_t pin, uint8_t mode) {
+  const char deviceType[] = "UNKNOWN";
+  const char eventType[] = "UNKNOWN";
+
   this->pin = pin;
   this->mode = mode;
   armed = false;
@@ -23,7 +22,7 @@ void Device::SetOffset(uint32_t offset) {
   this->offset = offset;
 }
 
-int8_t Device::Pin() const {
+byte Device::Pin() const {
   return pin;
 }
 
@@ -38,5 +37,27 @@ uint32_t Device::Offset() const {
 void Device::LogOutput() {
 }
 
-void Device::Config(JsonDocument* json) {
+void Device::Config(JsonDocument* doc) {
+}
+
+void Device::SerializeVar(const char var[], bool val) {
+  doc.clear();
+  doc["level"] = 444;
+  doc["device"] = String(deviceType);
+  doc["pin"] = pin;
+  doc["var"] = String(var);
+  doc["val"] = val;
+  serializeJson(doc, Serial);
+  Serial.println();
+}
+
+void Device::SerializeVar(const char var[], uint32_t val) {
+  doc.clear();
+  doc["level"] = 444;
+  doc["device"] = String(deviceType);
+  doc["pin"] = pin;
+  doc["var"] = String(var);
+  doc["val"] = val;
+  serializeJson(doc, Serial);
+  Serial.println();
 }

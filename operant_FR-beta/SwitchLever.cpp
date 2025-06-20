@@ -1,13 +1,12 @@
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 #include <ArduinoJson.h>
 
 #include "SwitchLever.h"
 
-#define deviceType "SWITCH_LEVER"
-#define eventType "PRESS"
-
 SwitchLever::SwitchLever(int8_t pin, const char* orientation) : Device(pin, INPUT_PULLUP) {
+  const char deviceType[] = "SWITCH_LEVER";
+  const char eventType[] = "PRESS";
+  
   armed = false;
   this->pin = pin;
   strncpy(this->orientation, orientation, sizeof(this->orientation) - 1);
@@ -23,16 +22,17 @@ SwitchLever::SwitchLever(int8_t pin, const char* orientation) : Device(pin, INPU
 }
 
 void SwitchLever::ArmToggle(bool armed) {
-  JsonDocument json;
+  doc.clear();
+  
   this->armed = armed;
   
-  json["level"] = 444;
-  json["device"] = deviceType;
-  json["pin"] = pin;
-  json["var"] = "armed";
-  json["val"] = this->armed;
+  doc["level"] = 444;
+  doc["device"] = deviceType;
+  doc["pin"] = pin;
+  doc["var"] = "armed";
+  doc["val"] = this->armed;
 
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println();
 }
 
@@ -85,46 +85,48 @@ void SwitchLever::Classify(uint32_t startTimestamp, uint32_t currentTimestamp) {
 }
 
 void SwitchLever::SetTimeoutIntervalLength(uint32_t timeoutInterval) {
-  JsonDocument json;
+  doc.clear();
+
   this->timeoutInterval = timeoutInterval;
 
-  json["level"] = 444;
-  json["device"] = deviceType;
-  json["pin"] = pin;
-  json["var"] = "timeoutInterval";
-  json["val"] = this->timeoutInterval;
+  doc["level"] = 444;
+  doc["device"] = deviceType;
+  doc["pin"] = pin;
+  doc["var"] = "timeoutInterval";
+  doc["val"] = this->timeoutInterval;
 
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println();
 }
 
 void SwitchLever::SetReinforcement(bool reinforced) {
-  JsonDocument json;
+  doc.clear();
+  
   this->reinforced = reinforced;
 
-  json["level"] = 444;
-  json["device"] = deviceType;
-  json["pin"] = pin;
-  json["var"] = "reinforced";
-  json["val"] = this->reinforced;
+  doc["level"] = 444;
+  doc["device"] = deviceType;
+  doc["pin"] = pin;
+  doc["var"] = "reinforced";
+  doc["val"] = this->reinforced;
 
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println();
 }
  
 void SwitchLever::LogOutput() {
-  JsonDocument json;
-
-  json["level"] = 777;
-  json["device"] = deviceType;
-  json["pin"] = pin;
-  json["event"] = eventType;
-  json["ts1"] = startTimestamp - Offset();
-  json["ts2"] = endTimestamp - Offset();
-  json["orient"] = orientation;
-  json["class"] = pressType; // 0=ACTIVE, 1=TIMEOUT, 2=INDEPENDENT 
+  doc.clear();
   
-  serializeJson(json, Serial);
+  doc["level"] = 777;
+  doc["device"] = deviceType;
+  doc["pin"] = pin;
+  doc["event"] = eventType;
+  doc["ts1"] = startTimestamp - Offset();
+  doc["ts2"] = endTimestamp - Offset();
+  doc["orient"] = orientation;
+  doc["class"] = pressType; // 0=ACTIVE, 1=TIMEOUT, 2=INDEPENDENT 
+  
+  serializeJson(doc, Serial);
   Serial.println();
 }
 
@@ -134,10 +136,10 @@ void SwitchLever::AddActions(uint32_t currentTimestamp) {
   if (laser) { laser->SetEvent(currentTimestamp); }
 }
 
-void SwitchLever::Config(JsonDocument* json) {
+void SwitchLever::Config(JsonDocument* doc) {
   String device = orientation;
   device += "_LEVER";
-  JsonObject conf = json->createNestedObject(device);
+  JsonObject conf = doc->createNestedObject(device);
 
   conf["pin"] = pin;
   conf["reinforced"] = reinforced;

@@ -1,13 +1,12 @@
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 #include <ArduinoJson.h>
 
 #include "LickCircuit.h"
 
-#define deviceType "LICK_CIRCUIT"
-#define eventType "LICK"
-
 LickCircuit::LickCircuit(int8_t pin) : Device(pin, INPUT_PULLUP) {
+  const char deviceType[] = "LICK_CIRCUIT";
+  const char eventType[] = "LICK";
+
   armed = false;
   this->pin = pin;
   pinMode(pin, INPUT_PULLUP);
@@ -18,16 +17,17 @@ LickCircuit::LickCircuit(int8_t pin) : Device(pin, INPUT_PULLUP) {
 }
 
 void LickCircuit::ArmToggle(bool armed) {
-  JsonDocument json;
+  doc.clear();
+  
   this->armed = armed;
   
-  json["level"] = 444;
-  json["device"] = deviceType;
-  json["pin"] = pin;
-  json["var"] = "armed";
-  json["val"] = this->armed;
+  doc["level"] = 444;
+  doc["device"] = deviceType;
+  doc["pin"] = pin;
+  doc["var"] = "armed";
+  doc["val"] = this->armed;
 
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println();
 }
 
@@ -53,21 +53,21 @@ void LickCircuit::Monitor(uint32_t currentTimestamp) {
 }
 
 void LickCircuit::LogOutput() {
-  JsonDocument json;
-
-  json["level"] = 777;
-  json["device"] = deviceType;
-  json["pin"] = pin;
-  json["event"] = eventType;
-  json["ts1"] = startTimestamp - Offset();
-  json["ts2"] = endTimestamp - Offset();
+  doc.clear();
   
-  serializeJson(json, Serial);
+  doc["level"] = 777;
+  doc["device"] = deviceType;
+  doc["pin"] = pin;
+  doc["event"] = eventType;
+  doc["ts1"] = startTimestamp - Offset();
+  doc["ts2"] = endTimestamp - Offset();
+  
+  serializeJson(doc, Serial);
   Serial.println();
 }
 
-void LickCircuit::Config(JsonDocument* json) {
-  JsonObject conf = json->createNestedObject(deviceType);
+void LickCircuit::Config(JsonDocument* doc) {
+  JsonObject conf = doc->createNestedObject(deviceType);
 
   conf["pin"] = pin;
   conf["debounce"] = debounceDelay;

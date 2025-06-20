@@ -18,7 +18,7 @@ public:
   void SetLaser(Laser* laser);
   void SetTimeoutIntervalLength(uint32_t timeoutInterval);
   void SetReinforcement(bool reinforced);
-  void Config(JsonDocument* json);
+  void Config(JsonDocument* doc);
   
 private:
   bool initState;
@@ -37,6 +37,9 @@ private:
   Cue* cue;
   Pump* pump;
   Laser* laser;
+  JsonDocument doc;
+  const char deviceType[];
+  const char eventType[];
 
   void Classify(uint32_t pressTimestamp, uint32_t currentTimestamp);
   void LogOutput();

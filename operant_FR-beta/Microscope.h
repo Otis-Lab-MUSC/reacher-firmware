@@ -13,15 +13,21 @@ public:
     void SetCollectFrames(bool state);
     void ArmToggle(bool armed);
     void SetOffset(uint32_t offset);
-    void Config(JsonDocument* json);
+    void Config(JsonDocument* doc);
+
+    byte TriggerPin();
+    byte TimestampPin();
 
 private:
-    int8_t triggerPin;
-    int8_t timestampPin;
-    bool received;
-    bool armed;
-    uint32_t timestamp;  
-    uint32_t offset;
+  int8_t triggerPin;
+  int8_t timestampPin;
+  bool received;
+  bool armed;
+  uint32_t timestamp;  
+  uint32_t offset;
+  JsonDocument doc;
+  const char deviceType[];
+  const char eventType[];
 
     static Microscope* instance;
 

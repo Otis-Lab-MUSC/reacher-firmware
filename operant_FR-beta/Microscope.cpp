@@ -1,15 +1,14 @@
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 #include <ArduinoJson.h>
 
 #include "Microscope.h"
 
-#define deviceType "MICROSCOPE"
-#define eventType "FRAME"
-
 Microscope* Microscope::instance = nullptr;
 
 Microscope::Microscope(int8_t triggerPin, int8_t timestampPin) {
+  const char deviceType[] = "MICROSCOPE";
+  const char eventType[] = "FRAME";
+  
   this->triggerPin = triggerPin;
   this->timestampPin = timestampPin;
   pinMode(this->triggerPin, OUTPUT);
@@ -41,16 +40,17 @@ void Microscope::HandleFrameSignal() {
 }
 
 void Microscope::ArmToggle(bool armed) {
-  JsonDocument json;
+  doc.clear();
+  
   this->armed = armed;
   
-  json["level"] = 444;
-  json["device"] = deviceType;
-  json["pin"] = triggerPin;
-  json["var"] = "armed";
-  json["val"] = this->armed;
+  doc["level"] = 444;
+  doc["device"] = deviceType;
+  doc["pin"] = triggerPin;
+  doc["var"] = "armed";
+  doc["val"] = this->armed;
 
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println();
 }
 
@@ -59,21 +59,29 @@ void Microscope::SetOffset(uint32_t offset) {
 }
 
 void Microscope::LogOutput() {
-  JsonDocument json;
+  doc.clear();
+  
+  doc["level"] = 777;
+  doc["device"] = deviceType;
+  doc["pin"] = timestampPin;
+  doc["event"] = eventType;
+  doc["ts"] = instance->timestamp;
 
-  json["level"] = 777;
-  json["device"] = deviceType;
-  json["pin"] = timestampPin;
-  json["event"] = eventType;
-  json["ts"] = instance->timestamp;
-
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println();   
 }
 
-void Microscope::Config(JsonDocument* json) {
-  JsonObject conf = json->createNestedObject(deviceType);
+void Microscope::Config(JsonDocument* doc) {
+  JsonObject conf = doc->createNestedObject(deviceType);
 
   conf["trigger_pin"] = triggerPin;
   conf["timestamp_pin"] = timestampPin;
+}
+
+byte Microscope::TriggerPin() {
+  return triggerPin;
+}
+
+byte Microscope::TimestampPin() {
+  return timestampPin;
 }

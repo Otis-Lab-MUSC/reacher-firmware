@@ -1,13 +1,12 @@
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 #include <ArduinoJson.h>
 
 #include "Laser.h"
 
-#define deviceType "LASER"
-#define eventType "STIM"
-
 Laser::Laser(int8_t pin, uint32_t frequency, uint32_t duration, uint32_t traceInterval) : Device(pin, OUTPUT) {
+  const char deviceType[] = "LASER";
+  const char eventType[] = "STIM";
+
   this->pin = pin;
   this->frequency = frequency;
   this->duration = duration;
@@ -21,16 +20,15 @@ Laser::Laser(int8_t pin, uint32_t frequency, uint32_t duration, uint32_t traceIn
 }
 
 void Laser::ArmToggle(bool armed) {
-  JsonDocument json;
   this->armed = armed;
   
-  json["level"] = 444;
-  json["device"] = deviceType;
-  json["pin"] = pin;
-  json["var"] = "armed";
-  json["val"] = this->armed;
+  doc["level"] = 444;
+  doc["device"] = deviceType;
+  doc["pin"] = pin;
+  doc["var"] = "armed";
+  doc["val"] = this->armed;
 
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println();
 }
 
@@ -69,63 +67,58 @@ void Laser::SetEvent(uint32_t currentTimestamp) {
 }
 
 void Laser::SetFrequency(uint32_t frequency) {
-  JsonDocument json;
   this->frequency = frequency;
 
-  json["level"] = 444;
-  json["device"] = deviceType;
-  json["pin"] = pin;
-  json["var"] = "frequency";
-  json["val"] = this->frequency;
+  doc["level"] = 444;
+  doc["device"] = deviceType;
+  doc["pin"] = pin;
+  doc["var"] = "frequency";
+  doc["val"] = this->frequency;
 
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println();
 }
 
 void Laser::SetDuration(uint32_t duration) {
-  JsonDocument json;
   this->duration = duration;
 
-  json["level"] = 444;
-  json["device"] = deviceType;
-  json["pin"] = pin;
-  json["var"] = "duration";
-  json["val"] = this->duration;
+  doc["level"] = 444;
+  doc["device"] = deviceType;
+  doc["pin"] = pin;
+  doc["var"] = "duration";
+  doc["val"] = this->duration;
 
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println();
 }
 
 void Laser::SetTraceInterval(uint32_t traceInterval) {
-  JsonDocument json;
   this->traceInterval = traceInterval;
   
-  json["level"] = 444;
-  json["device"] = deviceType;
-  json["pin"] = pin;
-  json["var"] = "traceInterval";
-  json["val"] = this->traceInterval;
+  doc["level"] = 444;
+  doc["device"] = deviceType;
+  doc["pin"] = pin;
+  doc["var"] = "traceInterval";
+  doc["val"] = this->traceInterval;
 
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println();
 }
 
-void Laser::SetMode(bool mode) {
-  JsonDocument json;
-  
+void Laser::SetMode(bool mode) { 
   if (mode) {
     this->mode = CONTINGENT;
   } else {
     this->mode = INDEPENDENT;
   }
 
-  json["level"] = 444;
-  json["device"] = deviceType;
-  json["pin"] = pin;
-  json["var"] = F("mode");
-  json["val"] = this->mode;
+  doc["level"] = 444;
+  doc["device"] = deviceType;
+  doc["pin"] = pin;
+  doc["var"] = F("mode");
+  doc["val"] = this->mode;
 
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println();
 }
 
@@ -182,23 +175,23 @@ void Laser::Oscillate(uint32_t currentTimestamp) {
 }
 
 void Laser::LogOutput() {
-  JsonDocument json;
+  doc.clear();
+  
+  doc["level"] = 777;
+  doc["device"] = deviceType;
+  doc["pin"] = pin;
+  doc["event"] = eventType;
+  doc["ts1"] = startTimestamp - Offset();
+  doc["ts2"] = endTimestamp - Offset();
 
-  json["level"] = 777;
-  json["device"] = deviceType;
-  json["pin"] = pin;
-  json["event"] = eventType;
-  json["ts1"] = startTimestamp - Offset();
-  json["ts2"] = endTimestamp - Offset();
-
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println();
 
   outputLogged = true;  
 }
 
-void Laser::Config(JsonDocument* json) {
-  JsonObject conf = json->createNestedObject(deviceType);
+void Laser::Config(JsonDocument* doc) {
+  JsonObject conf = doc->createNestedObject(deviceType);
 
   conf["pin"] = pin;
   conf["frequency"] = frequency;

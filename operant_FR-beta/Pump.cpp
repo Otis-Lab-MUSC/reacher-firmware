@@ -1,13 +1,12 @@
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 #include <ArduinoJson.h>
 
 #include "Pump.h"
 
-#define deviceType "PUMP"
-#define eventType "INFUSION"
-
 Pump::Pump(int8_t pin, uint32_t duration, uint32_t traceInterval) : Device(pin, OUTPUT) {
+  const char deviceType[] = "PUMP";
+  const char eventType[] = "INFUSION";
+
   this->pin = pin;
   this->duration = duration;
   this->traceInterval = traceInterval;
@@ -16,16 +15,17 @@ Pump::Pump(int8_t pin, uint32_t duration, uint32_t traceInterval) : Device(pin, 
 }
 
 void Pump::ArmToggle(bool armed) {
-  JsonDocument json;
+  doc.clear();
+  
   this->armed = armed;
   
-  json["level"] = 444;
-  json["device"] = deviceType;
-  json["pin"] = pin;
-  json["var"] = "armed";
-  json["val"] = this->armed;
+  doc["level"] = 444;
+  doc["device"] = deviceType;
+  doc["pin"] = pin;
+  doc["var"] = "armed";
+  doc["val"] = this->armed;
 
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println();
 }
 
@@ -49,30 +49,32 @@ void Pump::SetEvent(uint32_t currentTimestamp) {
 }
 
 void Pump::SetDuration(uint32_t duration) {
-  JsonDocument json;
+  doc.clear();
+  
   this->duration = duration;
 
-  json["level"] = 444;
-  json["device"] = deviceType;
-  json["pin"] = pin;
-  json["var"] = "duration";
-  json["val"] = this->duration;
+  doc["level"] = 444;
+  doc["device"] = deviceType;
+  doc["pin"] = pin;
+  doc["var"] = "duration";
+  doc["val"] = this->duration;
 
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println();
 }
 
 void Pump::SetTraceInterval(uint32_t traceInterval) {
-  JsonDocument json;
+  doc.clear();
+  
   this->traceInterval = traceInterval;
   
-  json["level"] = 444;
-  json["device"] = deviceType;
-  json["pin"] = pin;
-  json["var"] = "traceInterval";
-  json["val"] = this->traceInterval;
+  doc["level"] = 444;
+  doc["device"] = deviceType;
+  doc["pin"] = pin;
+  doc["var"] = "traceInterval";
+  doc["val"] = this->traceInterval;
 
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println();
 }
 
@@ -85,21 +87,21 @@ void Pump::Off() {
 }
 
 void Pump::LogOutput() {
-  JsonDocument json;
+  doc.clear();
+  
+  doc["level"] = 777;
+  doc["device"] = deviceType;
+  doc["pin"] = pin;
+  doc["event"] = eventType;
+  doc["ts1"] = startTimestamp - Offset();
+  doc["ts2"] = endTimestamp - Offset();
 
-  json["level"] = 777;
-  json["device"] = deviceType;
-  json["pin"] = pin;
-  json["event"] = eventType;
-  json["ts1"] = startTimestamp - Offset();
-  json["ts2"] = endTimestamp - Offset();
-
-  serializeJson(json, Serial);
+  serializeJson(doc, Serial);
   Serial.println();  
 }
 
-void Pump::Config(JsonDocument* json) {
-  JsonObject conf = json->createNestedObject(deviceType);
+void Pump::Config(JsonDocument* doc) {
+  JsonObject conf = doc->createNestedObject(deviceType);
 
   conf["pin"] = pin;
   conf["trace"] = traceInterval;

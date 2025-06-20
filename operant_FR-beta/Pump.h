@@ -13,7 +13,7 @@ public:
   void SetEvent(uint32_t currentTimestamp);
   void SetDuration(uint32_t duration);
   void SetTraceInterval(uint32_t traceInterval);
-  void Config(JsonDocument* json);
+  void Config(JsonDocument* doc);
 
   uint32_t Duration();
   uint32_t TraceInterval();
@@ -23,6 +23,9 @@ private:
   uint32_t traceInterval;
   uint32_t startTimestamp;
   uint32_t endTimestamp;
+  JsonDocument doc;
+  const char deviceType[];
+  const char eventType[];
 
   void On();
   void Off();
