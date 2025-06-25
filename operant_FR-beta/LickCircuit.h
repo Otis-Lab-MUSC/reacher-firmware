@@ -7,9 +7,7 @@
 class LickCircuit : public Device {
 public:
   LickCircuit(int8_t pin);
-  void ArmToggle(bool armed);
   void Monitor(uint32_t currentTimestamp);
-  void Config(JsonDocument* doc);
   
 private:
   bool initState;
@@ -20,8 +18,6 @@ private:
   uint32_t startTimestamp;
   uint32_t endTimestamp;
   JsonDocument doc;
-  const char deviceType[];
-  const char eventType[];
 
   void LogOutput();
 };

@@ -5,20 +5,18 @@
 
 Microscope* Microscope::instance = nullptr;
 
-Microscope::Microscope(int8_t triggerPin, int8_t timestampPin) {
-  const char deviceType[] = "MICROSCOPE";
-  const char eventType[] = "FRAME";
-  
+Microscope::Microscope(int8_t triggerPin, int8_t timestampPin) {  
   this->triggerPin = triggerPin;
   this->timestampPin = timestampPin;
   pinMode(this->triggerPin, OUTPUT);
   pinMode(this->timestampPin, INPUT);
   attachInterrupt(digitalPinToInterrupt(this->timestampPin), TimestampISR, RISING);
   received = false;
-  armed = false;
   timestamp = 0;
   offset = 0;
   instance = this;
+  device = "MICROSCOPE";
+  event = "TIMESTMP";
 }
 
 static void Microscope::TimestampISR() {
@@ -40,18 +38,7 @@ void Microscope::HandleFrameSignal() {
 }
 
 void Microscope::ArmToggle(bool armed) {
-  doc.clear();
-  
   this->armed = armed;
-  
-  doc["level"] = 444;
-  doc["device"] = deviceType;
-  doc["pin"] = triggerPin;
-  doc["var"] = "armed";
-  doc["val"] = this->armed;
-
-  serializeJson(doc, Serial);
-  Serial.println();
 }
 
 void Microscope::SetOffset(uint32_t offset) {
@@ -61,21 +48,14 @@ void Microscope::SetOffset(uint32_t offset) {
 void Microscope::LogOutput() {
   doc.clear();
   
-  doc["level"] = 777;
-  doc["device"] = deviceType;
+  doc["level"] = F("007");
+  doc["device"] = device;
   doc["pin"] = timestampPin;
-  doc["event"] = eventType;
-  doc["ts"] = instance->timestamp;
+  doc["event"] = event;
+  doc["timestamp"] = instance->timestamp;
 
   serializeJson(doc, Serial);
   Serial.println();   
-}
-
-void Microscope::Config(JsonDocument* doc) {
-  JsonObject conf = doc->createNestedObject(deviceType);
-
-  conf["trigger_pin"] = triggerPin;
-  conf["timestamp_pin"] = timestampPin;
 }
 
 byte Microscope::TriggerPin() {

@@ -17,6 +17,8 @@ LickCircuit lickCircuit(5);
 Laser laser(6, 40, 5000, cue.Duration());
 Microscope microscope(9, 2);
 
+JsonDocument doc;
+
 uint32_t SESSION_START_TIMESTAMP;
 uint32_t SESSION_END_TIMESTAMP;
 
@@ -27,25 +29,13 @@ void setup() {
   Serial.begin(baudrate);
   delay(100);
 
-  StaticJsonDocument<128> doc;
+  JsonDocument setupJson;
+  setupJson["level"] = F("000");
+  setupJson["sketch"] = F("operant_FR.ino");
+  setupJson["version"] = F("v1.1.1");
+  setupJson["baud_rate"] = baudrate;
 
-  doc["level"] = F("000");
-  doc["sketch"] = F("operant_FR.ino");
-  doc["version"] = F("v1.1.1");
-  doc["baud_rate"] = baudrate;
-
-  JsonObject pins = doc.createNestedObject("pins");
-
-  pins["rh_lever"] = rLever.Pin();
-  pins["lh_lever"] = lLever.Pin();
-  pins["cue"] = cue.Pin();
-  pins["pump"] = pump.Pin();
-  pins["lick_circuit"] = lickCircuit.Pin();
-  pins["laser"] = laser.Pin();
-  pins["microscope_trigger"] = microscope.TriggerPin();
-  pins["microscope_timestamp"] = microscope.TimestampPin();
-
-  serializeJson(doc, Serial);
+  serializeJson(setupJson, Serial);
   Serial.println();
   
   cue.Jingle();
@@ -63,8 +53,8 @@ void loop() {
   rLever.Monitor(currentTimestamp);
   lLever.Monitor(currentTimestamp);
   lickCircuit.Monitor(currentTimestamp);
-  cue.Await(currentTimestamp);
-  pump.Await(currentTimestamp);
+//  cue.Await(currentTimestamp);
+//  pump.Await(currentTimestamp);
   laser.Await(currentTimestamp);
   microscope.HandleFrameSignal();
   ParseCommands();
@@ -72,21 +62,22 @@ void loop() {
 
 void ParseCommands() {
   if (Serial.available() > 0) {
-    StaticJsonDocument<128> doc;
+    JsonDocument inputJson;
     String cmd = Serial.readStringUntil('\n');
-    DeserializationError error = deserializeJson(doc, cmd);
+    DeserializationError error = deserializeJson(inputJson, cmd);
 
     if (error) {
-      doc.clear();
-      doc["level"] = 666;
-      doc["desc"] = error.f_str();
+      inputJson.clear();
+      inputJson["level"] = "006";
+      inputJson["desc"] = error.f_str();
       serializeJson(doc, Serial);
       Serial.println();
+      while (Serial.available() > 0) Serial.read();
       return;
     }
 
-    if (!doc["cmd"].isNull()) {
-      int command = doc["cmd"];
+    if (!inputJson["cmd"].isNull()) {
+      int command = inputJson["cmd"];
       switch (command) {
         case 1001: rLever.ArmToggle(true); break;
         case 1000: rLever.ArmToggle(false); break;
@@ -126,30 +117,26 @@ void ParseCommands() {
 }
 
 void StartSession() {
-  JsonDocument doc;
   SESSION_START_TIMESTAMP = millis();
- 
-  doc["level"] = 777;
+
+  doc.clear();
+  doc["level"] = F("007");
   doc["device"] = F("CONTROLLER");
   doc["event"] = F("START");
-  doc["ts"] = 0;
-
-  // FIXME: output device setting here -> make a function for this?
+  doc["timestamp"] = 0;
 
   serializeJson(doc, Serial);
   Serial.println(); 
-
-  OutputDeviceConfig();
 }
 
 void EndSession() {
-  JsonDocument doc;
   SESSION_END_TIMESTAMP = millis();  
 
-  doc["level"] = 777;
+  doc.clear();
+  doc["level"] = F("007");
   doc["device"] = F("CONTROLLER");
   doc["event"] = F("END");
-  doc["ts"] = SESSION_END_TIMESTAMP - SESSION_START_TIMESTAMP;
+  doc["timestamp"] = SESSION_END_TIMESTAMP - SESSION_START_TIMESTAMP;
 
   // manually write LOW signals before shut off
   noTone(cue.Pin());
@@ -178,21 +165,4 @@ void ArmToggleDevices(bool toggle) {
   lickCircuit.ArmToggle(toggle);
   laser.ArmToggle(toggle);
   microscope.ArmToggle(toggle);
-}
-
-void OutputDeviceConfig() {
-  JsonDocument doc;
- 
-  doc["level"] = 333;
-
-  rLever.Config(&doc);
-  lLever.Config(&doc);
-  cue.Config(&doc);
-  pump.Config(&doc);
-  lickCircuit.Config(&doc);
-  laser.Config(&doc);
-  microscope.Config(&doc);
-
-  serializeJson(doc, Serial);
-  Serial.println();   
 }

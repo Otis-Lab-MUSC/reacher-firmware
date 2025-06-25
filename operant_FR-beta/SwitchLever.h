@@ -10,7 +10,6 @@
 class SwitchLever : public Device {
 public:
   SwitchLever(int8_t pin, const char* orientation);
-  void ArmToggle(bool armed);
   void Monitor(uint32_t currentTimestamp);
 
   void SetCue(Cue* cue);
@@ -18,7 +17,6 @@ public:
   void SetLaser(Laser* laser);
   void SetTimeoutIntervalLength(uint32_t timeoutInterval);
   void SetReinforcement(bool reinforced);
-  void Config(JsonDocument* doc);
   
 private:
   bool initState;
@@ -32,14 +30,12 @@ private:
   uint8_t debounceDelay;
   uint32_t startTimestamp;
   uint32_t endTimestamp;
-  enum PressType { ACTIVE, TIMEOUT, INDEPENDENT };
+  enum PressType { INDEPENDENT, ACTIVE, TIMEOUT };
   PressType pressType;
   Cue* cue;
   Pump* pump;
   Laser* laser;
   JsonDocument doc;
-  const char deviceType[];
-  const char eventType[];
 
   void Classify(uint32_t pressTimestamp, uint32_t currentTimestamp);
   void LogOutput();

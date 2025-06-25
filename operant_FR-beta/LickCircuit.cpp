@@ -3,32 +3,13 @@
 
 #include "LickCircuit.h"
 
-LickCircuit::LickCircuit(int8_t pin) : Device(pin, INPUT_PULLUP) {
-  const char deviceType[] = "LICK_CIRCUIT";
-  const char eventType[] = "LICK";
-
-  armed = false;
+LickCircuit::LickCircuit(int8_t pin) : Device(pin, INPUT_PULLUP, "LICK_CIRCUIT", "LICK") {
   this->pin = pin;
   pinMode(pin, INPUT_PULLUP);
   initState = digitalRead(pin);
   previousState = digitalRead(pin);
   stableState = digitalRead(pin);
   debounceDelay = 20;
-}
-
-void LickCircuit::ArmToggle(bool armed) {
-  doc.clear();
-  
-  this->armed = armed;
-  
-  doc["level"] = 444;
-  doc["device"] = deviceType;
-  doc["pin"] = pin;
-  doc["var"] = "armed";
-  doc["val"] = this->armed;
-
-  serializeJson(doc, Serial);
-  Serial.println();
 }
 
 void LickCircuit::Monitor(uint32_t currentTimestamp) {
@@ -55,20 +36,13 @@ void LickCircuit::Monitor(uint32_t currentTimestamp) {
 void LickCircuit::LogOutput() {
   doc.clear();
   
-  doc["level"] = 777;
-  doc["device"] = deviceType;
+  doc["level"] = F("007");
+  doc["device"] = device;
   doc["pin"] = pin;
-  doc["event"] = eventType;
-  doc["ts1"] = startTimestamp - Offset();
-  doc["ts2"] = endTimestamp - Offset();
+  doc["event"] = event;
+  doc["start_timestamp"] = startTimestamp - Offset();
+  doc["end_timestamp"] = endTimestamp - Offset();
   
   serializeJson(doc, Serial);
   Serial.println();
-}
-
-void LickCircuit::Config(JsonDocument* doc) {
-  JsonObject conf = doc->createNestedObject(deviceType);
-
-  conf["pin"] = pin;
-  conf["debounce"] = debounceDelay;
 }

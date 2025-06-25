@@ -3,33 +3,16 @@
 
 #include "Laser.h"
 
-Laser::Laser(int8_t pin, uint32_t frequency, uint32_t duration, uint32_t traceInterval) : Device(pin, OUTPUT) {
-  const char deviceType[] = "LASER";
-  const char eventType[] = "STIM";
-
+Laser::Laser(int8_t pin, uint32_t frequency, uint32_t duration, uint32_t traceInterval) : Device(pin, OUTPUT, "LASER", "STIM") {
   this->pin = pin;
   this->frequency = frequency;
   this->duration = duration;
   this->traceInterval = traceInterval;
-  armed = false;
   mode = INDEPENDENT;
   state = false;
   halfState = false;
   outputLogged = false;
   pinMode(pin, OUTPUT);
-}
-
-void Laser::ArmToggle(bool armed) {
-  this->armed = armed;
-  
-  doc["level"] = 444;
-  doc["device"] = deviceType;
-  doc["pin"] = pin;
-  doc["var"] = "armed";
-  doc["val"] = this->armed;
-
-  serializeJson(doc, Serial);
-  Serial.println();
 }
 
 void Laser::Await(uint32_t currentTimestamp) {
@@ -68,41 +51,14 @@ void Laser::SetEvent(uint32_t currentTimestamp) {
 
 void Laser::SetFrequency(uint32_t frequency) {
   this->frequency = frequency;
-
-  doc["level"] = 444;
-  doc["device"] = deviceType;
-  doc["pin"] = pin;
-  doc["var"] = "frequency";
-  doc["val"] = this->frequency;
-
-  serializeJson(doc, Serial);
-  Serial.println();
 }
 
 void Laser::SetDuration(uint32_t duration) {
   this->duration = duration;
-
-  doc["level"] = 444;
-  doc["device"] = deviceType;
-  doc["pin"] = pin;
-  doc["var"] = "duration";
-  doc["val"] = this->duration;
-
-  serializeJson(doc, Serial);
-  Serial.println();
 }
 
 void Laser::SetTraceInterval(uint32_t traceInterval) {
   this->traceInterval = traceInterval;
-  
-  doc["level"] = 444;
-  doc["device"] = deviceType;
-  doc["pin"] = pin;
-  doc["var"] = "traceInterval";
-  doc["val"] = this->traceInterval;
-
-  serializeJson(doc, Serial);
-  Serial.println();
 }
 
 void Laser::SetMode(bool mode) { 
@@ -111,15 +67,6 @@ void Laser::SetMode(bool mode) {
   } else {
     this->mode = INDEPENDENT;
   }
-
-  doc["level"] = 444;
-  doc["device"] = deviceType;
-  doc["pin"] = pin;
-  doc["var"] = F("mode");
-  doc["val"] = this->mode;
-
-  serializeJson(doc, Serial);
-  Serial.println();
 }
 
 uint32_t Laser::Frequency() {
@@ -177,25 +124,15 @@ void Laser::Oscillate(uint32_t currentTimestamp) {
 void Laser::LogOutput() {
   doc.clear();
   
-  doc["level"] = 777;
-  doc["device"] = deviceType;
+  doc["level"] = F("007");
+  doc["device"] = device;
   doc["pin"] = pin;
-  doc["event"] = eventType;
-  doc["ts1"] = startTimestamp - Offset();
-  doc["ts2"] = endTimestamp - Offset();
+  doc["event"] = event;
+  doc["start_timestamp"] = startTimestamp - Offset();
+  doc["end_timestamp"] = endTimestamp - Offset();
 
   serializeJson(doc, Serial);
   Serial.println();
 
   outputLogged = true;  
-}
-
-void Laser::Config(JsonDocument* doc) {
-  JsonObject conf = doc->createNestedObject(deviceType);
-
-  conf["pin"] = pin;
-  conf["frequency"] = frequency;
-  conf["trace"] = traceInterval;
-  conf["duration"] = duration;
-  conf["mode"] = mode;
 }

@@ -3,19 +3,23 @@
 
 #include "Device.h"
 
-Device::Device(int8_t pin, uint8_t mode) {
-  const char deviceType[] = "UNKNOWN";
-  const char eventType[] = "UNKNOWN";
-
+Device::Device(int8_t pin, uint8_t mode, const char* device, const char* event) {
   this->pin = pin;
   this->mode = mode;
+  this->device = device; 
+  this->event = event; 
   armed = false;
   pinMode(pin, mode);
   offset = 0;
 }
 
 void Device::ArmToggle(bool arm) {
-  this->armed = armed;
+  this->armed = arm; 
+
+  String desc = F("DEBUG: Device ");
+  desc += (this->armed ? F("armed") : F("disarmed"));
+  
+  Serial.println(desc);
 }
 
 void Device::SetOffset(uint32_t offset) {
@@ -35,29 +39,4 @@ uint32_t Device::Offset() const {
 }
 
 void Device::LogOutput() {
-}
-
-void Device::Config(JsonDocument* doc) {
-}
-
-void Device::SerializeVar(const char var[], bool val) {
-  doc.clear();
-  doc["level"] = 444;
-  doc["device"] = String(deviceType);
-  doc["pin"] = pin;
-  doc["var"] = String(var);
-  doc["val"] = val;
-  serializeJson(doc, Serial);
-  Serial.println();
-}
-
-void Device::SerializeVar(const char var[], uint32_t val) {
-  doc.clear();
-  doc["level"] = 444;
-  doc["device"] = String(deviceType);
-  doc["pin"] = pin;
-  doc["var"] = String(var);
-  doc["val"] = val;
-  serializeJson(doc, Serial);
-  Serial.println();
 }

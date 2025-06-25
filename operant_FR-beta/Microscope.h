@@ -6,17 +6,16 @@
 
 class Microscope {
 public:
-    Microscope(int8_t triggerPin, int8_t timestampPin);
-    
-    static void TimestampISR();
-    void HandleFrameSignal();
-    void SetCollectFrames(bool state);
-    void ArmToggle(bool armed);
-    void SetOffset(uint32_t offset);
-    void Config(JsonDocument* doc);
+  Microscope(int8_t triggerPin, int8_t timestampPin);
+  
+  static void TimestampISR();
+  void HandleFrameSignal();
+  void SetCollectFrames(bool state);
+  void ArmToggle(bool armed);
+  void SetOffset(uint32_t offset);
 
-    byte TriggerPin();
-    byte TimestampPin();
+  byte TriggerPin();
+  byte TimestampPin();
 
 private:
   int8_t triggerPin;
@@ -26,12 +25,12 @@ private:
   uint32_t timestamp;  
   uint32_t offset;
   JsonDocument doc;
-  const char deviceType[];
-  const char eventType[];
+  const char* device;
+  const char* event;
 
-    static Microscope* instance;
+  static Microscope* instance;
 
-    void LogOutput();
+  void LogOutput();
 };
 
 #endif // MICROSCOPE_H

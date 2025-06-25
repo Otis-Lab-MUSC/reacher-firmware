@@ -7,7 +7,6 @@
 class Laser : public Device {
 public:
   Laser(int8_t pin, uint32_t frequency, uint32_t duration, uint32_t traceInterval);
-  void ArmToggle(bool armed);
   void Await(uint32_t currentTimestamp);
 
   void SetEvent(uint32_t currentTimestamp);
@@ -15,7 +14,6 @@ public:
   void SetDuration(uint32_t duration);
   void SetTraceInterval(uint32_t traceInterval);
   void SetMode(bool mode);
-  void Config(JsonDocument* doc);
 
   uint32_t Frequency();
   uint32_t Duration();
@@ -35,8 +33,6 @@ private:
   bool halfState;
   bool outputLogged;
   JsonDocument doc;
-  const char deviceType[];
-  const char eventType[];
 
   void On();
   void Off();
