@@ -74,16 +74,14 @@ void SwitchLever::SetReinforcement(bool reinforced) {
 }
  
 void SwitchLever::LogOutput() {
-  doc.clear();
-  
-  doc["level"] = F("007");
-  doc["device"] = device;
-  doc["pin"] = pin;
-  doc["event"] = event;
-  doc["class"] = (pressType == 0) ? F("INDEPENDENT") : ((pressType == 1) ? F("ACTIVE") : F("TIMEOUT"));
-  doc["start_timestamp"] = startTimestamp - Offset();
-  doc["end_timestamp"] = endTimestamp - Offset();
-  doc["orientation"] = orientation;
+  doc[F("level")] = F("007");
+//  doc[F("device")] = device;
+//  doc[F("pin")] = pin;
+//  doc[F("event")] = event;
+//  doc[F("class")] = (pressType == 0) ? F("INDEPENDENT") : ((pressType == 1) ? F("ACTIVE") : F("TIMEOUT"));
+//  doc[F("start_timestamp")] = startTimestamp - Offset();
+//  doc[F("end_timestamp")] = endTimestamp - Offset();
+//  doc[F("orientation")] = orientation;
   
   serializeJson(doc, Serial);
   Serial.println();

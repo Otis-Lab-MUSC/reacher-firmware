@@ -45,14 +45,12 @@ void Microscope::SetOffset(uint32_t offset) {
     this->offset = offset;
 }
 
-void Microscope::LogOutput() {
-  doc.clear();
-  
-  doc["level"] = F("007");
-  doc["device"] = device;
-  doc["pin"] = timestampPin;
-  doc["event"] = event;
-  doc["timestamp"] = instance->timestamp;
+void Microscope::LogOutput() { 
+  doc[F("level")] = F("007");
+  doc[F("device")] = device;
+  doc[F("pin")] = timestampPin;
+  doc[F("event")] = event;
+  doc[F("timestamp")] = instance->timestamp;
 
   serializeJson(doc, Serial);
   Serial.println();   

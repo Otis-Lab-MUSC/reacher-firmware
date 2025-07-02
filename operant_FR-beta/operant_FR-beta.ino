@@ -53,8 +53,8 @@ void loop() {
   rLever.Monitor(currentTimestamp);
   lLever.Monitor(currentTimestamp);
   lickCircuit.Monitor(currentTimestamp);
-//  cue.Await(currentTimestamp);
-//  pump.Await(currentTimestamp);
+  cue.Await(currentTimestamp);
+  pump.Await(currentTimestamp);
   laser.Await(currentTimestamp);
   microscope.HandleFrameSignal();
   ParseCommands();
@@ -120,9 +120,9 @@ void StartSession() {
   SESSION_START_TIMESTAMP = millis();
 
   doc.clear();
-  doc["level"] = F("007");
-  doc["device"] = F("CONTROLLER");
-  doc["event"] = F("START");
+  doc[F("level")] = F("007");
+  doc[F("device")] = F("CONTROLLER");
+  doc[F("event")] = F("START");
   doc["timestamp"] = 0;
 
   serializeJson(doc, Serial);
@@ -133,9 +133,9 @@ void EndSession() {
   SESSION_END_TIMESTAMP = millis();  
 
   doc.clear();
-  doc["level"] = F("007");
-  doc["device"] = F("CONTROLLER");
-  doc["event"] = F("END");
+  doc[F("level")] = F("007");
+  doc[F("device")] = F("CONTROLLER");
+  doc[F("event")] = F("END");
   doc["timestamp"] = SESSION_END_TIMESTAMP - SESSION_START_TIMESTAMP;
 
   // manually write LOW signals before shut off

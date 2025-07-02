@@ -9,6 +9,7 @@ public:
   
   virtual void ArmToggle(bool arm);
   virtual void SetOffset(uint32_t offset);
+  virtual void LogOutput();
   
   virtual byte Pin() const;
   virtual bool Armed() const; 
@@ -16,8 +17,6 @@ public:
   
 private:
   uint32_t offset;
-
-  virtual void LogOutput();
   
 protected:
   int8_t pin;

@@ -45,15 +45,13 @@ void Pump::Off() {
   digitalWrite(pin, LOW);
 }
 
-void Pump::LogOutput() {
-  doc.clear();
-  
-  doc["level"] = F("007");
-  doc["device"] = device;
-  doc["pin"] = pin;
-  doc["event"] = event;
-  doc["start_timestamp"] = startTimestamp - Offset();
-  doc["end_timestamp"] = endTimestamp - Offset();
+void Pump::LogOutput() { 
+  doc[F("level")] = F("007");
+  doc[F("device")] = device;
+  doc[F("pin")] = pin;
+  doc[F("event")] = event;
+  doc[F("start_timestamp")] = startTimestamp - Offset();
+  doc[F("end_timestamp")] = endTimestamp - Offset();
 
   serializeJson(doc, Serial);
   Serial.println();  

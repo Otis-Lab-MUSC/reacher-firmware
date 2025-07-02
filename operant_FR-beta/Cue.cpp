@@ -73,15 +73,13 @@ void Cue::Off() {
   noTone(pin);
 }
 
-void Cue::LogOutput() {
-  doc.clear();
-  
-  doc["level"] = F("007");
-  doc["device"] = device;
-  doc["pin"] = pin;
-  doc["event"] = event;
-  doc["start_timestamp"] = startTimestamp - Offset();
-  doc["end_timestamp"] = endTimestamp - Offset();
+void Cue::LogOutput() {  
+  doc[F("level")] = F("007");
+  doc[F("device")] = device;
+  doc[F("pin")] = pin;
+  doc[F("event")] = event;
+  doc[F("start_timestamp")] = startTimestamp - Offset();
+  doc[F("end_timestamp")] = endTimestamp - Offset();
 
   serializeJson(doc, Serial);
   Serial.println();
