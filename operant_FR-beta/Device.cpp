@@ -13,13 +13,18 @@ Device::Device(int8_t pin, uint8_t mode, const char* device, const char* event) 
   offset = 0;
 }
 
-void Device::ArmToggle(bool arm) {
+void Device::ArmToggle(bool arm) { 
+  JsonDocument doc;
+  
   this->armed = arm; 
 
-  String desc = F("DEBUG: Device ");
-  desc += (this->armed ? F("armed") : F("disarmed"));
-  
-  Serial.println(desc);
+  doc[F("level")] = F("001");
+  doc[F("device")] = device;
+  doc[F("pin")] = pin;
+  doc[F("event")] = this->armed ? F("ARMED") : F("DISARMED");
+
+  serializeJson(doc, Serial);
+  Serial.println();
 }
 
 void Device::SetOffset(uint32_t offset) {

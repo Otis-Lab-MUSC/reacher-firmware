@@ -74,6 +74,8 @@ void Cue::Off() {
 }
 
 void Cue::LogOutput() {  
+  JsonDocument doc;
+  
   doc[F("level")] = F("007");
   doc[F("device")] = device;
   doc[F("pin")] = pin;

@@ -34,6 +34,8 @@ void LickCircuit::Monitor(uint32_t currentTimestamp) {
 }
 
 void LickCircuit::LogOutput() {  
+  JsonDocument doc;
+  
   doc[F("level")] = F("007");
   doc[F("device")] = device;
   doc[F("pin")] = pin;

@@ -24,7 +24,6 @@ private:
   bool armed;
   uint32_t timestamp;  
   uint32_t offset;
-  JsonDocument doc;
   const char* device;
   const char* event;
 

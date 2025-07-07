@@ -14,6 +14,7 @@ public:
   void SetDuration(uint32_t duration);
   void SetTraceInterval(uint32_t traceInterval);
   void SetMode(bool mode);
+  void Test(uint32_t currentTimestamp);
 
   uint32_t Frequency();
   uint32_t Duration();
@@ -32,13 +33,14 @@ private:
   bool state;
   bool halfState;
   bool outputLogged;
-  JsonDocument doc;
+  bool isTesting;
 
   void On();
   void Off();
   void Cycle(uint32_t currentTimestamp);
   void Oscillate(uint32_t currentTimestamp);
   void LogOutput();
+  void UpdateHalfCycle(uint32_t currentTimestamp);
 };
 
 #endif // LASER_H

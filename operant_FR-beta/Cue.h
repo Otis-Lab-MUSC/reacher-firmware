@@ -26,7 +26,6 @@ private:
   uint32_t traceInterval;
   uint32_t startTimestamp;
   uint32_t endTimestamp;
-  JsonDocument doc;
 
   void On();
   void Off();

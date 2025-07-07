@@ -16,7 +16,7 @@ Microscope::Microscope(int8_t triggerPin, int8_t timestampPin) {
   offset = 0;
   instance = this;
   device = "MICROSCOPE";
-  event = "TIMESTMP";
+  event = "TIMESTAMP";
 }
 
 static void Microscope::TimestampISR() {
@@ -46,6 +46,8 @@ void Microscope::SetOffset(uint32_t offset) {
 }
 
 void Microscope::LogOutput() { 
+  JsonDocument doc;
+
   doc[F("level")] = F("007");
   doc[F("device")] = device;
   doc[F("pin")] = timestampPin;

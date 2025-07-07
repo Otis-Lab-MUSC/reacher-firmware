@@ -69,19 +69,21 @@ void SwitchLever::SetTimeoutIntervalLength(uint32_t timeoutInterval) {
   this->timeoutInterval = timeoutInterval;
 }
 
-void SwitchLever::SetReinforcement(bool reinforced) { 
+void SwitchLever::SetActiveLever(bool reinforced) { 
   this->reinforced = reinforced;
 }
  
 void SwitchLever::LogOutput() {
+  JsonDocument doc;
+  
   doc[F("level")] = F("007");
-//  doc[F("device")] = device;
-//  doc[F("pin")] = pin;
-//  doc[F("event")] = event;
-//  doc[F("class")] = (pressType == 0) ? F("INDEPENDENT") : ((pressType == 1) ? F("ACTIVE") : F("TIMEOUT"));
-//  doc[F("start_timestamp")] = startTimestamp - Offset();
-//  doc[F("end_timestamp")] = endTimestamp - Offset();
-//  doc[F("orientation")] = orientation;
+  doc[F("device")] = device;
+  doc[F("pin")] = pin;
+  doc[F("event")] = event;
+  doc[F("class")] = (pressType == 0) ? F("INDEPENDENT") : ((pressType == 1) ? F("ACTIVE") : F("TIMEOUT"));
+  doc[F("start_timestamp")] = startTimestamp - Offset();
+  doc[F("end_timestamp")] = endTimestamp - Offset();
+  doc[F("orientation")] = orientation;
   
   serializeJson(doc, Serial);
   Serial.println();

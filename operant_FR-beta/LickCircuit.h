@@ -17,7 +17,6 @@ private:
   uint8_t debounceDelay;
   uint32_t startTimestamp;
   uint32_t endTimestamp;
-  JsonDocument doc;
 
   void LogOutput();
 };

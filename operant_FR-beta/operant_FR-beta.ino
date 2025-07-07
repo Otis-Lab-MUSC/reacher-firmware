@@ -44,7 +44,7 @@ void setup() {
   rLever.SetPump(&pump);
   rLever.SetLaser(&laser);
   rLever.SetTimeoutIntervalLength(cue.Duration() + pump.Duration());
-  rLever.SetReinforcement(true);
+  rLever.SetActiveLever(true);
 }
 
 void loop() {
@@ -79,36 +79,53 @@ void ParseCommands() {
     if (!inputJson["cmd"].isNull()) {
       int command = inputJson["cmd"];
       switch (command) {
+        
+        // RH lever commands
         case 1001: rLever.ArmToggle(true); break;
         case 1000: rLever.ArmToggle(false); break;
-        case 1074: rLever.SetTimeoutIntervalLength(doc["timeout"]); break;
-        case 1081: rLever.SetReinforcement(true); break;
-        case 1080: rLever.SetReinforcement(false); break;
+        case 1074: rLever.SetTimeoutIntervalLength(inputJson["timeout"]); break;
+        case 1081: rLever.SetActiveLever(true); break;
+        case 1080: rLever.SetActiveLever(false); break;
+
+        // LH lever commands
         case 1301: lLever.ArmToggle(true); break;
         case 1300: lLever.ArmToggle(false); break;
-        case 1374: lLever.SetTimeoutIntervalLength(doc["timeout"]); break;
-        case 1381: lLever.SetReinforcement(true); break;
-        case 1380: lLever.SetReinforcement(false); break;
+        case 1374: lLever.SetTimeoutIntervalLength(inputJson["timeout"]); break;
+        case 1381: lLever.SetActiveLever(true); break;
+        case 1380: lLever.SetActiveLever(false); break;
+
+        // cue commands
         case 301: cue.ArmToggle(true); break;
         case 300: cue.ArmToggle(false); break;
-        case 371: cue.SetFrequency(doc["frequency"]); break;
-        case 372: cue.SetDuration(doc["duration"]); break;
-        case 373: cue.SetTraceInterval(doc["trace"]); break;
+        case 371: cue.SetFrequency(inputJson["frequency"]); break;
+        case 372: cue.SetDuration(inputJson["duration"]); break;
+        case 373: cue.SetTraceInterval(inputJson["trace"]); break;
+
+        // pump commands
         case 401: pump.ArmToggle(true); break;
         case 400: pump.ArmToggle(false); break;
-        case 472: pump.SetDuration(doc["duration"]); break;
-        case 473: pump.SetTraceInterval(doc["trace"]); break;
+        case 472: pump.SetDuration(inputJson["duration"]); break;
+        case 473: pump.SetTraceInterval(inputJson["trace"]); break;
+
+        // lick circuit commands
         case 501: lickCircuit.ArmToggle(true); break;
         case 500: lickCircuit.ArmToggle(false); break;
+
+        // laser commands
         case 601: laser.ArmToggle(true); break;
         case 600: laser.ArmToggle(false); break;
-        case 671: laser.SetFrequency(doc["frequency"]); break;
-        case 672: laser.SetDuration(doc["duration"]); break;
-        case 673: laser.SetTraceInterval(doc["trace"]); break;
+        case 603: laser.Test(millis()); break;
+        case 671: laser.SetFrequency(inputJson["frequency"]); break;
+        case 672: laser.SetDuration(inputJson["duration"]); break;
+        case 673: laser.SetTraceInterval(inputJson["trace"]); break;
         case 681: laser.SetMode(true); break;
         case 682: laser.SetMode(false); break;
+
+        // microscope commands
         case 901: microscope.ArmToggle(true); break;
         case 900: microscope.ArmToggle(false); break;
+
+        // controller commands
         case 101: StartSession(); SetDeviceTimestampOffset(SESSION_START_TIMESTAMP); break;
         case 100: EndSession(); ArmToggleDevices(false); break;
       }

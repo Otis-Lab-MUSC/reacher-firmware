@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
-
 #include "Laser.h"
 
 Laser::Laser(int8_t pin, uint32_t frequency, uint32_t duration, uint32_t traceInterval) : Device(pin, OUTPUT, "LASER", "STIM") {
@@ -8,10 +7,11 @@ Laser::Laser(int8_t pin, uint32_t frequency, uint32_t duration, uint32_t traceIn
   this->frequency = frequency;
   this->duration = duration;
   this->traceInterval = traceInterval;
-  mode = INDEPENDENT;
+  mode = CONTINGENT;
   state = false;
   halfState = false;
   outputLogged = false;
+  isTesting = false; // Initialize testing flag
   pinMode(pin, OUTPUT);
 }
 
@@ -20,7 +20,7 @@ void Laser::Await(uint32_t currentTimestamp) {
     Cycle(currentTimestamp);
   }
   
-  if (armed) {
+  if (armed || isTesting) { // Oscillate if armed or testing
     Oscillate(currentTimestamp);
   } else {
     startTimestamp = currentTimestamp;
@@ -29,18 +29,25 @@ void Laser::Await(uint32_t currentTimestamp) {
   }
 }
 
+void Laser::Test(uint32_t currentTimestamp) {
+  startTimestamp = currentTimestamp;
+  endTimestamp = currentTimestamp + duration;
+  state = true;
+  UpdateHalfCycle(startTimestamp); // Start oscillation immediately
+  isTesting = true;
+  outputLogged = false;
+}
+
 void Laser::SetEvent(uint32_t currentTimestamp) {
   if (armed) {
     if (mode == CONTINGENT) {
       startTimestamp = traceInterval + currentTimestamp;
       endTimestamp = startTimestamp + duration;
+      state = true; // Enable laser for the event
+      UpdateHalfCycle(startTimestamp); // Initialize oscillation
     }
     else if (mode == INDEPENDENT) {
-      float halfCycleLength = (1.0f / frequency) / 2.0f * 1000.0f;
-      
-      halfCycleStartTimestamp = currentTimestamp;
-      halfCycleEndTimestamp = currentTimestamp + static_cast<uint32_t>(halfCycleLength); 
-      halfState = !halfState;       
+      UpdateHalfCycle(currentTimestamp);
     }
   
     if (!outputLogged) {
@@ -88,6 +95,7 @@ void Laser::On() {
 void Laser::Off() {
   digitalWrite(pin, LOW);
   halfState = false;
+  state = false; // Ensure state resets when off
 }
 
 void Laser::Cycle(uint32_t currentTimestamp) {
@@ -105,7 +113,7 @@ void Laser::Oscillate(uint32_t currentTimestamp) {
     }
     else {
       if (currentTimestamp >= halfCycleEndTimestamp) { 
-          SetEvent(currentTimestamp);  
+        UpdateHalfCycle(currentTimestamp); // Update oscillation cycle
       }
       if (halfState) {
         On();
@@ -117,11 +125,27 @@ void Laser::Oscillate(uint32_t currentTimestamp) {
   }
   else {
     Off();
+    if (isTesting && currentTimestamp > endTimestamp) {
+      isTesting = false; // End test after duration
+      JsonDocument doc;
+
+      doc[F("level")] = F("001");
+      doc[F("device")] = device;
+      doc[F("pin")] = pin;
+      doc[F("event")] = F("TEST");
+      doc[F("start_timestamp")] = startTimestamp - Offset();
+      doc[F("end_timestamp")] = endTimestamp - Offset();
+
+      serializeJson(doc, Serial);
+      Serial.println();
+    }
     outputLogged = false;
   }
 }
 
-void Laser::LogOutput() {  
+void Laser::LogOutput() { 
+  JsonDocument doc;
+   
   doc[F("level")] = F("007");
   doc[F("device")] = device;
   doc[F("pin")] = pin;
@@ -133,4 +157,11 @@ void Laser::LogOutput() {
   Serial.println();
 
   outputLogged = true;  
+}
+
+void Laser::UpdateHalfCycle(uint32_t currentTimestamp) {
+  float halfCycleLength = (1.0f / frequency) / 2.0f * 1000.0f; // Half-cycle in ms
+  halfCycleStartTimestamp = currentTimestamp;
+  halfCycleEndTimestamp = currentTimestamp + static_cast<uint32_t>(halfCycleLength);
+  halfState = !halfState;
 }

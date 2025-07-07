@@ -24,7 +24,6 @@ protected:
   bool armed;
   const char* device;
   const char* event;
-  JsonDocument doc;
 };
 
 #endif // DEVICE_H
