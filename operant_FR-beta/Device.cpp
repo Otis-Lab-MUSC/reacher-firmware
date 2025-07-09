@@ -21,7 +21,7 @@ void Device::ArmToggle(bool arm) {
   doc[F("level")] = F("001");
   doc[F("device")] = device;
   doc[F("pin")] = pin;
-  doc[F("event")] = this->armed ? F("ARMED") : F("DISARMED");
+  doc[F("desc")] = this->armed ? F("ARMED") : F("DISARMED");
 
   serializeJson(doc, Serial);
   Serial.println();

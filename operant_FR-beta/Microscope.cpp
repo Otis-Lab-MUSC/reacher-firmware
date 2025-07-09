@@ -48,7 +48,7 @@ void Microscope::SetOffset(uint32_t offset) {
 void Microscope::LogOutput() { 
   JsonDocument doc;
 
-  doc[F("level")] = F("007");
+  doc[F("level")] = F("008");
   doc[F("device")] = device;
   doc[F("pin")] = timestampPin;
   doc[F("event")] = event;

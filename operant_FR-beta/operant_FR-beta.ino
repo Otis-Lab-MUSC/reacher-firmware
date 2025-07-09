@@ -45,6 +45,12 @@ void setup() {
   rLever.SetLaser(&laser);
   rLever.SetTimeoutIntervalLength(cue.Duration() + pump.Duration());
   rLever.SetActiveLever(true);
+
+  lLever.SetCue(&cue);
+  lLever.SetPump(&pump);
+  lLever.SetLaser(&laser);
+  lLever.SetTimeoutIntervalLength(cue.Duration() + pump.Duration());
+  lLever.SetActiveLever(false);
 }
 
 void loop() {
@@ -70,7 +76,8 @@ void ParseCommands() {
       inputJson.clear();
       inputJson["level"] = "006";
       inputJson["desc"] = error.f_str();
-      serializeJson(doc, Serial);
+      
+      serializeJson(inputJson, Serial);
       Serial.println();
       while (Serial.available() > 0) Serial.read();
       return;
@@ -128,6 +135,16 @@ void ParseCommands() {
         // controller commands
         case 101: StartSession(); SetDeviceTimestampOffset(SESSION_START_TIMESTAMP); break;
         case 100: EndSession(); ArmToggleDevices(false); break;
+
+        // error
+        default:
+          JsonDocument doc;
+
+          doc["level"] = F("006");
+          doc["desc"] = F("Command not found");
+
+          serializeJson(doc, Serial);
+          Serial.println();
       }
     }
   }
