@@ -25,7 +25,6 @@ void Laser::Await(uint32_t currentTimestamp) {
   } else {
     startTimestamp = currentTimestamp;
     endTimestamp = currentTimestamp;
-    Off();
   }
 }
 
@@ -95,7 +94,6 @@ void Laser::On() {
 void Laser::Off() {
   digitalWrite(pin, LOW);
   halfState = false;
-  state = false; // Ensure state resets when off
 }
 
 void Laser::Cycle(uint32_t currentTimestamp) {

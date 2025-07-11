@@ -15,6 +15,8 @@ SwitchLever::SwitchLever(int8_t pin, const char* orientation) : Device(pin, INPU
   reinforced = false;
   debounceDelay = 20;
   timeoutInterval = 0;
+  ratio = 3; // default schedule FR1
+  numPresses = 0;
 }
 
 void SwitchLever::Monitor(uint32_t currentTimestamp) {
@@ -51,6 +53,10 @@ void SwitchLever::SetLaser(Laser* laser) {
   this->laser = laser;
 }
 
+void SwitchLever::SetRatio(uint8_t ratio) {
+  this->ratio = ratio;
+}
+
 void SwitchLever::Classify(uint32_t startTimestamp, uint32_t currentTimestamp) {
   if (reinforced) {
     if (startTimestamp <= timeoutIntervalEnd) {
@@ -58,7 +64,11 @@ void SwitchLever::Classify(uint32_t startTimestamp, uint32_t currentTimestamp) {
     } else {
       pressType = PressType::ACTIVE;
       timeoutIntervalEnd = startTimestamp + timeoutInterval;
-      AddActions(currentTimestamp);
+      numPresses++;
+      if (numPresses == ratio) {
+        AddActions(currentTimestamp);
+        numPresses = 0;
+      }
     }
   } else {
     pressType = PressType::INDEPENDENT;

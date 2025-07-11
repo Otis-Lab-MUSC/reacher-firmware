@@ -17,6 +17,7 @@ public:
   void SetLaser(Laser* laser);
   void SetTimeoutIntervalLength(uint32_t timeoutInterval);
   void SetActiveLever(bool reinforced);
+  void SetRatio(uint8_t ratio);
   
 private:
   bool initState;
@@ -32,6 +33,8 @@ private:
   uint32_t endTimestamp;
   enum PressType { INDEPENDENT, ACTIVE, TIMEOUT };
   PressType pressType;
+  uint8_t ratio;
+  uint8_t numPresses;
   Cue* cue;
   Pump* pump;
   Laser* laser;

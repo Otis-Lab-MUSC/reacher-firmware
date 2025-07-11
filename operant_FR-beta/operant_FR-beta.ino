@@ -91,6 +91,7 @@ void ParseCommands() {
         case 1001: rLever.ArmToggle(true); break;
         case 1000: rLever.ArmToggle(false); break;
         case 1074: rLever.SetTimeoutIntervalLength(inputJson["timeout"]); break;
+        case 1075: rLever.SetRatio(inputJson["ratio"]; break;
         case 1081: rLever.SetActiveLever(true); break;
         case 1080: rLever.SetActiveLever(false); break;
 
@@ -98,6 +99,7 @@ void ParseCommands() {
         case 1301: lLever.ArmToggle(true); break;
         case 1300: lLever.ArmToggle(false); break;
         case 1374: lLever.SetTimeoutIntervalLength(inputJson["timeout"]); break;
+        case 1375: lLever.SetRatio(inputJson["ratio"]; break;
         case 1381: lLever.SetActiveLever(true); break;
         case 1380: lLever.SetActiveLever(false); break;
 
@@ -125,8 +127,8 @@ void ParseCommands() {
         case 671: laser.SetFrequency(inputJson["frequency"]); break;
         case 672: laser.SetDuration(inputJson["duration"]); break;
         case 673: laser.SetTraceInterval(inputJson["trace"]); break;
-        case 681: laser.SetMode(true); break;
-        case 682: laser.SetMode(false); break;
+        case 681: laser.SetMode(true); break; // contingent on lever press
+        case 682: laser.SetMode(false); break; // independently cycle
 
         // microscope commands
         case 901: microscope.ArmToggle(true); break;
