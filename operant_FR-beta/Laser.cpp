@@ -133,6 +133,7 @@ void Laser::Oscillate(uint32_t currentTimestamp) {
       doc[F("event")] = F("TEST");
       doc[F("start_timestamp")] = startTimestamp - Offset();
       doc[F("end_timestamp")] = endTimestamp - Offset();
+      doc[F("desc")] = F("LASER_TEST");
 
       serializeJson(doc, Serial);
       Serial.println();

@@ -11,6 +11,7 @@
 
 SwitchLever rLever(10, "RH");
 SwitchLever lLever(13, "LH");
+SwitchLever* activeLever = &rLever;
 Cue cue(3, 8000, 1600, 0);
 Pump pump(4, 2000, cue.Duration());
 LickCircuit lickCircuit(5);
@@ -24,16 +25,17 @@ uint32_t SESSION_END_TIMESTAMP;
 
 void setup() {
   const uint32_t baudrate = 115200;
-  
+  JsonDocument setupJson;
+
   delay(100);
   Serial.begin(baudrate);
   delay(100);
 
-  JsonDocument setupJson;
-  setupJson["level"] = F("000");
-  setupJson["sketch"] = F("operant_FR.ino");
-  setupJson["version"] = F("v1.1.1");
-  setupJson["baud_rate"] = baudrate;
+  setupJson[F("level")] = F("000");
+  setupJson[F("sketch")] = F("operant_FR.ino");
+  setupJson[F("version")] = F("v1.1.1");
+  setupJson[F("baud_rate")] = baudrate;
+  setupJson[F("desc")] = F("FIXED_RATIO");
 
   serializeJson(setupJson, Serial);
   Serial.println();
@@ -91,16 +93,16 @@ void ParseCommands() {
         case 1001: rLever.ArmToggle(true); break;
         case 1000: rLever.ArmToggle(false); break;
         case 1074: rLever.SetTimeoutIntervalLength(inputJson["timeout"]); break;
-        case 1075: rLever.SetRatio(inputJson["ratio"]; break;
-        case 1081: rLever.SetActiveLever(true); break;
+        case 1075: rLever.SetRatio(inputJson["ratio"]); break;
+        case 1081: rLever.SetActiveLever(true); activeLever = &rLever; break;
         case 1080: rLever.SetActiveLever(false); break;
 
         // LH lever commands
         case 1301: lLever.ArmToggle(true); break;
         case 1300: lLever.ArmToggle(false); break;
         case 1374: lLever.SetTimeoutIntervalLength(inputJson["timeout"]); break;
-        case 1375: lLever.SetRatio(inputJson["ratio"]; break;
-        case 1381: lLever.SetActiveLever(true); break;
+        case 1375: lLever.SetRatio(inputJson["ratio"]); break;
+        case 1381: lLever.SetActiveLever(true); activeLever = &lLever; break;
         case 1380: lLever.SetActiveLever(false); break;
 
         // cue commands
@@ -133,6 +135,9 @@ void ParseCommands() {
         // microscope commands
         case 901: microscope.ArmToggle(true); break;
         case 900: microscope.ArmToggle(false); break;
+
+        // session setup commands
+        case 201: activeLever->SetRatio(inputJson["ratio"]); break;
 
         // controller commands
         case 101: StartSession(); SetDeviceTimestampOffset(SESSION_START_TIMESTAMP); break;
