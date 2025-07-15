@@ -31,7 +31,7 @@ private:
   uint8_t debounceDelay;
   uint32_t startTimestamp;
   uint32_t endTimestamp;
-  enum PressType { INDEPENDENT, ACTIVE, TIMEOUT };
+  enum PressType { INACTIVE, ACTIVE, TIMEOUT };
   PressType pressType;
   uint8_t ratio;
   uint8_t numPresses;

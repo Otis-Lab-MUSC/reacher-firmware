@@ -15,7 +15,7 @@ SwitchLever::SwitchLever(int8_t pin, const char* orientation) : Device(pin, INPU
   reinforced = false;
   debounceDelay = 20;
   timeoutInterval = 0;
-  ratio = 3; // default schedule FR1
+  ratio = 1; // default schedule FR1
   numPresses = 0;
 }
 
@@ -71,7 +71,7 @@ void SwitchLever::Classify(uint32_t startTimestamp, uint32_t currentTimestamp) {
       }
     }
   } else {
-    pressType = PressType::INDEPENDENT;
+    pressType = PressType::INACTIVE;
   }  
 }
 
@@ -90,7 +90,7 @@ void SwitchLever::LogOutput() {
   doc[F("device")] = device;
   doc[F("pin")] = pin;
   doc[F("event")] = event;
-  doc[F("class")] = (pressType == 0) ? F("INDEPENDENT") : ((pressType == 1) ? F("ACTIVE") : F("TIMEOUT"));
+  doc[F("class")] = (pressType == 0) ? F("INACTIVE") : ((pressType == 1) ? F("ACTIVE") : F("TIMEOUT"));
   doc[F("start_timestamp")] = startTimestamp - Offset();
   doc[F("end_timestamp")] = endTimestamp - Offset();
   doc[F("orientation")] = orientation;
