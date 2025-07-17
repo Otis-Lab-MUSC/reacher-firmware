@@ -9,6 +9,7 @@ Laser::Laser(int8_t pin, uint32_t frequency, uint32_t duration, uint32_t traceIn
   this->traceInterval = traceInterval;
   mode = CONTINGENT;
   state = false;
+  prevState = false;
   halfState = false;
   outputLogged = false;
   isTesting = false; // Initialize testing flag
@@ -16,15 +17,15 @@ Laser::Laser(int8_t pin, uint32_t frequency, uint32_t duration, uint32_t traceIn
 }
 
 void Laser::Await(uint32_t currentTimestamp) {
-  if (mode == INDEPENDENT) {
-    Cycle(currentTimestamp);
-  }
-  
-  if (armed || isTesting) { // Oscillate if armed or testing
-    Oscillate(currentTimestamp);
+  if (armed || isTesting) {
+    if (mode == INDEPENDENT && !isTesting) {
+      Cycle(currentTimestamp);  
+    }
+    Oscillate(currentTimestamp);  
   } else {
     startTimestamp = currentTimestamp;
     endTimestamp = currentTimestamp;
+    Off();
   }
 }
 
@@ -32,7 +33,7 @@ void Laser::Test(uint32_t currentTimestamp) {
   startTimestamp = currentTimestamp;
   endTimestamp = currentTimestamp + duration;
   state = true;
-  UpdateHalfCycle(startTimestamp); // Start oscillation immediately
+  UpdateHalfCycle(startTimestamp);
   isTesting = true;
   outputLogged = false;
 }
@@ -42,15 +43,11 @@ void Laser::SetEvent(uint32_t currentTimestamp) {
     if (mode == CONTINGENT) {
       startTimestamp = traceInterval + currentTimestamp;
       endTimestamp = startTimestamp + duration;
-      state = true; // Enable laser for the event
-      UpdateHalfCycle(startTimestamp); // Initialize oscillation
+      state = true;
+      UpdateHalfCycle(startTimestamp);
     }
     else if (mode == INDEPENDENT) {
       UpdateHalfCycle(currentTimestamp);
-    }
-  
-    if (!outputLogged) {
-      LogOutput();
     }
   }
 }
@@ -105,41 +102,32 @@ void Laser::Cycle(uint32_t currentTimestamp) {
 }
 
 void Laser::Oscillate(uint32_t currentTimestamp) {
-  if (currentTimestamp >= startTimestamp && currentTimestamp <= endTimestamp && state) {
-    if (frequency == 1) {
-      On();
-    }
-    else {
-      if (currentTimestamp >= halfCycleEndTimestamp) { 
-        UpdateHalfCycle(currentTimestamp); // Update oscillation cycle
-      }
-      if (halfState) {
-        On();
-      }
-      else {
+    if (currentTimestamp >= startTimestamp && currentTimestamp <= endTimestamp && state) {
+        if (frequency == 1) {
+            On();
+        } else {
+            if (currentTimestamp >= halfCycleEndTimestamp) {
+                UpdateHalfCycle(currentTimestamp);
+            }
+            if (halfState) {
+                On();
+            } else {
+                Off();
+            }
+        }
+    } else {
         Off();
-      }
+        if (state && currentTimestamp > endTimestamp) {
+            state = false;
+        }
+        if (prevState && !state) {
+            LogOutput();
+        }
+        if (isTesting && currentTimestamp > endTimestamp) {
+            isTesting = false;
+        }
     }
-  }
-  else {
-    Off();
-    if (isTesting && currentTimestamp > endTimestamp) {
-      isTesting = false; // End test after duration
-      JsonDocument doc;
-
-      doc[F("level")] = F("001");
-      doc[F("device")] = device;
-      doc[F("pin")] = pin;
-      doc[F("event")] = F("TEST");
-      doc[F("start_timestamp")] = startTimestamp - Offset();
-      doc[F("end_timestamp")] = endTimestamp - Offset();
-      doc[F("desc")] = F("LASER_TEST");
-
-      serializeJson(doc, Serial);
-      Serial.println();
-    }
-    outputLogged = false;
-  }
+    prevState = state;
 }
 
 void Laser::LogOutput() { 
@@ -149,8 +137,8 @@ void Laser::LogOutput() {
   doc[F("device")] = device;
   doc[F("pin")] = pin;
   doc[F("event")] = event;
-  doc[F("start_timestamp")] = startTimestamp - Offset();
-  doc[F("end_timestamp")] = endTimestamp - Offset();
+  doc[F("start_timestamp")] = startTimestamp - Offset() - duration;
+  doc[F("end_timestamp")] = endTimestamp - Offset() - duration;
 
   serializeJson(doc, Serial);
   Serial.println();

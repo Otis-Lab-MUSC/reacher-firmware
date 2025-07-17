@@ -31,6 +31,7 @@ private:
   enum Mode { CONTINGENT, INDEPENDENT };
   Mode mode;
   bool state;
+  bool prevState;
   bool halfState;
   bool outputLogged;
   bool isTesting;
