@@ -137,7 +137,7 @@ void Laser::LogOutput() {
   doc[F("device")] = device;
   doc[F("pin")] = pin;
   doc[F("event")] = event;
-  doc[F("start_timestamp")] = startTimestamp - Offset() - duration;
+  doc[F("start_timestamp")] = startTimestamp - Offset() - duration; // FIXME: this works for cycle, but not for contingent...shotty way of doing this anyway
   doc[F("end_timestamp")] = endTimestamp - Offset() - duration;
 
   serializeJson(doc, Serial);
