@@ -65,3 +65,14 @@ byte Microscope::TriggerPin() {
 byte Microscope::TimestampPin() {
   return timestampPin;
 }
+
+JsonDocument Microscope::Defaults() {
+  JsonDocument defaults;
+
+  defaults[F("level")] = F("000"); 
+  defaults[F("device")] = device;
+  defaults[F("trigger_pin")] = triggerPin;
+  defaults[F("timestamp_pin")] = timestampPin;
+
+  return defaults;
+}

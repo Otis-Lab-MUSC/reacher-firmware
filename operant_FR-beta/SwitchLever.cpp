@@ -104,3 +104,17 @@ void SwitchLever::AddActions(uint32_t currentTimestamp) {
   if (pump) { pump->SetEvent(currentTimestamp); }
   if (laser) { laser->SetEvent(currentTimestamp); }
 }
+
+JsonDocument SwitchLever::Defaults() {
+  JsonDocument defaults;
+
+  defaults[F("level")] = F("000"); 
+  defaults[F("device")] = device;
+  defaults[F("pin")] = pin;
+  defaults[F("orientation")] = orientation;
+  defaults[F("reinforced")] = reinforced ? F("REINFORCED") : F("UNENFORCED");
+  defaults[F("timeout")] = timeoutInterval;
+  defaults[F("ratio")] = ratio;
+
+  return defaults;
+}

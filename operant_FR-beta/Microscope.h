@@ -17,6 +17,8 @@ public:
   byte TriggerPin();
   byte TimestampPin();
 
+  JsonDocument Defaults();
+
 private:
   int8_t triggerPin;
   int8_t timestampPin;

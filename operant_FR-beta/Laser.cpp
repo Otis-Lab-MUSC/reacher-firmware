@@ -12,7 +12,7 @@ Laser::Laser(int8_t pin, uint32_t frequency, uint32_t duration, uint32_t traceIn
   prevState = false;
   halfState = false;
   outputLogged = false;
-  isTesting = false; // Initialize testing flag
+  isTesting = false;
   pinMode(pin, OUTPUT);
 }
 
@@ -21,12 +21,49 @@ void Laser::Await(uint32_t currentTimestamp) {
     if (mode == INDEPENDENT && !isTesting) {
       Cycle(currentTimestamp);  
     }
-    Oscillate(currentTimestamp);  
+    Oscillate(currentTimestamp); 
   } else {
     startTimestamp = currentTimestamp;
     endTimestamp = currentTimestamp;
     Off();
   }
+}
+
+void Laser::Cycle(uint32_t currentTimestamp) {
+  if (currentTimestamp >= endTimestamp) {
+    if (state) {
+      LogOutput();
+    }
+    startTimestamp = currentTimestamp;
+    endTimestamp = currentTimestamp + duration;
+    state = !state;
+  }
+}
+
+void Laser::Oscillate(uint32_t currentTimestamp) {
+    if (currentTimestamp >= startTimestamp && currentTimestamp <= endTimestamp && state) {
+        if (frequency == 1) {
+            On();
+        } else {
+            if (currentTimestamp >= halfCycleEndTimestamp) {
+                UpdateHalfCycle(currentTimestamp);
+            }
+            if (halfState) {
+                On();
+            } else {
+                Off();
+            }
+        }
+    } else {
+        Off();
+        if (state && currentTimestamp > endTimestamp) {
+            state = false;
+        }
+        if (isTesting && currentTimestamp > endTimestamp) {
+            isTesting = false;
+        }
+    }
+    prevState = state;
 }
 
 void Laser::Test(uint32_t currentTimestamp) {
@@ -45,9 +82,7 @@ void Laser::SetEvent(uint32_t currentTimestamp) {
       endTimestamp = startTimestamp + duration;
       state = true;
       UpdateHalfCycle(startTimestamp);
-    }
-    else if (mode == INDEPENDENT) {
-      UpdateHalfCycle(currentTimestamp);
+      LogOutput();
     }
   }
 }
@@ -93,43 +128,6 @@ void Laser::Off() {
   halfState = false;
 }
 
-void Laser::Cycle(uint32_t currentTimestamp) {
-  if (currentTimestamp >= endTimestamp) {
-    startTimestamp = currentTimestamp;
-    endTimestamp = currentTimestamp + duration;
-    state = !state;
-  }
-}
-
-void Laser::Oscillate(uint32_t currentTimestamp) {
-    if (currentTimestamp >= startTimestamp && currentTimestamp <= endTimestamp && state) {
-        if (frequency == 1) {
-            On();
-        } else {
-            if (currentTimestamp >= halfCycleEndTimestamp) {
-                UpdateHalfCycle(currentTimestamp);
-            }
-            if (halfState) {
-                On();
-            } else {
-                Off();
-            }
-        }
-    } else {
-        Off();
-        if (state && currentTimestamp > endTimestamp) {
-            state = false;
-        }
-        if (prevState && !state) {
-            LogOutput();
-        }
-        if (isTesting && currentTimestamp > endTimestamp) {
-            isTesting = false;
-        }
-    }
-    prevState = state;
-}
-
 void Laser::LogOutput() { 
   JsonDocument doc;
    
@@ -137,8 +135,8 @@ void Laser::LogOutput() {
   doc[F("device")] = device;
   doc[F("pin")] = pin;
   doc[F("event")] = event;
-  doc[F("start_timestamp")] = startTimestamp - Offset() - duration; // FIXME: this works for cycle, but not for contingent...shotty way of doing this anyway
-  doc[F("end_timestamp")] = endTimestamp - Offset() - duration;
+  doc[F("start_timestamp")] = startTimestamp - Offset(); 
+  doc[F("end_timestamp")] = endTimestamp - Offset();
 
   serializeJson(doc, Serial);
   Serial.println();
@@ -151,4 +149,18 @@ void Laser::UpdateHalfCycle(uint32_t currentTimestamp) {
   halfCycleStartTimestamp = currentTimestamp;
   halfCycleEndTimestamp = currentTimestamp + static_cast<uint32_t>(halfCycleLength);
   halfState = !halfState;
+}
+
+JsonDocument Laser::Defaults() {
+  JsonDocument defaults;
+
+  defaults[F("level")] = F("000"); 
+  defaults[F("device")] = device;
+  defaults[F("pin")] = pin;
+  defaults[F("frequency")] = frequency;
+  defaults[F("duration")] = duration;
+  defaults[F("trace")] = traceInterval;
+  defaults[F("mode")] = (mode == CONTINGENT) ? F("CONTINGENT") : F("INDEPENDENT");
+
+  return defaults;
 }

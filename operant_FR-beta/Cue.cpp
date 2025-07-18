@@ -86,3 +86,16 @@ void Cue::LogOutput() {
   serializeJson(doc, Serial);
   Serial.println();
 }
+
+JsonDocument Cue::Defaults() {
+  JsonDocument defaults;
+
+  defaults[F("level")] = F("000"); 
+  defaults[F("device")] = device;
+  defaults[F("pin")] = pin;
+  defaults[F("frequency")] = frequency;
+  defaults[F("duration")] = duration;
+  defaults[F("trace")] = traceInterval;
+
+  return defaults;
+}

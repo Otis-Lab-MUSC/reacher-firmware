@@ -18,6 +18,8 @@ public:
   void SetTimeoutIntervalLength(uint32_t timeoutInterval);
   void SetActiveLever(bool reinforced);
   void SetRatio(uint8_t ratio);
+
+  JsonDocument Defaults();
   
 private:
   bool initState;

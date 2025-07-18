@@ -53,6 +53,11 @@ void setup() {
   lLever.SetLaser(&laser);
   lLever.SetTimeoutIntervalLength(cue.Duration() + pump.Duration());
   lLever.SetActiveLever(false);
+
+  serializeJson(cue.Defaults(), Serial);
+  Serial.println();
+  serializeJson(laser.Defaults(), Serial);
+  Serial.println();
 }
 
 void loop() {

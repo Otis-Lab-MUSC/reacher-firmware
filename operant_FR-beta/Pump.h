@@ -15,6 +15,8 @@ public:
 
   uint32_t Duration();
   uint32_t TraceInterval();
+
+  JsonDocument Defaults();
   
 private:
   uint32_t duration;

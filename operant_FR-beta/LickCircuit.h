@@ -8,6 +8,8 @@ class LickCircuit : public Device {
 public:
   LickCircuit(int8_t pin);
   void Monitor(uint32_t currentTimestamp);
+
+  JsonDocument Defaults();
   
 private:
   bool initState;
