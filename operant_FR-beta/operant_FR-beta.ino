@@ -9,13 +9,24 @@
 #include "Laser.h"
 #include "Microscope.h"
 
+// Settings
+uint32_t CUE_DURATION = 1600;
+uint32_t CUE_FREQUENCY = 8000;
+uint32_t CUE_TRACE_INTERVAL = 0;
+uint32_t PUMP_DURATION = 2000;
+uint32_t PUMP_TRACE_INTERVAL = CUE_DURATION;
+uint8_t LASER_FREQUENCY = 40;
+uint32_t LASER_DURATION = 5000;
+uint32_t LASER_TRACE_INTERVAL = CUE_DURATION;
+uint32_t TIMEOUT_INTERVAL = 20000;
+
 SwitchLever rLever(10, "RH");
 SwitchLever lLever(13, "LH");
 SwitchLever* activeLever = &rLever;
-Cue cue(3, 8000, 1600, 0);
-Pump pump(4, 2000, cue.Duration());
+Cue cue(3, CUE_FREQUENCY, CUE_DURATION, 0);
+Pump pump(4, PUMP_DURATION, PUMP_TRACE_INTERVAL);
 LickCircuit lickCircuit(5);
-Laser laser(6, 40, 5000, cue.Duration());
+Laser laser(6, LASER_FREQUENCY, LASER_DURATION, LASER_TRACE_INTERVAL);
 Microscope microscope(9, 2);
 
 JsonDocument doc;
@@ -30,33 +41,29 @@ void setup() {
   delay(100);
   Serial.begin(baudrate);
   delay(100);
-
-  setupJson[F("level")] = F("000");
-  setupJson[F("sketch")] = F("operant_FR.ino");
-  setupJson[F("version")] = F("v1.1.1");
-  setupJson[F("baud_rate")] = baudrate;
-  setupJson[F("desc")] = F("FIXED_RATIO");
-
-  serializeJson(setupJson, Serial);
-  Serial.println();
   
   cue.Jingle();
 
   rLever.SetCue(&cue);
   rLever.SetPump(&pump);
   rLever.SetLaser(&laser);
-  rLever.SetTimeoutIntervalLength(cue.Duration() + pump.Duration());
+  rLever.SetTimeoutIntervalLength(TIMEOUT_INTERVAL);
   rLever.SetActiveLever(true);
 
   lLever.SetCue(&cue);
   lLever.SetPump(&pump);
   lLever.SetLaser(&laser);
-  lLever.SetTimeoutIntervalLength(cue.Duration() + pump.Duration());
+  lLever.SetTimeoutIntervalLength(TIMEOUT_INTERVAL);
   lLever.SetActiveLever(false);
 
-  serializeJson(cue.Defaults(), Serial);
-  Serial.println();
-  serializeJson(laser.Defaults(), Serial);
+  setupJson[F("level")] = F("000");
+  setupJson[F("device")] = F("CONTROLLER");
+  setupJson[F("sketch")] = F("operant_FR.ino");
+  setupJson[F("version")] = F("v1.1.1");
+  setupJson[F("baud_rate")] = baudrate;
+  setupJson[F("schedule")] = F("FIXED_RATIO");
+  
+  serializeJson(setupJson, Serial);
   Serial.println();
 }
 
@@ -173,6 +180,31 @@ void StartSession() {
 
   serializeJson(doc, Serial);
   Serial.println(); 
+
+  JsonDocument settings;
+  settings[F("level")] = F("000");
+  settings[F("device")] = F("NA");
+  JsonObject cue = settings.createNestedObject(F("cue"));
+  JsonObject pump = settings.createNestedObject(F("pump"));
+  JsonObject laser = settings.createNestedObject(F("laser"));
+  JsonObject lever = settings.createNestedObject(F("active_lever"));
+
+  cue[F("frequency")] = CUE_FREQUENCY;
+  cue[F("duration")] = CUE_DURATION;
+  cue[F("trace")] = CUE_TRACE_INTERVAL;
+
+  pump[F("duration")] = PUMP_DURATION;
+  pump[F("trace")] = PUMP_TRACE_INTERVAL;
+
+  laser[F("frequency")] = LASER_FREQUENCY;
+  laser[F("duration")] = LASER_DURATION;
+  laser[F("trace")] = LASER_TRACE_INTERVAL;
+
+  lever[F("timeout")] = TIMEOUT_INTERVAL;
+  
+  serializeJson(settings, Serial);
+  Serial.println();
+  
 }
 
 void EndSession() {

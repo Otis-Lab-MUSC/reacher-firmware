@@ -47,12 +47,12 @@ void LickCircuit::LogOutput() {
   Serial.println();
 }
 
-JsonDocument LickCircuit::Defaults() {
-  JsonDocument defaults;
+JsonDocument LickCircuit::Settings() {
+  JsonDocument Settings;
 
-  defaults[F("level")] = F("000"); 
-  defaults[F("device")] = device;
-  defaults[F("pin")] = pin;
+  Settings[F("level")] = F("000"); 
+  Settings[F("device")] = device;
+  Settings[F("pin")] = pin;
 
-  return defaults;
+  return Settings;
 }

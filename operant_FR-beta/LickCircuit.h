@@ -9,7 +9,7 @@ public:
   LickCircuit(int8_t pin);
   void Monitor(uint32_t currentTimestamp);
 
-  JsonDocument Defaults();
+  JsonDocument Settings();
   
 private:
   bool initState;

@@ -87,15 +87,15 @@ void Cue::LogOutput() {
   Serial.println();
 }
 
-JsonDocument Cue::Defaults() {
-  JsonDocument defaults;
+JsonDocument Cue::Settings() {
+  JsonDocument Settings;
 
-  defaults[F("level")] = F("000"); 
-  defaults[F("device")] = device;
-  defaults[F("pin")] = pin;
-  defaults[F("frequency")] = frequency;
-  defaults[F("duration")] = duration;
-  defaults[F("trace")] = traceInterval;
+  Settings[F("level")] = F("000"); 
+  Settings[F("device")] = device;
+  Settings[F("pin")] = pin;
+  Settings[F("frequency")] = frequency;
+  Settings[F("duration")] = duration;
+  Settings[F("trace")] = traceInterval;
 
-  return defaults;
+  return Settings;
 }

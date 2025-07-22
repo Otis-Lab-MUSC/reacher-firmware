@@ -20,7 +20,7 @@ public:
   uint32_t Duration();
   uint32_t TraceInterval();
 
-  JsonDocument Defaults();
+  JsonDocument Settings();
   
 private:
   uint32_t frequency;

@@ -151,16 +151,16 @@ void Laser::UpdateHalfCycle(uint32_t currentTimestamp) {
   halfState = !halfState;
 }
 
-JsonDocument Laser::Defaults() {
-  JsonDocument defaults;
+JsonDocument Laser::Settings() {
+  JsonDocument Settings;
 
-  defaults[F("level")] = F("000"); 
-  defaults[F("device")] = device;
-  defaults[F("pin")] = pin;
-  defaults[F("frequency")] = frequency;
-  defaults[F("duration")] = duration;
-  defaults[F("trace")] = traceInterval;
-  defaults[F("mode")] = (mode == CONTINGENT) ? F("CONTINGENT") : F("INDEPENDENT");
+  Settings[F("level")] = F("000"); 
+  Settings[F("device")] = device;
+  Settings[F("pin")] = pin;
+  Settings[F("frequency")] = frequency;
+  Settings[F("duration")] = duration;
+  Settings[F("trace")] = traceInterval;
+  Settings[F("mode")] = (mode == CONTINGENT) ? F("CONTINGENT") : F("INDEPENDENT");
 
-  return defaults;
+  return Settings;
 }

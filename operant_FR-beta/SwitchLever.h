@@ -19,7 +19,7 @@ public:
   void SetActiveLever(bool reinforced);
   void SetRatio(uint8_t ratio);
 
-  JsonDocument Defaults();
+  JsonDocument Settings();
   
 private:
   bool initState;

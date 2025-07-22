@@ -67,14 +67,14 @@ uint32_t Pump::TraceInterval() {
   return traceInterval;
 }
 
-JsonDocument Pump::Defaults() {
-  JsonDocument defaults;
+JsonDocument Pump::Settings() {
+  JsonDocument Settings;
 
-  defaults[F("level")] = F("000"); 
-  defaults[F("device")] = device;
-  defaults[F("pin")] = pin;
-  defaults[F("duration")] = duration;
-  defaults[F("trace")] = traceInterval;
+  Settings[F("level")] = F("000"); 
+  Settings[F("device")] = device;
+  Settings[F("pin")] = pin;
+  Settings[F("duration")] = duration;
+  Settings[F("trace")] = traceInterval;
 
-  return defaults;
+  return Settings;
 }
