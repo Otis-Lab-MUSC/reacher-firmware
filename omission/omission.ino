@@ -584,6 +584,7 @@ void PROGRAM() {
         monitorPressing(programIsRunning, activeLever);
         monitorPressing(programIsRunning, inactiveLever);
         monitorLicking(lickCircuit);
+	manageStim(laser);
         manageDevices();
         triggerInfusion();
         handleFrameSignal();

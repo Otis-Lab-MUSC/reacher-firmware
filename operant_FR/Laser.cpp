@@ -214,5 +214,5 @@ void Laser::on() {
  */
 void Laser::off() {
     digitalWrite(pin, LOW);   // Turn the laser OFF
-     Serial.println("OFF, " + String(laserAction) + ", " + String(cycleUp) + ", " + String(laserState)); // Uncomment for debugging
+//    Serial.println("OFF, " + String(laserAction) + ", " + String(cycleUp) + ", " + String(laserState)); // Uncomment for debugging
 }

@@ -1,11 +1,9 @@
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 #include <ArduinoJson.h>
 
 #include "LickCircuit.h"
 
-LickCircuit::LickCircuit(int8_t pin) : Device(pin, INPUT_PULLUP) {
-  armed = false;
+LickCircuit::LickCircuit(int8_t pin) : Device(pin, INPUT_PULLUP, "LICK_CIRCUIT", "LICK") {
   this->pin = pin;
   pinMode(pin, INPUT_PULLUP);
   initState = digitalRead(pin);
@@ -14,29 +12,7 @@ LickCircuit::LickCircuit(int8_t pin) : Device(pin, INPUT_PULLUP) {
   debounceDelay = 20;
 }
 
-void LickCircuit::ArmToggle(bool armed) {
-  JsonDocument json;
-  String desc;
-  
-  this->armed = armed;
-  
-  desc = F("Lick circuit ");
-  desc += armed ? F("armed") : F("disarmed");
-  desc += F(" at pin ");
-  desc += pin;
-
-  json["level"] = F("output");
-  json["desc"] = desc;
-  json["device"] = F("LICK_CIRCUIT");
-  json["start_timestamp"] = startTimestamp;
-  json["end_timestamp"] = endTimestamp;
-
-  serializeJsonPretty(json, Serial);
-  Serial.println();
-}
-
-void LickCircuit::Monitor() {
-  uint32_t currentTimestamp = millis();
+void LickCircuit::Monitor(uint32_t currentTimestamp) {
   if (armed) {
     bool currentState = digitalRead(pin);
     if (currentState != previousState) {
@@ -46,9 +22,9 @@ void LickCircuit::Monitor() {
       if (currentState != stableState) {
         stableState = currentState;
         if (stableState != initState) {
-          startTimestamp = currentTimestamp - Offset();
+          startTimestamp = currentTimestamp;
         } else {
-          endTimestamp = currentTimestamp - Offset();
+          endTimestamp = currentTimestamp;
           LogOutput();
         }
       }
@@ -57,18 +33,26 @@ void LickCircuit::Monitor() {
   }
 }
 
-void LickCircuit::LogOutput() {
-  JsonDocument json;
-  String desc;
-
-  desc += F("Lick occurred for circuit at pin ");
-  desc += pin;
-
-  json["level"] = F("output");
-  json["desc"] = desc;
-  json["device"] = F("LICK_CIRCUIT");
-  json["onset_timestamp"] = startTimestamp;
-  json["offset_timestamp"] = endTimestamp;
-  serializeJsonPretty(json, Serial);
+void LickCircuit::LogOutput() {  
+  JsonDocument doc;
+  
+  doc[F("level")] = F("007");
+  doc[F("device")] = device;
+  doc[F("pin")] = pin;
+  doc[F("event")] = event;
+  doc[F("start_timestamp")] = startTimestamp - Offset();
+  doc[F("end_timestamp")] = endTimestamp - Offset();
+  
+  serializeJson(doc, Serial);
   Serial.println();
+}
+
+JsonDocument LickCircuit::Settings() {
+  JsonDocument Settings;
+
+  Settings[F("level")] = F("000"); 
+  Settings[F("device")] = device;
+  Settings[F("pin")] = pin;
+
+  return Settings;
 }

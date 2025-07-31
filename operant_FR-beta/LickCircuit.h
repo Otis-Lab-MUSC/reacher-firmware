@@ -7,14 +7,14 @@
 class LickCircuit : public Device {
 public:
   LickCircuit(int8_t pin);
-  void ArmToggle(bool armed);
-  void Monitor();
+  void Monitor(uint32_t currentTimestamp);
+
+  JsonDocument Settings();
   
 private:
   bool initState;
   bool previousState;
   bool stableState;
-  char orientation[3];
   uint32_t lastDebounceTimestamp;
   uint8_t debounceDelay;
   uint32_t startTimestamp;

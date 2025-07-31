@@ -5,13 +5,13 @@
 
 class Device {
 public:
-  Device(int8_t pin, uint8_t mode);
+  Device(int8_t pin, uint8_t mode, const char* device, const char* event);
   
   virtual void ArmToggle(bool arm);
-  virtual void EventHandler();
   virtual void SetOffset(uint32_t offset);
+  virtual void LogOutput();
   
-  virtual int8_t Pin() const;
+  virtual byte Pin() const;
   virtual bool Armed() const; 
   virtual uint32_t Offset() const;
   
@@ -22,6 +22,8 @@ protected:
   int8_t pin;
   uint8_t mode;
   bool armed;
+  const char* device;
+  const char* event;
 };
 
 #endif // DEVICE_H
