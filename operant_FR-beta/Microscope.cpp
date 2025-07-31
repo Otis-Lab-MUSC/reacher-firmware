@@ -22,23 +22,27 @@ Microscope::Microscope(int8_t triggerPin, int8_t timestampPin) {
 static void Microscope::TimestampISR() {
   if (instance) {
     instance->received = true;
-    instance->timestamp = millis() - instance->offset;
+    instance->timestamp = micros() - instance->offset;
   }
 }
 
 void Microscope::HandleFrameSignal() {
-    if (armed) {
-        if (received) {
-            noInterrupts();
-            received = false;
-            LogOutput();
-            interrupts(); 
-        }
+    if (armed && received) {
+      noInterrupts();
+      received = false;
+      interrupts(); 
+      LogOutput();
     }
 }
 
 void Microscope::ArmToggle(bool armed) {
   this->armed = armed;
+}
+
+void Microscope::Trigger() {
+    digitalWrite(triggerPin, HIGH);   
+    delay(50);                        
+    digitalWrite(triggerPin, LOW);          
 }
 
 void Microscope::SetOffset(uint32_t offset) {
@@ -55,7 +59,7 @@ void Microscope::LogOutput() {
   doc[F("timestamp")] = instance->timestamp;
 
   serializeJson(doc, Serial);
-  Serial.println();   
+  Serial.println();
 }
 
 byte Microscope::TriggerPin() {

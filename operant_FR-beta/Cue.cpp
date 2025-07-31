@@ -60,13 +60,11 @@ uint32_t Cue::Frequency() {
 uint32_t Cue::Duration() {
   return duration;
 }
-
-uint32_t Cue::TraceInterval() {
-  return traceInterval;
-}
-
 void Cue::On() {
   tone(pin, frequency);
+}
+uint32_t Cue::TraceInterval() {
+  return traceInterval;
 }
 
 void Cue::Off() {

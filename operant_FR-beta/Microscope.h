@@ -13,6 +13,7 @@ public:
   void SetCollectFrames(bool state);
   void ArmToggle(bool armed);
   void SetOffset(uint32_t offset);
+  void Trigger();
 
   byte TriggerPin();
   byte TimestampPin();
