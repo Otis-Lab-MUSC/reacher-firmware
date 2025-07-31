@@ -22,7 +22,7 @@ Microscope::Microscope(int8_t triggerPin, int8_t timestampPin) {
 static void Microscope::TimestampISR() {
   if (instance) {
     instance->received = true;
-    instance->timestamp = micros() - instance->offset;
+    instance->timestamp = millis() - instance->offset;
   }
 }
 

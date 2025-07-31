@@ -34,22 +34,7 @@ JsonDocument doc;
 uint32_t SESSION_START_TIMESTAMP;
 uint32_t SESSION_END_TIMESTAMP;
 
-
-
-const int proxy = 7;
-const uint32_t framePeriod = 100000;
-
-void frameOut() {
-  digitalWrite(proxy, HIGH);
-  delayMicroseconds(framePeriod / 2);
-  digitalWrite(proxy, LOW);
-  delayMicroseconds(framePeriod / 2);
-}
-
-void setup() {
-  pinMode(proxy, OUTPUT);
-  digitalWrite(proxy, LOW);
-  
+void setup() { 
   const uint32_t baudrate = 115200;
   JsonDocument setupJson;
 
@@ -83,11 +68,6 @@ void setup() {
 }
 
 void loop() {
-
-  frameOut();
-
-
-  
   uint32_t currentTimestamp = millis();
   
   rLever.Monitor(currentTimestamp);
