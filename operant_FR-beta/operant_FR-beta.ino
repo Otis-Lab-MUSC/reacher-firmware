@@ -58,7 +58,7 @@ void setup() {
 
   setupJson[F("level")] = F("000");
   setupJson[F("device")] = F("CONTROLLER");
-  setupJson[F("sketch")] = F("operant_FR.ino");
+  setupJson[F("sketch")] = F("operant_FR-beta.ino");
   setupJson[F("version")] = F("v1.1.1");
   setupJson[F("baud_rate")] = baudrate;
   setupJson[F("schedule")] = F("FIXED_RATIO");
