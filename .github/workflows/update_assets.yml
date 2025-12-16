@@ -42,8 +42,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Get the list of all asset IDs for the v1.0.1 release
-          ASSET_IDS=$(gh release view v1.0.1 --repo Otis-Lab-MUSC/reacher-firmware --json assets --jq '.assets[].id' || true)
+          # Get the list of all asset IDs for the v1.0.0 release
+          ASSET_IDS=$(gh release view v1.0.0 --repo Otis-Lab-MUSC/reacher-firmware --json assets --jq '.assets[].id' || true)
           
           # Delete each existing asset
           for ASSET_ID in $ASSET_IDS; do
@@ -55,7 +55,7 @@ jobs:
           done
           
           # Upload new assets
-          gh release upload v1.0.1 \
+          gh release upload v1.0.0 \
             omission.zip \
             operant_FR.zip \
             operant_VI.zip \
