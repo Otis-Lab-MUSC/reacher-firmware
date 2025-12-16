@@ -1,125 +1,99 @@
+#include <Arduino.h>
+#include <ArduinoJson.h>
+
 #include "Cue.h"
-#include "Device.h"
 
-/**
- * @brief Constructs a Cue object with an initial pin and default settings.
- * 
- * Initializes a Cue object as a subclass of Device, setting the pin for tone output
- * and default values for running state, frequency, and duration.
- * 
- * @param initPin The digital pin (byte) to which the cue speaker is connected.
- */
-Cue::Cue(byte initPin) 
-    : Device(initPin), running(false), frequency(8000), duration(1600), onTimestamp(0), offTimestamp(0) {}
-
-/**
- * @brief Sets the running state of the cue.
- * 
- * @param initRunning Boolean indicating whether the cue is currently playing a tone.
- */
-void Cue::setRunning(bool initRunning) {
-    running = initRunning;
+Cue::Cue(int8_t pin, uint32_t frequency, uint32_t duration, uint32_t traceInterval) : Device(pin, OUTPUT, "CUE", "TONE") {
+  this->pin = pin;
+  this->frequency = frequency;
+  this->duration = duration;
+  this->traceInterval = traceInterval;
+  pinMode(pin, OUTPUT);
 }
 
-/**
- * @brief Sets the frequency of the cue tone and logs the change.
- * 
- * @param initFrequency The frequency (in Hz) to set for the cue tone.
- */
-void Cue::setFrequency(int32_t initFrequency) {
-    frequency = initFrequency;
-    Serial.println("SET CUE FREQUENCY TO: " + String(frequency));
+void Cue::Await(uint32_t currentTimestamp) {
+  if (armed) {
+    if (currentTimestamp >= startTimestamp && currentTimestamp <= endTimestamp) {
+      On();
+    } else {
+      Off();
+    }
+  }
 }
 
-/**
- * @brief Sets the duration of the cue tone and logs the change.
- * 
- * @param initDuration The duration (in milliseconds) for which the tone will play.
- */
-void Cue::setDuration(int32_t initDuration) {
-    duration = initDuration;
-    Serial.println("SET CUE DURATION TO: " + String(duration));
+void Cue::Jingle() {
+  static int32_t pitch = 500; 
+  uint32_t duration = 100;
+  for (int32_t i = 0; i < 3; i++) {
+      tone(pin, pitch, 100); 
+      delay(100);                   
+      noTone(pin);           
+      pitch += 500;             
+  }
 }
 
-/**
- * @brief Activates the cue speaker with the set frequency.
- * 
- * Starts playing a tone on the assigned pin at the specified frequency.
- */
-void Cue::on() {
-    tone(pin, frequency);
+void Cue::SetEvent(uint32_t currentTimestamp) {
+  if (armed) {
+    startTimestamp = currentTimestamp;
+    endTimestamp = startTimestamp + duration;
+
+    LogOutput();
+  }
 }
 
-/**
- * @brief Deactivates the cue speaker.
- * 
- * Stops the tone on the assigned pin.
- */
-void Cue::off() {
-    noTone(pin);
+void Cue::SetFrequency(uint32_t frequency) { 
+  this->frequency = frequency;
 }
 
-/**
- * @brief Checks if the cue is currently running.
- * 
- * @return Boolean indicating whether the cue is playing a tone.
- */
-bool Cue::isRunning() const {
-    return running;
+void Cue::SetDuration(uint32_t duration) {
+  this->duration = duration;
 }
 
-/**
- * @brief Retrieves the current frequency of the cue.
- * 
- * @return The frequency (in Hz) of the cue tone.
- */
-int32_t Cue::getFrequency() const {
-    return frequency;
+void Cue::SetTraceInterval(uint32_t traceInterval) {
+  this->traceInterval = traceInterval;
 }
 
-/**
- * @brief Retrieves the current duration of the cue.
- * 
- * @return The duration (in milliseconds) of the cue tone.
- */
-int32_t Cue::getDuration() const {
-    return duration;
+uint32_t Cue::Frequency() {
+  return frequency;
 }
 
-/**
- * @brief Sets the timestamp when the cue should turn on.
- * 
- * @param currentTimestamp The time (in milliseconds) when the cue should activate.
- */
-void Cue::setOnTimestamp(int32_t currentTimestamp) {
-    onTimestamp = currentTimestamp;
+uint32_t Cue::Duration() {
+  return duration;
+}
+void Cue::On() {
+  tone(pin, frequency);
+}
+uint32_t Cue::TraceInterval() {
+  return traceInterval;
 }
 
-/**
- * @brief Sets the timestamp when the cue should turn off.
- * 
- * Calculates the off timestamp based on the current timestamp plus the duration.
- * 
- * @param currentTimestamp The starting time (in milliseconds) for the off calculation.
- */
-void Cue::setOffTimestamp(int32_t currentTimestamp) {
-    offTimestamp = currentTimestamp + duration;
+void Cue::Off() {
+  noTone(pin);
 }
 
-/**
- * @brief Retrieves the timestamp when the cue turns on.
- * 
- * @return The on timestamp (in milliseconds).
- */
-int32_t Cue::getOnTimestamp() const {
-    return onTimestamp;
+void Cue::LogOutput() {  
+  JsonDocument doc;
+  
+  doc[F("level")] = F("007");
+  doc[F("device")] = device;
+  doc[F("pin")] = pin;
+  doc[F("event")] = event;
+  doc[F("start_timestamp")] = startTimestamp - Offset();
+  doc[F("end_timestamp")] = endTimestamp - Offset();
+
+  serializeJson(doc, Serial);
+  Serial.println();
 }
 
-/**
- * @brief Retrieves the timestamp when the cue turns off.
- * 
- * @return The off timestamp (in milliseconds).
- */
-int32_t Cue::getOffTimestamp() const {
-    return offTimestamp;
+JsonDocument Cue::Settings() {
+  JsonDocument Settings;
+
+  Settings[F("level")] = F("000"); 
+  Settings[F("device")] = device;
+  Settings[F("pin")] = pin;
+  Settings[F("frequency")] = frequency;
+  Settings[F("duration")] = duration;
+  Settings[F("trace")] = traceInterval;
+
+  return Settings;
 }

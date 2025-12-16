@@ -1,118 +1,80 @@
-#include "Pump.h"
-#include "Device.h"
 #include <Arduino.h>
+#include <ArduinoJson.h>
 
-/**
- * @brief Constructs a Pump object with an initial pin and default settings.
- * 
- * Initializes a Pump object as a subclass of Device with default infusion settings.
- * 
- * @param initPin The digital pin (byte) to which the pump is connected.
- */
-Pump::Pump(byte initPin) 
-    : Device(initPin), running(false), infusionDuration(2000), infusionAmount(0.0f), 
-      motorRPMs(0.0f), infusionStartTimestamp(0), infusionEndTimestamp(0) {}
+#include "Pump.h"
 
-/**
- * @brief Sets the pump running state.
- * @param initRunning Boolean indicating if the pump is running.
- */
-void Pump::setRunning(bool initRunning) {
-    running = initRunning;
+Pump::Pump(int8_t pin, uint32_t duration, uint32_t traceInterval) : Device(pin, OUTPUT, "PUMP", "INFUSION") {
+  this->pin = pin;
+  this->duration = duration;
+  this->traceInterval = traceInterval;
+  pinMode(pin, OUTPUT);
 }
 
-/**
- * @brief Sets the infusion duration.
- * @param initDuration Duration in milliseconds.
- */
-void Pump::setInfusionDuration(int32_t initDuration) {
-    infusionDuration = initDuration;
+void Pump::Await(uint32_t currentTimestamp) {
+  if (armed) {
+    if (currentTimestamp >= startTimestamp && currentTimestamp <= endTimestamp) {
+      On();
+    } else {
+      Off();
+    }
+  }
 }
 
-/**
- * @brief Sets the infusion amount.
- * @param initAmount Amount in arbitrary units (e.g., microliters).
- */
-void Pump::setInfusionAmount(float initAmount) {
-    infusionAmount = initAmount;
+void Pump::SetEvent(uint32_t currentTimestamp) {  
+  if (armed) {
+    startTimestamp = traceInterval + currentTimestamp;
+    endTimestamp = startTimestamp + duration;
+    
+    LogOutput();
+  }
 }
 
-/**
- * @brief Sets the motor RPMs.
- * @param initRPMs Revolutions per minute of the pump motor.
- */
-void Pump::setMotorRPMs(float initRPMs) {
-    motorRPMs = initRPMs;
+void Pump::SetDuration(uint32_t duration) {
+  this->duration = duration;
 }
 
-/**
- * @brief Sets the infusion period based on cue offset and trace interval.
- * @param cueOffTimestamp Cue off timestamp in milliseconds.
- * @param traceInterval Trace interval in milliseconds.
- */
-void Pump::setInfusionPeriod(int32_t cueOffTimestamp, int32_t traceInterval) {
-    infusionStartTimestamp = cueOffTimestamp + traceInterval;
-    infusionEndTimestamp = infusionStartTimestamp + infusionDuration;
+void Pump::SetTraceInterval(uint32_t traceInterval) {
+  this->traceInterval = traceInterval;
 }
 
-/**
- * @brief Turns the pump on.
- */
-void Pump::on() {
-    digitalWrite(pin, HIGH);
+void Pump::On() {
+  digitalWrite(pin, HIGH);
 }
 
-/**
- * @brief Turns the pump off.
- */
-void Pump::off() {
-    digitalWrite(pin, LOW);
+void Pump::Off() {
+  digitalWrite(pin, LOW);
 }
 
-/**
- * @brief Checks if the pump is running.
- * @return Boolean indicating running state.
- */
-bool Pump::isRunning() const {
-    return running;
+void Pump::LogOutput() { 
+  JsonDocument doc;
+  
+  doc[F("level")] = F("007");
+  doc[F("device")] = device;
+  doc[F("pin")] = pin;
+  doc[F("event")] = event;
+  doc[F("start_timestamp")] = startTimestamp - Offset();
+  doc[F("end_timestamp")] = endTimestamp - Offset();
+
+  serializeJson(doc, Serial);
+  Serial.println();  
 }
 
-/**
- * @brief Retrieves the infusion duration.
- * @return Duration in milliseconds.
- */
-int32_t Pump::getInfusionDuration() const {
-    return infusionDuration;
+uint32_t Pump::Duration() {
+  return duration;
 }
 
-/**
- * @brief Retrieves the infusion amount.
- * @return Amount in arbitrary units.
- */
-float Pump::getInfusionAmount() const {
-    return infusionAmount;
+uint32_t Pump::TraceInterval() {
+  return traceInterval;
 }
 
-/**
- * @brief Retrieves the motor RPMs.
- * @return RPMs of the pump motor.
- */
-float Pump::getMotorRPMs() const {
-    return motorRPMs;
-}
+JsonDocument Pump::Settings() {
+  JsonDocument Settings;
 
-/**
- * @brief Retrieves the infusion start timestamp.
- * @return Start time in milliseconds.
- */
-int32_t Pump::getInfusionStartTimestamp() const {
-    return infusionStartTimestamp;
-}
+  Settings[F("level")] = F("000"); 
+  Settings[F("device")] = device;
+  Settings[F("pin")] = pin;
+  Settings[F("duration")] = duration;
+  Settings[F("trace")] = traceInterval;
 
-/**
- * @brief Retrieves the infusion end timestamp.
- * @return End time in milliseconds.
- */
-int32_t Pump::getInfusionEndTimestamp() const {
-    return infusionEndTimestamp;
+  return Settings;
 }

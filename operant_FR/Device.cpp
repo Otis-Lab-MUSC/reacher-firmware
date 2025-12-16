@@ -1,52 +1,47 @@
-#include "Device.h"
 #include <Arduino.h>
+#include <ArduinoJson.h>
 
-/**
- * @brief Constructs a Device object with an initial pin and unarmed state.
- * 
- * Initializes a Device object with a specified digital pin and sets its armed
- * state to false by default.
- * 
- * @param initPin The digital pin (byte) to which the device is connected.
- */
-Device::Device(byte initPin) : pin(initPin), armed(false) {}
+#include "Device.h"
 
-/**
- * @brief Arms the device and logs the action.
- * 
- * Sets the armed state to true, enabling the device to perform its intended function.
- */
-void Device::arm() {
-    armed = true;
-    Serial.print("DEVICE ARMED AT PIN: ");
-    Serial.println(pin);
+Device::Device(int8_t pin, uint8_t mode, const char* device, const char* event) {
+  this->pin = pin;
+  this->mode = mode;
+  this->device = device; 
+  this->event = event; 
+  armed = false;
+  pinMode(pin, mode);
+  offset = 0;
 }
 
-/**
- * @brief Disarms the device and logs the action.
- * 
- * Sets the armed state to false, preventing the device from performing its function.
- */
-void Device::disarm() {
-    armed = false;
-    Serial.print("DEVICE DISARMED AT PIN: ");
-    Serial.println(pin);
+void Device::ArmToggle(bool arm) { 
+  JsonDocument doc;
+  
+  this->armed = arm; 
+
+  doc[F("level")] = F("001");
+  doc[F("device")] = device;
+  doc[F("pin")] = pin;
+  doc[F("desc")] = this->armed ? F("ARMED") : F("DISARMED");
+
+  serializeJson(doc, Serial);
+  Serial.println();
 }
 
-/**
- * @brief Retrieves the pin assigned to the device.
- * 
- * @return The digital pin number (byte) associated with the device.
- */
-byte Device::getPin() const {
-    return pin;
+void Device::SetOffset(uint32_t offset) {
+  this->offset = offset;
 }
 
-/**
- * @brief Checks if the device is armed.
- * 
- * @return Boolean indicating whether the device is currently armed.
- */
-bool Device::isArmed() const {
-    return armed;
+byte Device::Pin() const {
+  return pin;
+}
+
+bool Device::Armed() const {
+  return armed;
+}
+
+uint32_t Device::Offset() const {
+  return offset;
+}
+
+void Device::LogOutput() {
 }
