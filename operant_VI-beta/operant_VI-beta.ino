@@ -1,52 +1,6 @@
 #define SKETCH_NAME "operant_VI.ino" ///< Name of the sketch.
 #define VERSION "v1.0.0"             ///< Version of the sketch.
 
-/* ++++++++++++++++++++ INFORMATION ++++++++++++++++++++
-  Meta data:
-  Josh Boquiren (@thejoshbq on GitHub), Otis Lab
-
-  "Unless the Lord builds the house, those who build it labor in vain.
-  Unless the Lord watches over the city, the watchman stays awake in vain."
-  Psalm 127:1
-
-  ---------------------------------------------------------------------
-  Program notes:
-  - An active press becomes available once randomly within each variable interval and will be labeled as "ACTIVE"
-  - Once an active press occurs, the reward becomes unavailable for the remainder of that interval
-  - All other presses will be denoted as "INACTIVE"
-  - Timestamps are adjusted to the start of the program once the program is started (adjusted timestamp = current timestamp - program start time)
-
-  ---------------------------------------------------------------------
-  Defaults:
-  - ratio, 1 reward:15 seconds
-  - trace interval length, 0ms (time between tone and infusion)
-  - timeout period length, 20000ms (time from cue tone end)
-  - cue tone length, 1600ms
-  - infusion length, 2000ms
-  - active lever, right-hand lever
-  - laser pulse duration, 3000ms
-
-  ---------------------------------------------------------------------
-  Current pin configuration:
-  - Pin 10, right-hand lever
-  - Pin 13, left-hand lever
-  - Pin 4, pump
-  - Pin 3 (PWM capable pin), conditioned stimulus speaker (denoted as "cs") and speaker for linked/unlinked jingle
-  - Pin 2, trigger for frame timestamp input signals
-  - Pin 9, trigger for imaging program start and stop
-  - Pin 5, lick circuit
-  - Pin 6, laser
-
-  ---------------------------------------------------------------------
-  Sections:
-  - Section 1: Definitions and configurations
-  - Section 2: setup() and loop()
-  - Section 3: Utility functions
-  - Section 4: Looped functions
-  - Section 5: Interrupt functions
-  - Section 6: Main program
-
-  ++++++++++++++++++++ INFORMATION ++++++++++++++++++++ */
 
 /**
    @warning This implementation is in testing and not fully verified.

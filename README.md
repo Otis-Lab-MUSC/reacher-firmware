@@ -32,18 +32,17 @@ This repository contains operant conditioning paradigms implemented as Arduino s
 
 ## Project Downloads
 
-| Project          | Paradigm Description                                      | Download Link                                                                 |
-|------------------|----------------------------------------------------------|--------------------------------------------------------------------------------|
-| Operant FR       | Fixed-ratio: Rewards after a set number of presses       | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_FR.zip) |
-| Operant FR *BETA* | Fixed-ratio: Rewards after a set number of presses (JSON transmission) | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_FR-beta.zip) |
-| Omission         | Contingency-based: Rewards withheld under conditions     | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/omission.zip) |
-| Operant PR       | Progressive-ratio: Press requirement increases           | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_PR.zip) |
-| Operant VI       | Variable-interval: Reward available once per interval    | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_VI.zip) |
-| All Projects     | Combined archive of all four paradigms                   | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_suite.zip) |
+| Project             | Paradigm Description                                      | Download Link                                                                                                                                                                |
+|---------------------|----------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Operant FR          | Fixed-ratio: Rewards after a set number of presses (JSON transmission) | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_FR.zip) |
+| Omission *BETA*     | Contingency-based: Rewards withheld under conditions     | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/omission-beta.zip)  |
+| Operant PR *BETA*   | Progressive-ratio: Press requirement increases           | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_PR-beta.zip) |
+| Operant VI *BETA*   | Variable-interval: Reward available once per interval    | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_VI-beta.zip) |
+| All Projects *BETA* | Combined archive of all four paradigms                   | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_suite.zip)  |
 
 ## Project Details
 
-### 1. Operant Fixed Ratio (operant_FR.ino & operant_FR-beta.ino)
+### 1. Operant Fixed Ratio (operant_FR.ino)
 #### Paradigm
 - **Fixed-Ratio**: Triggers rewards (cue tone, pump infusion) after a set number of active lever presses (default ratio: 1:1).
 - **Press Types**: Labels presses as "ACTIVE" (triggers reward), "TIMEOUT" (during timeout period), or "INACTIVE" (non-active lever or no reward condition).

@@ -1,55 +1,6 @@
 #define SKETCH_NAME "operant_PR.ino" ///< Name of the sketch.
 #define VERSION "v1.0.0"             ///< Version of the sketch.
 
-/* ++++++++++++++++++++ INFORMATION ++++++++++++++++++++
-  Meta data:
-  Josh Boquiren (@thejoshbq on GitHub), Otis Lab
-
-  "Unless the Lord builds the house, those who build it labor in vain.
-  Unless the Lord watches over the city, the watchman stays awake in vain."
-  Psalm 127:1
-
-  ---------------------------------------------------------------------
-  Program notes:
-  - An active lever press triggers a cue tone, followed by a trace interval and pump infusion, and will be labeled as "ACTIVE"
-  - Presses that occur during the cue tone, trace interval, pump infusion, or timeout period will be labeled as a "TIMEOUT" press
-  - All other presses will be denoted as "INACTIVE"
-  - Timestamps are adjusted to the start of the program once the program is started (adjusted timestamp = current timestamp - program start time)
-
-  ---------------------------------------------------------------------
-  Defaults:
-  - ratio, each reward delivery increments the number of required presses
-  - trace interval length, 0ms (time between tone and infusion)
-  - timeout period length, 20000ms (time from cue tone end)
-  - cue tone length, 1600ms
-  - infusion length, 2000ms
-  - active lever, right-hand lever
-  - laser pulse duration, 30000ms
-
-  ---------------------------------------------------------------------
-  Current pin configuration:
-  - Pin 2, trigger for frame timestamp input signals
-  - Pin 3 (PWM capable pin), conditioned stimulus speaker (denoted as "cs") and speaker for linked/unlinked jingle
-  - Pin 4, pump
-  - Pin 5, lick circuit
-  - Pin 6, laser
-  - Pin 9, trigger for imaging program start and stop
-  - Pin 10, right-hand lever
-  - Pin 13, left-hand lever
-
-  ---------------------------------------------------------------------
-  Sections:
-  - Section 1: Definitions and configurations
-  - Section 2: setup(), loop(), and sendSetupJSON()
-  - Section 3: Serial commands library for this module
-  - Section 4: Main program structure
-
-  ++++++++++++++++++++ INFORMATION ++++++++++++++++++++ */
-
-// =======================================================
-// ====================== SECTION 1 ======================
-// =======================================================
-
 // Libraries
 #include <Arduino.h>
 #include <SoftwareSerial.h>
