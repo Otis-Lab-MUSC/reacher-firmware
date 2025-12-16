@@ -27,14 +27,14 @@ jobs:
       - name: Create ZIP files
         run: |
           # Create ZIP for individual directories
-          zip -r omission.zip omission
+          zip -r omission-beta.zip omission-beta
           zip -r operant_FR.zip operant_FR
-          zip -r operant_VI.zip operant_VI
-          zip -r operant_PR.zip operant_PR
+          zip -r operant_VI-beta.zip operant_VI-beta
+          zip -r operant_PR-beta.zip operant_P-beta
           
           # Create a temporary directory for operant_suite
           mkdir operant_suite
-          cp -r omission operant_FR operant_VI operant_PR operant_suite/
+          cp -r omission-beta operant_FR operant_VI-beta operant_PR-beta operant_suite/
           zip -r operant_suite.zip operant_suite
 
       # Delete all existing assets and upload new ones
