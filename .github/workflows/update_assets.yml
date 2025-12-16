@@ -30,7 +30,7 @@ jobs:
           zip -r omission-beta.zip omission-beta
           zip -r operant_FR.zip operant_FR
           zip -r operant_VI-beta.zip operant_VI-beta
-          zip -r operant_PR-beta.zip operant_P-beta
+          zip -r operant_PR-beta.zip operant_PR-beta
           
           # Create a temporary directory for operant_suite
           mkdir operant_suite
