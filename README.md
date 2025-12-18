@@ -174,10 +174,3 @@ This repository contains operant conditioning paradigms implemented as Arduino s
 5. Configure and start your experiment using the provided serial commands.
 
 This suite provides a robust foundation for operant conditioning research, integrating seamlessly with the REACHER ecosystem.
-
-<br><br>
-
-<div align="center", style="padding: 10px; background-color: #333; color: white;">
-    <p><i>"The heavens declare the glory of God, and the sky above proclaims his handiwork."</i>
-    <p>Psalm 19:1</p>
-</div>
