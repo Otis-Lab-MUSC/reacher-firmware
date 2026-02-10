@@ -13,7 +13,7 @@
 
 ## Overview
 
-This repository contains operant conditioning paradigms implemented as Arduino sketches: `operant_FR.ino`, `omission.ino`, `operant_PR.ino`, and `operant_VI.ino`, each compatible with the [REACHER Suite](https://github.com/Otis-Lab-MUSC/reacher). Each sketch controls hardware components (levers, cues, pumps, lasers, etc.) via serial commands from the REACHER Suite Python framework, collects real-time data, and ensures data integrity through immediate serial logging.
+This repository contains operant conditioning paradigms implemented as Arduino sketches: `operant_FR.ino`, `omission-beta.ino`, `operant_PR-beta.ino`, and `operant_VI-beta.ino`, each compatible with the [REACHER Suite](https://github.com/Otis-Lab-MUSC/reacher). Each sketch controls hardware components (levers, cues, pumps, lasers, etc.) via serial commands from the REACHER Suite Python framework, collects real-time data, and ensures data integrity through immediate serial logging.
 
 ## System Requirements
 
@@ -32,6 +32,7 @@ This repository contains operant conditioning paradigms implemented as Arduino s
 
 ## Project Downloads
 
+<<<<<<< HEAD
 | Project          | Paradigm Description                                      | Download Link                                                                 |
 |------------------|----------------------------------------------------------|--------------------------------------------------------------------------------|
 | Operant FR       | Fixed-ratio: Rewards after a set number of presses       | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_FR.zip) |
@@ -40,6 +41,15 @@ This repository contains operant conditioning paradigms implemented as Arduino s
 | Operant PR       | Progressive-ratio: Press requirement increases           | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_PR.zip) |
 | Operant VI       | Variable-interval: Reward available once per interval    | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_VI.zip) |
 | All Projects     | Combined archive of all four paradigms                   | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1/operant_suite.zip) |
+=======
+| Project             | Paradigm Description                                      | Download Link                                                                                                                                                                |
+|---------------------|----------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Operant FR          | Fixed-ratio: Rewards after a set number of presses (JSON transmission) | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1-alpha/operant_FR.zip) |
+| Omission *BETA*     | Contingency-based: Rewards withheld under conditions     | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1-alpha/omission-beta.zip)  |
+| Operant PR *BETA*   | Progressive-ratio: Press requirement increases           | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1-alpha/operant_PR-beta.zip) |
+| Operant VI *BETA*   | Variable-interval: Reward available once per interval    | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1-alpha/operant_VI-beta.zip) |
+| All Projects *BETA* | Combined archive of all four paradigms                   | [![Download](https://img.shields.io/badge/Download-cyan?style=for-the-badge)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware/releases/download/v1.0.1-alpha/operant_suite.zip)  |
+>>>>>>> main
 
 ## Project Details
 
@@ -162,7 +172,7 @@ This repository contains operant conditioning paradigms implemented as Arduino s
 
 ## Additional Notes
 
-- **Version**: All projects are at v1.0.1.
+- **Version**: All projects are at v1.0.1-alpha.
 - **Warning**: These implementations are in testing and not fully verified.
 - **Documentation**: Full Doxygen-generated documentation is available at the link above, covering classes, functions, and source code.
 

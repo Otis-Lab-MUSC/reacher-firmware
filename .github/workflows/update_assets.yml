@@ -27,14 +27,14 @@ jobs:
       - name: Create ZIP files
         run: |
           # Create ZIP for individual directories
-          zip -r omission.zip omission
+          zip -r omission-beta.zip omission-beta
           zip -r operant_FR.zip operant_FR
-          zip -r operant_VI.zip operant_VI
-          zip -r operant_PR.zip operant_PR
+          zip -r operant_VI-beta.zip operant_VI-beta
+          zip -r operant_PR-beta.zip operant_PR-beta
           
           # Create a temporary directory for operant_suite
           mkdir operant_suite
-          cp -r omission operant_FR operant_VI operant_PR operant_suite/
+          cp -r omission-beta operant_FR operant_VI-beta operant_PR-beta operant_suite/
           zip -r operant_suite.zip operant_suite
 
       # Delete all existing assets and upload new ones
@@ -42,8 +42,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Get the list of all asset IDs for the v1.0.1 release
-          ASSET_IDS=$(gh release view v1.0.1 --repo Otis-Lab-MUSC/reacher-firmware --json assets --jq '.assets[].id' || true)
+          # Get the list of all asset IDs for the v1.0.0 release
+          ASSET_IDS=$(gh release view v1.0.0 --repo Otis-Lab-MUSC/reacher-firmware --json assets --jq '.assets[].id' || true)
           
           # Delete each existing asset
           for ASSET_ID in $ASSET_IDS; do
@@ -55,7 +55,7 @@ jobs:
           done
           
           # Upload new assets
-          gh release upload v1.0.1 \
+          gh release upload v1.0.0 \
             omission.zip \
             operant_FR.zip \
             operant_VI.zip \

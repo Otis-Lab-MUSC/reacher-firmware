@@ -1,48 +1,42 @@
-#include <Arduino.h>
-#include "Device.h"
-
 #ifndef LASER_H
 #define LASER_H
 
+#include <Arduino.h>
+#include "Device.h"
+
 class Laser : public Device {
 public:
-  Laser(int8_t pin, uint32_t frequency, uint32_t duration, uint32_t traceInterval);
-  void Await(uint32_t currentTimestamp);
+  Laser(int8_t pin, uint32_t frequency, uint32_t duration);
 
-  void SetEvent(uint32_t currentTimestamp);
-  void SetFrequency(uint32_t frequency);
-  void SetDuration(uint32_t duration);
-  void SetTraceInterval(uint32_t traceInterval);
-  void SetMode(bool mode);
+  void Activate(uint32_t startTs, uint32_t dur);
+  void Await(uint32_t currentTimestamp);
   void Test(uint32_t currentTimestamp);
 
-  uint32_t Frequency();
-  uint32_t Duration();
-  uint32_t TraceInterval();
+  void SetFrequency(uint32_t frequency);
+  void SetDuration(uint32_t duration);
+  void SetMode(bool contingent);
 
-  JsonDocument Settings();
-  
+  uint32_t Frequency() const;
+  uint32_t Duration() const;
+  bool IsContingent() const;
+
 private:
   uint32_t frequency;
   uint32_t duration;
-  uint32_t traceInterval;
   uint32_t startTimestamp;
   uint32_t endTimestamp;
   uint32_t halfCycleStartTimestamp;
   uint32_t halfCycleEndTimestamp;
-  enum Mode { CONTINGENT, INDEPENDENT };
+  enum Mode : uint8_t { CONTINGENT, INDEPENDENT };
   Mode mode;
   bool state;
-  bool prevState;
   bool halfState;
-  bool outputLogged;
   bool isTesting;
 
   void On();
   void Off();
   void Cycle(uint32_t currentTimestamp);
   void Oscillate(uint32_t currentTimestamp);
-  void LogOutput();
   void UpdateHalfCycle(uint32_t currentTimestamp);
 };
 

@@ -1,22 +1,18 @@
-#include <Arduino.h>
 #include <ArduinoJson.h>
-
 #include "Device.h"
 
-Device::Device(int8_t pin, uint8_t mode, const char* device, const char* event) {
+Device::Device(int8_t pin, uint8_t mode, const char* device) {
   this->pin = pin;
   this->mode = mode;
-  this->device = device; 
-  this->event = event; 
+  this->device = device;
   armed = false;
-  pinMode(pin, mode);
   offset = 0;
+  pinMode(pin, mode);
 }
 
-void Device::ArmToggle(bool arm) { 
+void Device::ArmToggle(bool arm) {
   JsonDocument doc;
-  
-  this->armed = arm; 
+  this->armed = arm;
 
   doc[F("level")] = F("001");
   doc[F("device")] = device;
@@ -41,7 +37,4 @@ bool Device::Armed() const {
 
 uint32_t Device::Offset() const {
   return offset;
-}
-
-void Device::LogOutput() {
 }
