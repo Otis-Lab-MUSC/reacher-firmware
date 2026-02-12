@@ -21,6 +21,8 @@ PavlovianScheduler::PavlovianScheduler() {
   microscope = nullptr;
   sessionOffset = 0;
   sessionActive = false;
+  sessionPaused = false;
+  pauseStart = 0;
   lastPressClassRH = PressClass::INACTIVE;
   lastPressClassLH = PressClass::INACTIVE;
 
@@ -75,12 +77,13 @@ void PavlovianScheduler::RegisterMicroscope(Microscope* mic) {
 }
 
 void PavlovianScheduler::Update(uint32_t now) {
-  if (sessionActive) PavTick(now);
+  if (sessionActive && !sessionPaused) PavTick(now);
   TickOutputs(now);
 }
 
 void PavlovianScheduler::OnInputEvent(DeviceType source, uint32_t timestamp) {
   if (!sessionActive) return;
+  if (sessionPaused) return;
   if (source != DeviceType::LEVER_RH && source != DeviceType::LEVER_LH) return;
 
   PressClass cls = ClassifyPress(source);
@@ -95,6 +98,7 @@ void PavlovianScheduler::OnInputEvent(DeviceType source, uint32_t timestamp) {
 
 void PavlovianScheduler::OnInputRelease(DeviceType source) {
   if (!sessionActive) return;
+  if (sessionPaused) return;
 
   if (source == DeviceType::LEVER_RH) {
     LogLeverPress(source, lastPressClassRH);
@@ -142,9 +146,25 @@ void PavlovianScheduler::Configure(uint8_t csPlusCount, uint8_t csMinusCount,
   }
 }
 
+void PavlovianScheduler::SetPaused(bool paused, uint32_t now) {
+  if (!sessionActive) return;
+  if (paused) {
+    sessionPaused = true;
+    pauseStart = now;
+    if (cue) noTone(cue->Pin());
+    if (cue2) noTone(cue2->Pin());
+  } else {
+    // Adjust phase timer to account for paused duration
+    uint32_t pausedDuration = now - pauseStart;
+    pavPhaseStart += pausedDuration;
+    sessionPaused = false;
+  }
+}
+
 void PavlovianScheduler::StartSession(uint32_t now) {
   sessionOffset = now;
   sessionActive = true;
+  sessionPaused = false;
 
   pavTotalTrials = pavCsPlusCount + pavCsMinusCount;
   if (pavTotalTrials > MAX_PAVLOV_TRIALS) pavTotalTrials = MAX_PAVLOV_TRIALS;
@@ -158,6 +178,7 @@ void PavlovianScheduler::StartSession(uint32_t now) {
 
 void PavlovianScheduler::EndSession(uint32_t now) {
   sessionActive = false;
+  sessionPaused = false;
   pavPhase = PavlovPhase::IDLE;
 
   // Force all outputs off

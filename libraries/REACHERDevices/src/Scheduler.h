@@ -105,6 +105,14 @@ public:
   /// @param now Current millis() value
   void TestChain(uint32_t now);
 
+  /// @brief Pause or resume the session (gates inputs, triggers, and pending actions).
+  /// @param paused True to pause, false to resume
+  /// @param now Current millis() value
+  void SetPaused(bool paused, uint32_t now);
+
+  /// @brief Check if session is currently paused.
+  bool IsPaused() const;
+
   /// @brief Enable/disable full-pipeline test mode (lever->trigger->chain pre-session).
   /// @param enable True to enter test mode, false to exit
   /// @param now Current millis() value
@@ -140,6 +148,8 @@ private:
   uint32_t timeoutInterval;  ///< Post-reward timeout duration in ms
   bool     sessionActive;    ///< True between StartSession/EndSession
   bool     testMode;         ///< True when full-pipeline test mode is active
+  bool     sessionPaused;    ///< True when session is paused via SESSION_PAUSE
+  uint32_t pauseStart;       ///< millis() when pause began
 
   PressClass lastPressClassRH;  ///< Classification stored on press-down, logged on release
   PressClass lastPressClassLH;  ///< Classification stored on press-down, logged on release

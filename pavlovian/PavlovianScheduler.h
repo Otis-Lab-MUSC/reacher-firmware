@@ -76,6 +76,11 @@ public:
                  uint32_t itiMean, uint32_t itiMin, uint32_t itiMax,
                  uint8_t csPlusProb, uint8_t csMinusProb, bool counterbalance);
 
+  /// @brief Pause or resume the session (gates trial progression and inputs).
+  /// @param paused True to pause, false to resume (adjusts phase timer)
+  /// @param now Current millis() value
+  void SetPaused(bool paused, uint32_t now);
+
   /// @brief Initialize session state and generate trial order.
   void StartSession(uint32_t now);
   /// @brief End session and force all outputs off.
@@ -97,6 +102,8 @@ private:
   // Session state
   uint32_t sessionOffset;
   bool     sessionActive;
+  bool     sessionPaused;    ///< True when session is paused via SESSION_PAUSE
+  uint32_t pauseStart;       ///< millis() when pause began
 
   PressClass lastPressClassRH;
   PressClass lastPressClassLH;

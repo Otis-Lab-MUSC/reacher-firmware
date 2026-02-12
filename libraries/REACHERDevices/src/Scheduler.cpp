@@ -25,6 +25,8 @@ Scheduler::Scheduler() {
   timeoutInterval = 20000;
   sessionActive = false;
   testMode = false;
+  sessionPaused = false;
+  pauseStart = 0;
   lastPressClassRH = PressClass::INACTIVE;
   lastPressClassLH = PressClass::INACTIVE;
 
@@ -74,22 +76,25 @@ void Scheduler::RegisterMicroscope(Microscope* mic) {
 }
 
 void Scheduler::Update(uint32_t now) {
-  // Tick time-based triggers
-  for (uint8_t i = 0; i < MAX_TRIGGERS; i++) {
-    if (triggers[i].OnTick(now)) {
-      FireChain(triggers[i].chainIndex, now);
+  if (!sessionPaused) {
+    // Tick time-based triggers
+    for (uint8_t i = 0; i < MAX_TRIGGERS; i++) {
+      if (triggers[i].OnTick(now)) {
+        FireChain(triggers[i].chainIndex, now);
+      }
     }
+
+    // Execute pending actions whose time has come
+    TickPending(now);
   }
 
-  // Execute pending actions whose time has come
-  TickPending(now);
-
-  // Tick output device state machines (needed for Cue::Await / Pump::Await)
+  // Tick output device state machines unconditionally (so pumps finish current infusion)
   TickOutputs(now);
 }
 
 void Scheduler::OnInputEvent(DeviceType source, uint32_t timestamp) {
   if (!sessionActive && !testMode) return;
+  if (sessionPaused) return;
 
   // Only handle lever events for triggering
   if (source != DeviceType::LEVER_RH && source != DeviceType::LEVER_LH) return;
@@ -121,6 +126,7 @@ void Scheduler::OnInputEvent(DeviceType source, uint32_t timestamp) {
 
 void Scheduler::OnInputRelease(DeviceType source) {
   if (!sessionActive && !testMode) return;
+  if (sessionPaused) return;
 
   if (source == DeviceType::LEVER_RH) {
     LogLeverPress(source, lastPressClassRH);
@@ -355,8 +361,25 @@ void Scheduler::ClearPending() {
   }
 }
 
+void Scheduler::SetPaused(bool paused, uint32_t now) {
+  if (!sessionActive) return;
+  sessionPaused = paused;
+  if (paused) {
+    pauseStart = now;
+    ClearPending();
+    // Silence cues immediately; let pumps finish current infusion
+    if (cue) noTone(cue->Pin());
+    if (cue2) noTone(cue2->Pin());
+  }
+}
+
+bool Scheduler::IsPaused() const {
+  return sessionPaused;
+}
+
 void Scheduler::StartSession(uint32_t now) {
   testMode = false;
+  sessionPaused = false;
   sessionOffset = now;
   sessionActive = true;
 
@@ -389,6 +412,7 @@ void Scheduler::StartSession(uint32_t now) {
 
 void Scheduler::EndSession(uint32_t now) {
   sessionActive = false;
+  sessionPaused = false;
 
   // Clear pending queue
   for (uint8_t i = 0; i < MAX_PENDING; i++) {

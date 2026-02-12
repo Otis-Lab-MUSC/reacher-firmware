@@ -1,3 +1,7 @@
 *.zip
 releases
 zip/
+
+# Pre-compiled hex files (built by compile.sh / CI)
+hex/*.hex
+hex/*.elf

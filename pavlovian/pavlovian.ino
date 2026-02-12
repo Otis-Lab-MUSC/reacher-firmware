@@ -303,6 +303,12 @@ void ParseCommands() {
           EndSession(); armToggleDevices(devices, false); break;
         case Cmd::IDENTIFY:
           SendIdentification(); break;
+        case Cmd::SESSION_PAUSE: {
+          bool paused = inputJson["paused"] | false;
+          scheduler.SetPaused(paused, millis());
+          logParamChange(F("CONTROLLER"), F("session_paused"), paused);
+          break;
+        }
 
         // Error
         default:

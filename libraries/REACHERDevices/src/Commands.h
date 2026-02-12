@@ -26,6 +26,7 @@ namespace Cmd {
   constexpr int IDENTIFY             = 102;
   constexpr int TEST_CHAIN           = 103;
   constexpr int TEST_MODE            = 104;
+  constexpr int SESSION_PAUSE        = 105;  // Pause/resume active session
 
   // --- Session Setup (2xx) ---
   constexpr int SET_RATIO            = 201;
