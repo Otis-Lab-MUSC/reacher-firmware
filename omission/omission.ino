@@ -74,8 +74,9 @@ void SendIdentification() {
 void setup() {
   delay(100);
   Serial.begin(115200);
-  Serial.setTimeout(10);
+  Serial.setTimeout(100);
   delay(100);
+  while (Serial.available()) Serial.read();  // Drain bootloader residue
 
   cue.Jingle();
 
