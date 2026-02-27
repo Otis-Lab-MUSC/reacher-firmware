@@ -40,7 +40,7 @@ void setup() {
 
   delay(100);
   Serial.begin(baudrate);
-  delay(1000);
+  delay(100);
   
   cue.Jingle();
 
