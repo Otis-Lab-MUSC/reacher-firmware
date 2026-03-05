@@ -1,8 +1,8 @@
 /**
  * @file pavlovian.ino
- * @brief Main sketch for REACHER v2.0 Pavlovian (classical conditioning) controller.
+ * @brief Main sketch for REACHER v2.0.0 Pavlovian (classical conditioning) controller.
  *
- * @mainpage REACHER v2.0 Pavlovian Firmware
+ * @mainpage REACHER v2.0.0 Pavlovian Firmware
  *
  * Classical conditioning controller firmware for Arduino Uno (ATmega328P, 2KB RAM, 32KB Flash).
  *

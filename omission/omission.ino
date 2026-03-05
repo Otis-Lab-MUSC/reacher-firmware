@@ -1,6 +1,6 @@
 /**
  * @file omission.ino
- * @brief REACHER v2.0 Omission operant conditioning controller.
+ * @brief REACHER v2.0.0 Omission operant conditioning controller.
  *
  * Reward fires after the animal withholds lever pressing for a configurable
  * absence interval. Any press resets the timer. No timeout is applied.

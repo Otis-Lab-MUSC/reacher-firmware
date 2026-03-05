@@ -1,6 +1,6 @@
 /**
  * @file fr.ino
- * @brief REACHER v2.0 Fixed Ratio (FR) operant conditioning controller.
+ * @brief REACHER v2.0.0 Fixed Ratio (FR) operant conditioning controller.
  *
  * N active lever presses produce a reward (cue -> pump + laser).
  * The ratio is configurable via serial command (SET_RATIO).

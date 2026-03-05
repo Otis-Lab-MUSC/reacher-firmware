@@ -1,6 +1,6 @@
 /**
  * @file Pins.h
- * @brief Pin assignments for REACHER v2.0 hardware.
+ * @brief Pin assignments for REACHER v2.0.0 hardware.
  * @ingroup hardware
  */
 

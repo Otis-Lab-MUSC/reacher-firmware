@@ -1,4 +1,4 @@
-PROJECT_NAME           = "REACHER v2.0"
+PROJECT_NAME           = "REACHER v2.0.0"
 PROJECT_BRIEF          = "Operant conditioning controller firmware for Arduino Uno"
 OUTPUT_DIRECTORY       = docs
 INPUT                  = reacher

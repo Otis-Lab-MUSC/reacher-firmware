@@ -1,6 +1,6 @@
 /**
  * @file pr.ino
- * @brief REACHER v2.0 Progressive Ratio (PR) operant conditioning controller.
+ * @brief REACHER v2.0.0 Progressive Ratio (PR) operant conditioning controller.
  *
  * Like FR, but the press threshold increases by a configurable step after each
  * reward. Uses arithmetic progression (not Richardson & Roberts exponential).
