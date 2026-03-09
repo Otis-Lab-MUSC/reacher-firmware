@@ -5,6 +5,7 @@
 [![Version](https://img.shields.io/badge/version-2.0.0-blue)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware)
 [![Platform](https://img.shields.io/badge/platform-Arduino%20UNO-teal)](https://www.arduino.cc/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![REACHER Suite](https://img.shields.io/badge/REACHER_Suite-member-orange)](https://github.com/Otis-Lab-MUSC)
 
 *Written by*: Joshua Boquiren
 
