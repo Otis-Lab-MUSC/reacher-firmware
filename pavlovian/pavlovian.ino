@@ -25,6 +25,7 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <avr/wdt.h>
 
 #include <Commands.h>
 #include <Pins.h>
@@ -134,10 +135,12 @@ void setup() {
 
   // Send setup JSON
   SendIdentification();
+  wdt_enable(WDTO_8S);
 }
 
 /// @brief Arduino main loop — poll inputs, tick scheduler, handle serial commands.
 void loop() {
+  wdt_reset();
   uint32_t currentTimestamp = millis();
 
   // Poll inputs
@@ -167,6 +170,9 @@ void ParseCommands() {
     JsonDocument inputJson;
     char buf[128];
     int len = Serial.readBytesUntil('\n', buf, sizeof(buf) - 1);
+    if (len == (int)(sizeof(buf) - 1)) {
+      while (Serial.available() && Serial.read() != '\n') {}
+    }
     buf[len] = '\0';
 
     // SCPI-style identification query (not valid JSON, must check before deserialization)

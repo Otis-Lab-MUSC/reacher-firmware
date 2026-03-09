@@ -10,6 +10,7 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <avr/wdt.h>
 
 #include <Commands.h>
 #include <Pins.h>
@@ -104,9 +105,11 @@ void setup() {
   configureVariableInterval(scheduler, cue, pump, laser, VI_INTERVAL, DeviceType::LEVER_RH, TRACE_INTERVAL);
 
   SendIdentification();
+  wdt_enable(WDTO_8S);
 }
 
 void loop() {
+  wdt_reset();
   uint32_t currentTimestamp = millis();
 
   rLever.Monitor(currentTimestamp);
@@ -168,6 +171,9 @@ void ParseCommands() {
     JsonDocument inputJson;
     char buf[128];
     int len = Serial.readBytesUntil('\n', buf, sizeof(buf) - 1);
+    if (len == (int)(sizeof(buf) - 1)) {
+      while (Serial.available() && Serial.read() != '\n') {}
+    }
     buf[len] = '\0';
 
     if (len >= 5 && memcmp(buf, "*IDN?", 5) == 0) {
