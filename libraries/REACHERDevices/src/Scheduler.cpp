@@ -409,6 +409,9 @@ void Scheduler::StartSession(uint32_t now) {
   // Reset lever timeouts
   if (leverRH) leverRH->SetTimeoutEnd(0);
   if (leverLH) leverLH->SetTimeoutEnd(0);
+
+  // Reset laser oscillation state from previous session
+  if (laser) laser->Reset();
 }
 
 void Scheduler::EndSession(uint32_t now) {

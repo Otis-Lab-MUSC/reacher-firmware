@@ -23,6 +23,32 @@ void setDeviceTimestampOffset(DeviceSet& ds, uint32_t ts) {
   ds.microscope->SetOffset(ts);
 }
 
+ArmSnapshot captureArmState(const DeviceSet& ds) {
+  ArmSnapshot snap;
+  snap.rLever      = ds.rLever->Armed();
+  snap.lLever      = ds.lLever->Armed();
+  snap.cue         = ds.cue->Armed();
+  snap.cue2        = ds.cue2->Armed();
+  snap.pump        = ds.pump->Armed();
+  snap.pump2       = ds.pump2->Armed();
+  snap.lickCircuit = ds.lickCircuit->Armed();
+  snap.laser       = ds.laser ? ds.laser->Armed() : false;
+  snap.microscope  = ds.microscope->Armed();
+  return snap;
+}
+
+void restoreArmState(DeviceSet& ds, const ArmSnapshot& snap) {
+  ds.rLever->ArmToggle(snap.rLever);
+  ds.lLever->ArmToggle(snap.lLever);
+  ds.cue->ArmToggle(snap.cue);
+  ds.cue2->ArmToggle(snap.cue2);
+  ds.pump->ArmToggle(snap.pump);
+  ds.pump2->ArmToggle(snap.pump2);
+  ds.lickCircuit->ArmToggle(snap.lickCircuit);
+  if (ds.laser) ds.laser->ArmToggle(snap.laser);
+  ds.microscope->ArmToggle(snap.microscope);
+}
+
 void armToggleDevices(DeviceSet& ds, bool toggle) {
   ds.rLever->ArmToggle(toggle);
   ds.lLever->ArmToggle(toggle);

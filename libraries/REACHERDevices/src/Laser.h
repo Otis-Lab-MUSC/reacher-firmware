@@ -27,6 +27,10 @@ public:
   /// @brief Fire a single test pulse using default duration.
   void Test(uint32_t currentTimestamp);
 
+  /// @brief Reset internal oscillation state for a new session.
+  /// Clears timestamps and state flags. Preserves mode, frequency, duration, and armed.
+  void Reset();
+
   void SetFrequency(uint32_t frequency);
   void SetDuration(uint32_t duration);
 

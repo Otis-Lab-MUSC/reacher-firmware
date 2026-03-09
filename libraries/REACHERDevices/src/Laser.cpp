@@ -82,6 +82,16 @@ void Laser::Oscillate(uint32_t currentTimestamp) {
   }
 }
 
+void Laser::Reset() {
+  startTimestamp = 0;
+  endTimestamp = 0;
+  halfCycleStartTimestamp = 0;
+  halfCycleEndTimestamp = 0;
+  state = false;
+  halfState = false;
+  isTesting = false;
+}
+
 void Laser::SetFrequency(uint32_t frequency) {
   if (frequency > 0) {
     this->frequency = frequency;

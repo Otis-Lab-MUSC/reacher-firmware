@@ -77,6 +77,7 @@ DeviceSet devices = { &rLever, &lLever, &cue, &cue2, &pump, &pump2, &lickCircuit
 // Session timestamps
 uint32_t SESSION_START_TIMESTAMP;
 uint32_t SESSION_END_TIMESTAMP;
+ArmSnapshot lastArmState;
 
 // Forward declarations
 void ParseCommands();
@@ -312,6 +313,7 @@ void ReconfigureScheduler() {
 
 /// @brief Begin a session: trigger microscope, initialize scheduler, emit settings JSON.
 void StartSession() {
+  restoreArmState(devices, lastArmState);
   SESSION_START_TIMESTAMP = millis();
   microscope.Trigger();
   scheduler.StartSession(SESSION_START_TIMESTAMP);
@@ -363,6 +365,7 @@ void StartSession() {
 /// @brief End a session: trigger microscope, shut down scheduler, emit end event.
 void EndSession() {
   if (!scheduler.IsSessionActive()) return;  // Already ended
+  lastArmState = captureArmState(devices);
   SESSION_END_TIMESTAMP = millis();
   microscope.Trigger();
   scheduler.EndSession(SESSION_END_TIMESTAMP);

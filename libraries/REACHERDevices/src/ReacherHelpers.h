@@ -54,6 +54,26 @@ void reportDeviceConfig(const __FlashStringHelper* dev, bool armed);
 void reportDeviceLever(const __FlashStringHelper* dev, bool armed,
                        bool reinforced);
 
+/// @brief Snapshot of arm states for all devices in a DeviceSet.
+/// Used to preserve arm state across session boundaries (EndSession disarms all).
+struct ArmSnapshot {
+  bool rLever;
+  bool lLever;
+  bool cue;
+  bool cue2;
+  bool pump;
+  bool pump2;
+  bool lickCircuit;
+  bool laser;
+  bool microscope;
+};
+
+/// @brief Capture the current arm state of all devices.
+ArmSnapshot captureArmState(const DeviceSet& ds);
+
+/// @brief Restore a previously captured arm state to all devices.
+void restoreArmState(DeviceSet& ds, const ArmSnapshot& snap);
+
 /// @brief Handle device commands common to all paradigms (cue, pump, lick, laser, microscope).
 /// @param ds Device set
 /// @param command Command code from serial JSON
