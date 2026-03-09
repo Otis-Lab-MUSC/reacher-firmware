@@ -30,7 +30,7 @@ static constexpr uint8_t MAX_TRIGGERS = 2;
 /// Maximum number of reward chains.
 static constexpr uint8_t MAX_CHAINS   = 2;
 /// Maximum number of deferred actions in the pending queue.
-static constexpr uint8_t MAX_PENDING  = 8;
+static constexpr uint8_t MAX_PENDING  = 16;
 
 /// @brief Central contingency engine: classifies lever presses, fires reward chains,
 /// manages pending action queue and device tick loop.

@@ -92,7 +92,7 @@ struct Trigger {
         return false;
 
       case TriggerType::AVAILABILITY_WINDOW:
-        if (!firedInWindow && timestamp >= windowStart && timestamp < windowEnd) {
+        if (!firedInWindow && (int32_t)(timestamp - windowStart) >= 0 && (int32_t)(windowEnd - timestamp) > 0) {
           if (probability < 100 && (uint8_t)random(100) >= probability) return false;
           firedInWindow = true;
           return true;
