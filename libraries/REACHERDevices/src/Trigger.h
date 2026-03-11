@@ -80,8 +80,12 @@ struct Trigger {
           if (prStep > 0) {
             if (threshold <= 255 - prStep) {
               threshold += prStep;
+            } else {
+              // Fix: FW-005 — Emit info event when PR threshold is capped at max
+              Serial.print(F("{\"level\":\"001\",\"device\":\"CONTROLLER\",\"desc\":\"PR threshold capped at "));
+              Serial.print(threshold);
+              Serial.println(F("\"}"));
             }
-            // else: threshold stays at current value (breakpoint reached)
           }
           return true;
         }

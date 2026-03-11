@@ -253,8 +253,14 @@ void Scheduler::SchedulePending(const Action& action, uint32_t fireTime) {
       return;
     }
   }
-  // All MAX_PENDING slots occupied — action dropped
-  Serial.println(F("{\"level\":\"006\",\"desc\":\"Pending action queue full — action dropped\"}"));
+  // Fix: FW-002 — Enhanced error with action type and scheduled time
+  Serial.print(F("{\"level\":\"006\",\"error_code\":\"E_PENDING_FULL\",\"desc\":\"Pending action queue full — action dropped\",\"action_type\":"));
+  Serial.print((uint8_t)action.type);
+  Serial.print(F(",\"target\":"));
+  Serial.print((uint8_t)action.target);
+  Serial.print(F(",\"scheduled_at\":"));
+  Serial.print(fireTime);
+  Serial.println('}');
 }
 
 void Scheduler::LogLeverPress(DeviceType source, PressClass cls) {
@@ -371,6 +377,18 @@ void Scheduler::SetPaused(bool paused, uint32_t now) {
     // Silence cues immediately; let pumps finish current infusion
     if (cue) noTone(cue->Pin());
     if (cue2) noTone(cue2->Pin());
+  } else {
+    // Fix: FW-006 — Compensate time-based triggers for pause duration
+    uint32_t pausedDuration = now - pauseStart;
+    for (uint8_t i = 0; i < MAX_TRIGGERS; i++) {
+      if (!triggers[i].enabled) continue;
+      if (triggers[i].type == TriggerType::ABSENCE_TIMER && triggers[i].absenceStart > 0) {
+        triggers[i].absenceStart += pausedDuration;
+      } else if (triggers[i].type == TriggerType::AVAILABILITY_WINDOW) {
+        triggers[i].windowStart += pausedDuration;
+        triggers[i].windowEnd += pausedDuration;
+      }
+    }
   }
 }
 

@@ -160,6 +160,7 @@ void loop() {
 
   // Microscope frame handling
   microscope.HandleFrameSignal();
+  microscope.TickTrigger(currentTimestamp);  // Fix: FW-001
 
   // Process serial commands
   ParseCommands();

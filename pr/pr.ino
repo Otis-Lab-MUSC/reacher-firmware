@@ -81,6 +81,7 @@ void setup() {
   Serial.setTimeout(100);
   delay(100);
   while (Serial.available()) Serial.read();  // Drain bootloader residue
+  randomSeed(analogRead(A0) ^ micros());  // Fix: FW-004
 
   cue.Jingle();
 
@@ -119,6 +120,7 @@ void loop() {
 
   scheduler.Update(currentTimestamp);
   microscope.HandleFrameSignal();
+  microscope.TickTrigger(currentTimestamp);  // Fix: FW-001
   ParseCommands();
 }
 

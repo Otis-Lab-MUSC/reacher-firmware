@@ -417,6 +417,10 @@ void PavlovianScheduler::PavStartTrial(uint32_t now) {
   uint8_t prob = isCsMinus ? pavCsMinusProb : pavCsPlusProb;
   pavRewardThisTrial = ((uint8_t)random(100) < prob);
 
+  // Fix: FW-003 — Silence any active cue before starting a new trial's cue
+  if (cue) noTone(cue->Pin());
+  if (cue2) noTone(cue2->Pin());
+
   // Select cue: CS+ -> cue, CS- -> cue2 (swapped if counterbalanced)
   Cue* activeCue;
   DeviceType cueType;

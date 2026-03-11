@@ -28,8 +28,11 @@ public:
   void ArmToggle(bool armed);
   void SetOffset(uint32_t offset);
 
-  /// @brief Send a digital trigger pulse to the microscope (50ms HIGH).
+  /// @brief Initiate a non-blocking trigger pulse (50ms HIGH).
   void Trigger();
+
+  /// @brief Tick the trigger state machine — call from loop(). Fix: FW-001
+  void TickTrigger(uint32_t now);
 
   bool Armed() const;
   byte TriggerPin() const;
@@ -42,6 +45,11 @@ private:
   bool armed;                     ///< True when microscope logging is active
   volatile uint32_t timestamp;    ///< ISR-captured frame timestamp (session-relative)
   volatile uint32_t offset;       ///< Session start offset (volatile — read in ISR)
+
+  // Fix: FW-001 — Non-blocking trigger state machine
+  bool triggerActive;             ///< True while trigger pulse is HIGH
+  uint32_t triggerStart;          ///< millis() when trigger went HIGH
+  static constexpr uint32_t TRIGGER_DURATION_MS = 50;
 
   static Microscope* instance;    ///< Singleton for ISR dispatch
 

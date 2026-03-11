@@ -17,6 +17,8 @@ Microscope::Microscope(int8_t triggerPin, int8_t timestampPin) {
   armed = false;
   timestamp = 0;
   offset = 0;
+  triggerActive = false;
+  triggerStart = 0;
   instance = this;
 }
 
@@ -50,10 +52,18 @@ void Microscope::SetOffset(uint32_t offset) {
   this->offset = offset;
 }
 
+// Fix: FW-001 — Non-blocking trigger; Trigger() starts the pulse, TickTrigger() ends it.
 void Microscope::Trigger() {
   digitalWrite(triggerPin, HIGH);
-  delay(50);
-  digitalWrite(triggerPin, LOW);
+  triggerActive = true;
+  triggerStart = millis();
+}
+
+void Microscope::TickTrigger(uint32_t now) {
+  if (triggerActive && (now - triggerStart) >= TRIGGER_DURATION_MS) {
+    digitalWrite(triggerPin, LOW);
+    triggerActive = false;
+  }
 }
 
 bool Microscope::Armed() const { return armed; }
