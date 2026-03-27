@@ -14,7 +14,13 @@ class SwitchLever;
 class LickCircuit;
 class Cue;
 class Pump;
+class Laser;
 class Microscope;
+
+/// @brief Which trial types the Pavlovian laser fires on.
+enum class LaserTrialFilter : uint8_t { CS_PLUS, CS_MINUS, CS_BOTH };
+/// @brief Which phase the Pavlovian laser fires during.
+enum class LaserPhase : uint8_t { REWARD, CUE };
 
 /// Maximum number of Pavlovian trials per session.
 static constexpr uint8_t MAX_PAVLOV_TRIALS = 128;
@@ -58,8 +64,15 @@ public:
   void RegisterPump(Pump* pump);
   /// @brief Register the secondary pump.
   void RegisterPump2(Pump* pump2);
+  /// @brief Register the laser.
+  void RegisterLaser(Laser* laser);
   /// @brief Register the microscope.
   void RegisterMicroscope(Microscope* mic);
+
+  /// @brief Set which trial types the laser fires on.
+  void SetLaserTrialFilter(LaserTrialFilter filter);
+  /// @brief Set which phase the laser fires during.
+  void SetLaserPhase(LaserPhase phase);
 
   /// @brief Main loop tick — advances trial state machine and output devices.
   void Update(uint32_t now);
@@ -103,7 +116,11 @@ private:
   Cue*         cue2;        ///< CS- cue (pulsed tone)
   Pump*        pump;        ///< CS+ reward pump
   Pump*        pump2;       ///< CS- reward pump
+  Laser*       laser;
   Microscope*  microscope;
+
+  LaserTrialFilter laserTrialFilter;
+  LaserPhase       laserPhase;
 
   // Session state
   uint32_t sessionOffset;
@@ -153,8 +170,10 @@ private:
   PressClass ClassifyPress(DeviceType source);
   /// @brief Resolve a DeviceType to its SwitchLever pointer.
   SwitchLever* GetLever(DeviceType type);
-  /// @brief Advance output device state machines (Cue::Await / Pump::Await).
+  /// @brief Advance output device state machines (Cue::Await / Pump::Await / Laser::Await).
   void TickOutputs(uint32_t now);
+  /// @brief Check whether the laser should fire for this trial type.
+  bool ShouldFireLaser(bool isCsMinus) const;
 
   /// @brief Serialize lever press event to serial JSON (level 007).
   void LogLeverPress(DeviceType source, PressClass cls);

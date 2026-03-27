@@ -90,6 +90,14 @@ namespace Cmd {
   constexpr int LASER_MODE_CONTINGENT  = 681;
   constexpr int LASER_MODE_INDEPENDENT = 682;
 
+  // Pavlovian laser trial assignment
+  constexpr int PAV_LASER_CS_PLUS      = 691;  // Fire on CS+ trials only
+  constexpr int PAV_LASER_CS_MINUS     = 692;  // Fire on CS- trials only
+  constexpr int PAV_LASER_CS_BOTH      = 693;  // Fire on both trial types
+  // Pavlovian laser phase selection
+  constexpr int PAV_LASER_PHASE_REWARD = 694;  // Fire during REWARD phase (default)
+  constexpr int PAV_LASER_PHASE_CUE    = 695;  // Fire during CUE_ON phase
+
   // --- Microscope (9xx) ---
   constexpr int MICROSCOPE_DISARM    = 900;
   constexpr int MICROSCOPE_ARM       = 901;

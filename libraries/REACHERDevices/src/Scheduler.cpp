@@ -396,6 +396,10 @@ bool Scheduler::IsPaused() const {
   return sessionPaused;
 }
 
+bool Scheduler::IsSessionActive() const {
+  return sessionActive;
+}
+
 void Scheduler::StartSession(uint32_t now) {
   testMode = false;
   sessionPaused = false;

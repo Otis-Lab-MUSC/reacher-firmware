@@ -124,6 +124,9 @@ public:
   uint32_t TimeoutInterval() const;
   uint32_t SessionOffset() const;
 
+  /// @brief Check if a session is currently active.
+  bool IsSessionActive() const;
+
 private:
   // Device pointers
   SwitchLever* leverRH;     ///< Right-hand lever

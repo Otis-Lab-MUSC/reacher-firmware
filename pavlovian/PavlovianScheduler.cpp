@@ -8,6 +8,7 @@
 #include <LickCircuit.h>
 #include <Cue.h>
 #include <Pump.h>
+#include <Laser.h>
 #include <Microscope.h>
 
 PavlovianScheduler::PavlovianScheduler() {
@@ -18,7 +19,10 @@ PavlovianScheduler::PavlovianScheduler() {
   cue2 = nullptr;
   pump = nullptr;
   pump2 = nullptr;
+  laser = nullptr;
   microscope = nullptr;
+  laserTrialFilter = LaserTrialFilter::CS_BOTH;
+  laserPhase = LaserPhase::REWARD;
   sessionOffset = 0;
   sessionActive = false;
   sessionPaused = false;
@@ -72,8 +76,26 @@ void PavlovianScheduler::RegisterPump2(Pump* p) {
   pump2 = p;
 }
 
+void PavlovianScheduler::RegisterLaser(Laser* l) {
+  laser = l;
+}
+
 void PavlovianScheduler::RegisterMicroscope(Microscope* mic) {
   microscope = mic;
+}
+
+void PavlovianScheduler::SetLaserTrialFilter(LaserTrialFilter filter) {
+  laserTrialFilter = filter;
+}
+
+void PavlovianScheduler::SetLaserPhase(LaserPhase phase) {
+  laserPhase = phase;
+}
+
+bool PavlovianScheduler::ShouldFireLaser(bool isCsMinus) const {
+  return (laserTrialFilter == LaserTrialFilter::CS_BOTH)
+      || (laserTrialFilter == LaserTrialFilter::CS_PLUS && !isCsMinus)
+      || (laserTrialFilter == LaserTrialFilter::CS_MINUS && isCsMinus);
 }
 
 void PavlovianScheduler::Update(uint32_t now) {
@@ -174,6 +196,7 @@ void PavlovianScheduler::SetPaused(bool paused, uint32_t now) {
     pauseStart = now;
     if (cue) noTone(cue->Pin());
     if (cue2) noTone(cue2->Pin());
+    if (laser) digitalWrite(laser->Pin(), LOW);
   } else {
     // Adjust phase timer to account for paused duration
     uint32_t pausedDuration = now - pauseStart;
@@ -236,6 +259,7 @@ void PavlovianScheduler::EndSession(uint32_t now) {
   if (cue2) noTone(cue2->Pin());
   if (pump) digitalWrite(pump->Pin(), LOW);
   if (pump2) digitalWrite(pump2->Pin(), LOW);
+  if (laser) digitalWrite(laser->Pin(), LOW);
 }
 
 uint32_t PavlovianScheduler::SessionOffset() const {
@@ -253,6 +277,7 @@ void PavlovianScheduler::TickOutputs(uint32_t now) {
   if (cue2) cue2->Await(now);
   if (pump) pump->Await(now);
   if (pump2) pump2->Await(now);
+  if (laser) laser->Await(now);
 }
 
 // --- Trial generation ---
@@ -366,8 +391,8 @@ void PavlovianScheduler::PavTick(uint32_t now) {
     case PavlovPhase::TRACE:
       if (elapsed >= pavTraceInterval) {
         // Deliver reward or log omission
+        bool isCsMinus = PavIsCSMinus(pavTrialIndex);
         if (pavRewardThisTrial) {
-          bool isCsMinus = PavIsCSMinus(pavTrialIndex);
           // Select pump: CS+ -> pump, CS- -> pump2 (swapped if counterbalanced)
           Pump* activePump;
           DeviceType pumpType;
@@ -386,6 +411,15 @@ void PavlovianScheduler::PavTick(uint32_t now) {
         } else {
           LogPavlovianEvent(F("REWARD_OMITTED"), now);
         }
+
+        // Laser activation during REWARD phase
+        if (laser && laser->Armed() && laser->IsContingent() && laserPhase == LaserPhase::REWARD) {
+          if (ShouldFireLaser(isCsMinus)) {
+            laser->Activate(now, laser->Duration());
+            LogDeviceActivation(DeviceType::LASER, now, now + laser->Duration());
+          }
+        }
+
         pavPhase = PavlovPhase::REWARD;
         pavPhaseStart = now;
       }
@@ -437,6 +471,14 @@ void PavlovianScheduler::PavStartTrial(uint32_t now) {
     LogDeviceActivation(cueType, now, now + pavCueDuration);
   }
 
+  // Laser activation during CUE phase
+  if (laser && laser->Armed() && laser->IsContingent() && laserPhase == LaserPhase::CUE) {
+    if (ShouldFireLaser(isCsMinus)) {
+      laser->Activate(now, laser->Duration());
+      LogDeviceActivation(DeviceType::LASER, now, now + laser->Duration());
+    }
+  }
+
   LogPavlovianTrial(now, isCsMinus);
 }
 
@@ -480,6 +522,8 @@ void PavlovianScheduler::LogDeviceActivation(DeviceType target, uint32_t startTs
       device = F("PUMP"); event = F("INFUSION"); pinNum = pump->Pin(); break;
     case DeviceType::PUMP_2:
       device = F("PUMP_2"); event = F("INFUSION"); pinNum = pump2->Pin(); break;
+    case DeviceType::LASER:
+      device = F("LASER"); event = F("STIMULATION"); pinNum = laser->Pin(); break;
     default:
       return;
   }

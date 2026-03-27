@@ -54,6 +54,17 @@ void Laser::Cycle(uint32_t currentTimestamp) {
     startTimestamp = currentTimestamp;
     endTimestamp = currentTimestamp + duration;
     state = !state;
+
+    // Log ON-cycle start for session visibility (matches Scheduler::LogDeviceActivation format)
+    if (state && Offset() > 0) {
+      Serial.print(F("{\"level\":\"007\",\"device\":\"LASER\",\"pin\":"));
+      Serial.print(pin);
+      Serial.print(F(",\"event\":\"STIM\",\"start_timestamp\":"));
+      Serial.print(startTimestamp - Offset());
+      Serial.print(F(",\"end_timestamp\":"));
+      Serial.print(endTimestamp - Offset());
+      Serial.println('}');
+    }
   }
 }
 

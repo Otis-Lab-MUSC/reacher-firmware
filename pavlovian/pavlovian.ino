@@ -12,8 +12,9 @@
  *
  * **Architecture:** The PavlovianScheduler drives a trial-based state machine
  * (ITI -> CUE -> TRACE -> REWARD). Lever presses are logged but do not affect
- * trial progression. Two cues (CS+/CS-) and two pumps are used. No laser or
- * operant triggers.
+ * trial progression. Two cues (CS+/CS-), two pumps, and an optional laser are used.
+ * Laser can be assigned to specific trial types (CS+, CS-, or both) and firing phases
+ * (CUE or REWARD).
  *
  * **JSON protocol levels:**
  * - 000 — Settings / configuration dump
@@ -34,6 +35,7 @@
 #include <LickCircuit.h>
 #include <Cue.h>
 #include <Pump.h>
+#include <Laser.h>
 #include <Microscope.h>
 #include <ReacherHelpers.h>
 #include "PavlovianScheduler.h"
@@ -67,17 +69,22 @@ Cue         cue2(PIN_CUE_2, DEFAULT_CUE_FREQUENCY, DEFAULT_CUE_DURATION);
 Pump        pump(PIN_PUMP, DEFAULT_PUMP_DURATION);
 Pump        pump2(PIN_PUMP_2, DEFAULT_PUMP_DURATION);
 LickCircuit lickCircuit(PIN_LICK_CIRCUIT);
+Laser       laser(PIN_LASER, 40, 5000);
 Microscope  microscope(PIN_MICROSCOPE_TRIG, PIN_MICROSCOPE_TS);
+
+// Laser shadow variables
+uint8_t  LASER_FREQUENCY = 40;
+uint32_t LASER_DURATION  = 5000;
 
 /// Central scheduler instance.
 PavlovianScheduler scheduler;
 
-DeviceSet devices = { &rLever, &lLever, &cue, &cue2, &pump, &pump2, &lickCircuit, nullptr, &microscope };
+DeviceSet devices = { &rLever, &lLever, &cue, &cue2, &pump, &pump2, &lickCircuit, &laser, &microscope };
 
 // Session timestamps
 uint32_t SESSION_START_TIMESTAMP;
 uint32_t SESSION_END_TIMESTAMP;
-ArmSnapshot lastArmState;
+
 
 // Forward declarations
 void ParseCommands();
@@ -119,6 +126,7 @@ void setup() {
   scheduler.RegisterCue2(&cue2);
   scheduler.RegisterPump(&pump);
   scheduler.RegisterPump2(&pump2);
+  scheduler.RegisterLaser(&laser);
   scheduler.RegisterMicroscope(&microscope);
 
   // Set input callbacks
@@ -203,6 +211,8 @@ void ParseCommands() {
           case Cmd::CUE_SET_DURATION:   PAV_CUE_DURATION = inputJson["duration"]; ReconfigureScheduler(); break;
           case Cmd::CUE2_SET_FREQUENCY: PAV_CS_MINUS_FREQ = inputJson["frequency"]; ReconfigureScheduler(); break;
           case Cmd::CUE2_SET_DURATION:  ReconfigureScheduler(); break;
+          case Cmd::LASER_SET_FREQUENCY: LASER_FREQUENCY = inputJson["frequency"]; break;
+          case Cmd::LASER_SET_DURATION:  LASER_DURATION = inputJson["duration"]; break;
         }
       } else {
         switch (command) {
@@ -278,12 +288,32 @@ void ParseCommands() {
             break;
           }
 
+          // Pavlovian laser commands
+          case Cmd::PAV_LASER_CS_PLUS:
+            scheduler.SetLaserTrialFilter(LaserTrialFilter::CS_PLUS);
+            logParamChange(F("LASER"), F("trial_filter"), F("CS_PLUS")); break;
+          case Cmd::PAV_LASER_CS_MINUS:
+            scheduler.SetLaserTrialFilter(LaserTrialFilter::CS_MINUS);
+            logParamChange(F("LASER"), F("trial_filter"), F("CS_MINUS")); break;
+          case Cmd::PAV_LASER_CS_BOTH:
+            scheduler.SetLaserTrialFilter(LaserTrialFilter::CS_BOTH);
+            logParamChange(F("LASER"), F("trial_filter"), F("CS_BOTH")); break;
+          case Cmd::PAV_LASER_PHASE_REWARD:
+            scheduler.SetLaserPhase(LaserPhase::REWARD);
+            logParamChange(F("LASER"), F("laser_phase"), F("REWARD")); break;
+          case Cmd::PAV_LASER_PHASE_CUE:
+            scheduler.SetLaserPhase(LaserPhase::CUE);
+            logParamChange(F("LASER"), F("laser_phase"), F("CUE")); break;
+
           // Controller commands
           case Cmd::SESSION_START:
             StartSession(); setDeviceTimestampOffset(devices, SESSION_START_TIMESTAMP); break;
           case Cmd::SESSION_END:
             EndSession(); armToggleDevices(devices, false); break;
           case Cmd::IDENTIFY:
+            if (!scheduler.IsSessionActive()) {
+              armToggleDevices(devices, false);
+            }
             SendIdentification(); break;
           case Cmd::SESSION_PAUSE: {
             bool paused = inputJson["paused"] | false;
@@ -314,7 +344,6 @@ void ReconfigureScheduler() {
 
 /// @brief Begin a session: trigger microscope, initialize scheduler, emit settings JSON.
 void StartSession() {
-  restoreArmState(devices, lastArmState);
   SESSION_START_TIMESTAMP = millis();
   microscope.Trigger();
   scheduler.StartSession(SESSION_START_TIMESTAMP);
@@ -357,6 +386,7 @@ void StartSession() {
   reportDeviceConfig(F("CUE2"), cue2.Armed(), PAV_CS_MINUS_FREQ, cue2.Duration());
   reportDeviceConfig(F("PUMP"), pump.Armed(), pump.Duration());
   reportDeviceConfig(F("PUMP2"), pump2.Armed(), pump2.Duration());
+  reportDeviceConfig(F("LASER"), laser.Armed(), LASER_FREQUENCY, LASER_DURATION);
   reportDeviceConfig(F("LICK"), lickCircuit.Armed());
   reportDeviceConfig(F("MICROSCOPE"), microscope.Armed());
   reportDeviceLever(F("LEVER_RH"), rLever.Armed(), rLever.IsReinforced());
@@ -366,10 +396,10 @@ void StartSession() {
 /// @brief End a session: trigger microscope, shut down scheduler, emit end event.
 void EndSession() {
   if (!scheduler.IsSessionActive()) return;  // Already ended
-  lastArmState = captureArmState(devices);
   SESSION_END_TIMESTAMP = millis();
   microscope.Trigger();
   scheduler.EndSession(SESSION_END_TIMESTAMP);
+  digitalWrite(PIN_LASER, LOW);
 
   Serial.print(F("{\"level\":\"007\",\"device\":\"CONTROLLER\",\"event\":\"END\",\"timestamp\":"));
   Serial.print(SESSION_END_TIMESTAMP - SESSION_START_TIMESTAMP);
