@@ -17,6 +17,7 @@ Laser::Laser(int8_t pin, uint32_t frequency, uint32_t duration)
   state = false;
   halfState = false;
   isTesting = false;
+  sessionActive = false;
 }
 
 void Laser::Activate(uint32_t startTs, uint32_t dur) {
@@ -30,7 +31,7 @@ void Laser::Activate(uint32_t startTs, uint32_t dur) {
 
 void Laser::Await(uint32_t currentTimestamp) {
   if (armed || isTesting) {
-    if (mode == INDEPENDENT && !isTesting) {
+    if (mode == INDEPENDENT && !isTesting && sessionActive) {
       Cycle(currentTimestamp);
     }
     Oscillate(currentTimestamp);
@@ -101,6 +102,10 @@ void Laser::Reset() {
   state = false;
   halfState = false;
   isTesting = false;
+}
+
+void Laser::SetSessionActive(bool active) {
+  sessionActive = active;
 }
 
 void Laser::SetFrequency(uint32_t frequency) {

@@ -434,6 +434,7 @@ void Scheduler::StartSession(uint32_t now) {
 
   // Reset laser oscillation state from previous session
   if (laser) laser->Reset();
+  if (laser) laser->SetSessionActive(true);
 }
 
 void Scheduler::EndSession(uint32_t now) {
@@ -450,6 +451,7 @@ void Scheduler::EndSession(uint32_t now) {
   if (cue2) noTone(cue2->Pin());
   if (pump) digitalWrite(pump->Pin(), LOW);
   if (pump2) digitalWrite(pump2->Pin(), LOW);
+  if (laser) laser->SetSessionActive(false);
   if (laser) digitalWrite(laser->Pin(), LOW);
 }
 

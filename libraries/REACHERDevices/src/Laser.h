@@ -28,8 +28,12 @@ public:
   void Test(uint32_t currentTimestamp);
 
   /// @brief Reset internal oscillation state for a new session.
-  /// Clears timestamps and state flags. Preserves mode, frequency, duration, and armed.
+  /// Clears timestamps and state flags. Preserves mode, frequency, duration, armed, and sessionActive.
   void Reset();
+
+  /// @brief Set session-active flag (gates INDEPENDENT cycling).
+  /// @param active true when session is running, false otherwise
+  void SetSessionActive(bool active);
 
   void SetFrequency(uint32_t frequency);
   void SetDuration(uint32_t duration);
@@ -59,7 +63,8 @@ private:
   Mode mode;        ///< Current operating mode
   bool state;       ///< True during an active on-period (macro cycle)
   bool halfState;   ///< Current half of oscillation square wave (true = ON half)
-  bool isTesting;   ///< True during a manual test pulse
+  bool isTesting;     ///< True during a manual test pulse
+  bool sessionActive; ///< True when a session is running (gates INDEPENDENT cycling)
 
   void On();
   void Off();

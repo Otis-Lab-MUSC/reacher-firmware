@@ -12,6 +12,9 @@ Device::Device(int8_t pin, uint8_t mode, const char* device) {
   armed = false;
   offset = 0;
   pinMode(pin, mode);
+  if (mode == OUTPUT) {
+    digitalWrite(pin, LOW);
+  }
 }
 
 void Device::ArmToggle(bool arm) {

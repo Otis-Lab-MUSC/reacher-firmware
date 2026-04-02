@@ -247,6 +247,8 @@ void PavlovianScheduler::StartSession(uint32_t now) {
   pavCurrentIti = PavSampleIti();
   pavPhase = PavlovPhase::ITI;
   pavPhaseStart = now;
+
+  if (laser) laser->SetSessionActive(true);
 }
 
 void PavlovianScheduler::EndSession(uint32_t now) {
@@ -259,6 +261,7 @@ void PavlovianScheduler::EndSession(uint32_t now) {
   if (cue2) noTone(cue2->Pin());
   if (pump) digitalWrite(pump->Pin(), LOW);
   if (pump2) digitalWrite(pump2->Pin(), LOW);
+  if (laser) laser->SetSessionActive(false);
   if (laser) digitalWrite(laser->Pin(), LOW);
 }
 
