@@ -31,10 +31,16 @@ void Laser::Activate(uint32_t startTs, uint32_t dur) {
 
 void Laser::Await(uint32_t currentTimestamp) {
   if (armed || isTesting) {
-    if (mode == INDEPENDENT && !isTesting && sessionActive) {
-      Cycle(currentTimestamp);
+    if (mode == INDEPENDENT && !isTesting) {
+      if (sessionActive) {
+        Cycle(currentTimestamp);
+        Oscillate(currentTimestamp);
+      } else {
+        Off();
+      }
+    } else {
+      Oscillate(currentTimestamp);
     }
-    Oscillate(currentTimestamp);
   } else {
     startTimestamp = currentTimestamp;
     endTimestamp = currentTimestamp;
