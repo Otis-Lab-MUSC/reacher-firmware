@@ -86,7 +86,6 @@ namespace Cmd {
   constexpr int LASER_TEST           = 603;
   constexpr int LASER_SET_FREQUENCY  = 671;
   constexpr int LASER_SET_DURATION   = 672;
-  constexpr int LASER_SET_TRACE      = 673;  // deprecated
   constexpr int LASER_MODE_CONTINGENT  = 681;
   constexpr int LASER_MODE_INDEPENDENT = 682;
 

@@ -192,7 +192,6 @@ bool handleCommonDeviceCommand(DeviceSet& ds, int command, JsonDocument& inputJs
       uint32_t dur = clampParam(inputJson, "duration", 1, 600000);
       if (ds.laser) { ds.laser->SetDuration(dur); logParamChange(F("LASER"), F("duration"), dur); } break;
     }
-    case Cmd::LASER_SET_TRACE:    break;
     case Cmd::LASER_MODE_CONTINGENT:
       if (ds.laser) { ds.laser->SetMode(true); logParamChange(F("LASER"), F("mode"), F("CONTINGENT")); } break;
     case Cmd::LASER_MODE_INDEPENDENT:
