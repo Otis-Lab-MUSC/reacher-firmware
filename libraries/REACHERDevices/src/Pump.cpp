@@ -20,7 +20,9 @@ void Pump::Activate(uint32_t startTs, uint32_t dur) {
 
 void Pump::Await(uint32_t currentTimestamp) {
   if (armed || isTesting) {
-    if (currentTimestamp >= startTimestamp && currentTimestamp <= endTimestamp) {
+    // Overflow-safe: see Scheduler.cpp:232 for rationale (Bug 2.2)
+    if ((int32_t)(currentTimestamp - startTimestamp) >= 0 &&
+        (int32_t)(currentTimestamp - endTimestamp) <= 0) {
       On();
     } else {
       Off();

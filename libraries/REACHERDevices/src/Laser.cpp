@@ -57,7 +57,8 @@ void Laser::Test(uint32_t currentTimestamp) {
 }
 
 void Laser::Cycle(uint32_t currentTimestamp) {
-  if (currentTimestamp >= endTimestamp) {
+  // Overflow-safe: see Scheduler.cpp:232 for rationale (Bug 2.2)
+  if ((int32_t)(currentTimestamp - endTimestamp) >= 0) {
     startTimestamp = currentTimestamp;
     endTimestamp = currentTimestamp + duration;
     state = !state;
@@ -76,11 +77,14 @@ void Laser::Cycle(uint32_t currentTimestamp) {
 }
 
 void Laser::Oscillate(uint32_t currentTimestamp) {
-  if (currentTimestamp >= startTimestamp && currentTimestamp <= endTimestamp && state) {
+  // Overflow-safe: see Scheduler.cpp:232 for rationale (Bug 2.2)
+  bool inWindow = (int32_t)(currentTimestamp - startTimestamp) >= 0 &&
+                  (int32_t)(currentTimestamp - endTimestamp) <= 0;
+  if (inWindow && state) {
     if (frequency == 1) {
       On();
     } else {
-      if (currentTimestamp >= halfCycleEndTimestamp) {
+      if ((int32_t)(currentTimestamp - halfCycleEndTimestamp) >= 0) {
         UpdateHalfCycle(currentTimestamp);
       }
       if (halfState) {
@@ -91,10 +95,11 @@ void Laser::Oscillate(uint32_t currentTimestamp) {
     }
   } else {
     Off();
-    if (state && currentTimestamp > endTimestamp) {
+    bool pastEnd = (int32_t)(currentTimestamp - endTimestamp) > 0;
+    if (state && pastEnd) {
       state = false;
     }
-    if (isTesting && currentTimestamp > endTimestamp) {
+    if (isTesting && pastEnd) {
       isTesting = false;
     }
   }

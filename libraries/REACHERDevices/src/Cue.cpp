@@ -29,7 +29,9 @@ void Cue::Activate(uint32_t startTs, uint32_t dur) {
 // tone output on ANY pin (Arduino tone() is a singleton on ATmega328P).
 void Cue::Await(uint32_t currentTimestamp) {
   if (armed || isTesting) {
-    if (currentTimestamp >= startTimestamp && currentTimestamp <= endTimestamp) {
+    // Overflow-safe: see Scheduler.cpp:232 for rationale (Bug 2.2)
+    if ((int32_t)(currentTimestamp - startTimestamp) >= 0 &&
+        (int32_t)(currentTimestamp - endTimestamp) <= 0) {
       if (pulsed) {
         uint16_t cycleLen = pulseOnMs + pulseOffMs;
         if (cycleLen == 0) cycleLen = 1;  // guard against div-by-zero

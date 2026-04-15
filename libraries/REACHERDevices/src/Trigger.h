@@ -124,7 +124,8 @@ struct Trigger {
         return false;
 
       case TriggerType::AVAILABILITY_WINDOW:
-        if (windowEnd > 0 && now >= windowEnd) {
+        // Overflow-safe: see Scheduler.cpp:232 for rationale (Bug 2.2)
+        if (windowEnd > 0 && (int32_t)(now - windowEnd) >= 0) {
           // Interval expired, start new interval with new random window
           windowStart = now + random(0, intervalMin);
           windowEnd = now + intervalMin;
