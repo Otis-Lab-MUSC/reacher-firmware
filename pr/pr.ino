@@ -278,6 +278,15 @@ void ParseCommands() {
             logParamChange(F("CONTROLLER"), F("test_mode"), scheduler.IsTestMode());
             break;
           }
+          case Cmd::SESSION_PAUSE: {
+            bool paused = inputJson["paused"] | false;
+            uint32_t now = millis();
+            scheduler.SetPaused(paused, now);
+            if (paused) microscope.Pause(now);
+            else        microscope.Resume(now);
+            logParamChange(F("CONTROLLER"), F("session_paused"), paused);
+            break;
+          }
 
           default:
             Serial.println(F("{\"level\":\"006\",\"desc\":\"Command not found\"}"));

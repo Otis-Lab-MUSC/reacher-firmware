@@ -268,7 +268,10 @@ void ParseCommands() {
           }
           case Cmd::SESSION_PAUSE: {
             bool paused = inputJson["paused"] | false;
-            scheduler.SetPaused(paused, millis());
+            uint32_t now = millis();
+            scheduler.SetPaused(paused, now);
+            if (paused) microscope.Pause(now);
+            else        microscope.Resume(now);
             logParamChange(F("CONTROLLER"), F("session_paused"), paused);
             break;
           }

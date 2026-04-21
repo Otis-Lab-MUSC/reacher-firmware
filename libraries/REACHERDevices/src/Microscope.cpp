@@ -19,6 +19,8 @@ Microscope::Microscope(int8_t triggerPin, int8_t timestampPin) {
   offset = 0;
   triggerActive = false;
   triggerStart = 0;
+  paused = false;
+  pauseStart = 0;
   instance = this;
 }
 
@@ -30,7 +32,7 @@ void Microscope::TimestampISR() {
 }
 
 void Microscope::HandleFrameSignal() {
-  if (armed && received) {
+  if (armed && !paused && received) {
     noInterrupts();
     received = false;
     uint32_t ts = timestamp; // atomic copy of volatile 32-bit value
@@ -66,7 +68,28 @@ void Microscope::TickTrigger(uint32_t now) {
   }
 }
 
+void Microscope::Pause(uint32_t now) {
+  if (!armed || paused) return;
+  Trigger();           // 50ms pulse — toggles scope to stop scanning
+  pauseStart = now;
+  paused = true;
+  noInterrupts();
+  received = false;    // drop any in-flight ISR capture
+  interrupts();
+}
+
+void Microscope::Resume(uint32_t now) {
+  if (!armed || !paused) return;
+  noInterrupts();
+  offset += (now - pauseStart);  // emitted ts = millis() - offset stays session-live across pause
+  received = false;              // discard any stray ISR capture from the pause interval
+  interrupts();
+  paused = false;
+  Trigger();           // 50ms pulse — toggles scope to resume scanning
+}
+
 bool Microscope::Armed() const { return armed; }
+bool Microscope::Paused() const { return paused; }
 
 byte Microscope::TriggerPin() const {
   return triggerPin;

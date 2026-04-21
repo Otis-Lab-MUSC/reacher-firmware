@@ -34,7 +34,16 @@ public:
   /// @brief Tick the trigger state machine — call from loop(). Fix: FW-001
   void TickTrigger(uint32_t now);
 
+  /// @brief Stop scope scanning on session pause; no-op if disarmed or already paused.
+  void Pause(uint32_t now);
+
+  /// @brief Restart scope scanning on session resume and advance offset by the
+  /// paused interval so emitted timestamps stay session-live. No-op if disarmed
+  /// or not currently paused.
+  void Resume(uint32_t now);
+
   bool Armed() const;
+  bool Paused() const;
   byte TriggerPin() const;
   byte TimestampPin() const;
 
@@ -50,6 +59,9 @@ private:
   bool triggerActive;             ///< True while trigger pulse is HIGH
   uint32_t triggerStart;          ///< millis() when trigger went HIGH
   static constexpr uint32_t TRIGGER_DURATION_MS = 50;
+
+  bool paused;                    ///< True while session is paused (scope stopped)
+  uint32_t pauseStart;            ///< millis() when pause began, for offset compensation
 
   static Microscope* instance;    ///< Singleton for ISR dispatch
 
