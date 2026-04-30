@@ -69,7 +69,7 @@ All pin assignments are defined in `libraries/REACHERDevices/src/Pins.h`:
 | 8 | `PIN_PUMP_2` | OUTPUT | Secondary syringe pump relay |
 | 9 | `PIN_MICROSCOPE_TRIG` | OUTPUT | Microscope trigger pulse (50 ms HIGH) |
 | 10 | `PIN_LEVER_RH` | INPUT_PULLUP | Right-hand lever |
-| 12 | `PIN_LEVER_LH` | INPUT_PULLUP | Left-hand lever |
+| 13 | `PIN_LEVER_LH` | INPUT_PULLUP | Left-hand lever (note: shares the onboard LED line; INPUT_PULLUP validated but revisit if reads are unstable) |
 
 ---
 

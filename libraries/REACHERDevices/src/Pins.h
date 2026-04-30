@@ -12,8 +12,11 @@
 
 /// Right-hand lever switch (INPUT_PULLUP)
 constexpr int8_t PIN_LEVER_RH        = 10;
-/// Left-hand lever switch (INPUT_PULLUP)
-constexpr int8_t PIN_LEVER_LH        = 12;
+/// Left-hand lever switch (INPUT_PULLUP).
+/// NOTE: pin 13 also drives the onboard LED via a series resistor; with
+/// INPUT_PULLUP this can weakly pull the line low. Validated on current
+/// hardware; revisit if reads become unstable.
+constexpr int8_t PIN_LEVER_LH        = 13;
 /// Lick detection circuit (INPUT_PULLUP)
 constexpr int8_t PIN_LICK_CIRCUIT    = 5;
 /// Microscope frame timestamp ISR input (INT0)
