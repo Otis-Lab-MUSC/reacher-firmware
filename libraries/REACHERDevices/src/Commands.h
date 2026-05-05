@@ -9,7 +9,7 @@
 //            10xx=RH Lever  13xx=LH Lever
 //   Suffix:  x00=disarm  x01=arm  x03=test
 //            x71=set frequency  x72=set duration
-//            x74=set timeout  x75=set ratio
+//            x74=set timeout  x75=set ratio  x76=set pin
 //            x80=set inactive/mode B  x81=set active/mode A  x82=set mode B
 //
 // Output JSON levels (firmware -> host):
@@ -62,8 +62,10 @@ namespace Cmd {
   constexpr int CUE_SET_FREQUENCY    = 371;
   constexpr int CUE_SET_DURATION     = 372;
   constexpr int CUE_SET_TRACE        = 373;  // deprecated
+  constexpr int CUE_SET_PIN          = 376;
   constexpr int CUE2_SET_FREQUENCY   = 381;
   constexpr int CUE2_SET_DURATION    = 382;
+  constexpr int CUE2_SET_PIN         = 386;
 
   // --- Pump (4xx) ---
   constexpr int PUMP_DISARM          = 400;
@@ -74,11 +76,14 @@ namespace Cmd {
   constexpr int PUMP2_TEST           = 413;
   constexpr int PUMP_SET_DURATION    = 472;
   constexpr int PUMP_SET_TRACE       = 473;  // deprecated
+  constexpr int PUMP_SET_PIN         = 476;
   constexpr int PUMP2_SET_DURATION   = 482;
+  constexpr int PUMP2_SET_PIN        = 486;
 
   // --- Lick Circuit (5xx) ---
   constexpr int LICK_DISARM          = 500;
   constexpr int LICK_ARM             = 501;
+  constexpr int LICK_SET_PIN         = 576;
 
   // --- Laser (6xx) ---
   constexpr int LASER_DISARM         = 600;
@@ -86,6 +91,7 @@ namespace Cmd {
   constexpr int LASER_TEST           = 603;
   constexpr int LASER_SET_FREQUENCY  = 671;
   constexpr int LASER_SET_DURATION   = 672;
+  constexpr int LASER_SET_PIN        = 676;
   constexpr int LASER_MODE_CONTINGENT  = 681;
   constexpr int LASER_MODE_INDEPENDENT = 682;
 
@@ -101,12 +107,15 @@ namespace Cmd {
   constexpr int MICROSCOPE_DISARM    = 900;
   constexpr int MICROSCOPE_ARM       = 901;
   constexpr int MICROSCOPE_TEST      = 903;
+  // Trigger pin only — timestamp pin (INT0) is fixed for cross-board portability.
+  constexpr int MICROSCOPE_SET_TRIG_PIN = 976;
 
   // --- RH Lever (10xx) ---
   constexpr int LEVER_RH_DISARM      = 1000;
   constexpr int LEVER_RH_ARM         = 1001;
   constexpr int LEVER_RH_SET_TIMEOUT = 1074;
   constexpr int LEVER_RH_SET_RATIO   = 1075;
+  constexpr int LEVER_RH_SET_PIN     = 1076;
   constexpr int LEVER_RH_SET_INACTIVE = 1080;
   constexpr int LEVER_RH_SET_ACTIVE  = 1081;
 
@@ -115,6 +124,7 @@ namespace Cmd {
   constexpr int LEVER_LH_ARM         = 1301;
   constexpr int LEVER_LH_SET_TIMEOUT = 1374;
   constexpr int LEVER_LH_SET_RATIO   = 1375;
+  constexpr int LEVER_LH_SET_PIN     = 1376;
   constexpr int LEVER_LH_SET_INACTIVE = 1380;
   constexpr int LEVER_LH_SET_ACTIVE  = 1381;
 }

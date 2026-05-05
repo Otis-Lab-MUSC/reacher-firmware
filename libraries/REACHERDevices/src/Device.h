@@ -41,6 +41,12 @@ public:
   /// @brief Set the session-relative timestamp offset.
   void SetOffset(uint32_t offset);
 
+  /// @brief Reassign this device to a different Arduino pin at runtime.
+  /// Disarms first, drives any OUTPUT pin LOW, applies pinMode(newPin, mode),
+  /// and emits a level-`000` config event. SwitchLever overrides to also
+  /// refresh its debounce buffers.
+  void SetPin(int8_t newPin);
+
   byte Pin() const;
   bool Armed() const;
   uint32_t Offset() const;

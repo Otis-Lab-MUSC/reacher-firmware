@@ -39,6 +39,12 @@ public:
   /// @param releaseCb Function called on debounced release
   void SetReleaseCallback(InputReleaseCallback releaseCb);
 
+  /// @brief Reassign the lever to a different pin and refresh debounce state.
+  /// Calls Device::SetPin then re-reads initState/previousState/stableState
+  /// from the new pin so a stale debounced state can't fire a phantom
+  /// press/release event the next time the lever is armed.
+  void SetPin(int8_t newPin);
+
   /// @brief Mark this lever as reinforced (active) or inactive.
   void SetActiveLever(bool reinforced);
 

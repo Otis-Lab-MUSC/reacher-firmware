@@ -54,6 +54,19 @@ void Microscope::SetOffset(uint32_t offset) {
   this->offset = offset;
 }
 
+void Microscope::SetTriggerPin(int8_t newPin) {
+  if (triggerActive) {
+    digitalWrite(triggerPin, LOW);
+    triggerActive = false;
+  }
+  triggerPin = newPin;
+  pinMode(triggerPin, OUTPUT);
+  digitalWrite(triggerPin, LOW);
+  Serial.print(F("{\"level\":\"000\",\"device\":\"MICROSCOPE\",\"param\":\"trigger_pin\",\"value\":"));
+  Serial.print(triggerPin);
+  Serial.println('}');
+}
+
 // Fix: FW-001 — Non-blocking trigger; Trigger() starts the pulse, TickTrigger() ends it.
 void Microscope::Trigger() {
   digitalWrite(triggerPin, HIGH);

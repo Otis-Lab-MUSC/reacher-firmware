@@ -204,6 +204,48 @@ bool handleCommonDeviceCommand(DeviceSet& ds, int command, JsonDocument& inputJs
       ds.microscope->Trigger();
       logParamChange(F("MICROSCOPE"), F("test"), F("FIRED")); break;
 
+    // --- Pin reassignment (suffix x76) ---
+    // Backend validates board / role / collisions; firmware clamps to 2-53.
+    case Cmd::CUE_SET_PIN: {
+      uint32_t p = clampParam(inputJson, "pin", 2, 53);
+      ds.cue->SetPin((int8_t)p); break;
+    }
+    case Cmd::CUE2_SET_PIN: {
+      uint32_t p = clampParam(inputJson, "pin", 2, 53);
+      ds.cue2->SetPin((int8_t)p); break;
+    }
+    case Cmd::PUMP_SET_PIN: {
+      uint32_t p = clampParam(inputJson, "pin", 2, 53);
+      ds.pump->SetPin((int8_t)p); break;
+    }
+    case Cmd::PUMP2_SET_PIN: {
+      uint32_t p = clampParam(inputJson, "pin", 2, 53);
+      ds.pump2->SetPin((int8_t)p); break;
+    }
+    case Cmd::LICK_SET_PIN: {
+      uint32_t p = clampParam(inputJson, "pin", 2, 53);
+      ds.lickCircuit->SetPin((int8_t)p); break;
+    }
+    case Cmd::LASER_SET_PIN: {
+      if (!ds.laser) break;
+      uint32_t p = clampParam(inputJson, "pin", 2, 53);
+      ds.laser->SetPin((int8_t)p); break;
+    }
+    case Cmd::MICROSCOPE_SET_TRIG_PIN: {
+      uint32_t p = clampParam(inputJson, "pin", 2, 53);
+      ds.microscope->SetTriggerPin((int8_t)p); break;
+    }
+    case Cmd::LEVER_RH_SET_PIN: {
+      if (!ds.rLever) break;
+      uint32_t p = clampParam(inputJson, "pin", 2, 53);
+      ds.rLever->SetPin((int8_t)p); break;
+    }
+    case Cmd::LEVER_LH_SET_PIN: {
+      if (!ds.lLever) break;
+      uint32_t p = clampParam(inputJson, "pin", 2, 53);
+      ds.lLever->SetPin((int8_t)p); break;
+    }
+
     default:
       return false;  // Not handled — let sketch handle it
   }

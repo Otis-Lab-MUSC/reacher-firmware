@@ -33,6 +33,23 @@ void Device::SetOffset(uint32_t offset) {
   this->offset = offset;
 }
 
+void Device::SetPin(int8_t newPin) {
+  if (armed) ArmToggle(false);
+  if (mode == OUTPUT) {
+    digitalWrite(pin, LOW);
+  }
+  pin = newPin;
+  pinMode(pin, mode);
+  if (mode == OUTPUT) {
+    digitalWrite(pin, LOW);
+  }
+  Serial.print(F("{\"level\":\"000\",\"device\":\""));
+  Serial.print(device);
+  Serial.print(F("\",\"param\":\"pin\",\"value\":"));
+  Serial.print(pin);
+  Serial.println('}');
+}
+
 byte Device::Pin() const {
   return pin;
 }

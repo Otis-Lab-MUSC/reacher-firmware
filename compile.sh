@@ -1,38 +1,49 @@
 #!/bin/bash
-# Compile all REACHER firmware paradigms to .hex files.
+# Compile all REACHER firmware paradigms for every supported board.
 # Requires: arduino-cli with arduino:avr board package installed.
 #
 # Usage:  bash compile.sh
-# Output: hex/fr.hex  hex/pr.hex  hex/vi.hex  hex/omission.hex  hex/pavlovian.hex
+# Output: hex/<board>/<paradigm>.hex   for each (paradigm, board) pair.
+#         Subdirectory layout matches the reacher backend uploader's
+#         resolver (uploader/uploader.py::get_hex_path).
 
 set -euo pipefail
 
-FQBN="arduino:avr:uno"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 HEX_DIR="$SCRIPT_DIR/hex"
 LIB_DIR="$SCRIPT_DIR/libraries"
 
 mkdir -p "$HEX_DIR"
 
-for sketch in fr pr vi omission pavlovian; do
-    echo "==> Compiling $sketch..."
-    arduino-cli compile \
-        --fqbn "$FQBN" \
-        --libraries "$LIB_DIR" \
-        --output-dir "$HEX_DIR" \
-        "$SCRIPT_DIR/$sketch/$sketch.ino"
+for board in uno mega; do
+    case "$board" in
+        uno)  FQBN="arduino:avr:uno" ;;
+        mega) FQBN="arduino:avr:mega:cpu=atmega2560" ;;
+    esac
 
-    # arduino-cli names the output <sketch>.ino.hex — rename to <sketch>.hex
-    if [ -f "$HEX_DIR/$sketch.ino.hex" ]; then
-        mv "$HEX_DIR/$sketch.ino.hex" "$HEX_DIR/$sketch.hex"
-    fi
+    BOARD_DIR="$HEX_DIR/$board"
+    mkdir -p "$BOARD_DIR"
 
-    # Clean up extra build artifacts
-    rm -f "$HEX_DIR/$sketch.ino.elf" "$HEX_DIR/$sketch.ino.with_bootloader.hex"
+    for sketch in fr pr vi omission pavlovian; do
+        echo "==> Compiling $sketch for $board ($FQBN)..."
+        arduino-cli compile \
+            --fqbn "$FQBN" \
+            --libraries "$LIB_DIR" \
+            --output-dir "$BOARD_DIR" \
+            "$SCRIPT_DIR/$sketch/$sketch.ino"
 
-    echo "    -> $HEX_DIR/$sketch.hex"
+        # arduino-cli names the output <sketch>.ino.hex — rename to <sketch>.hex
+        if [ -f "$BOARD_DIR/$sketch.ino.hex" ]; then
+            mv "$BOARD_DIR/$sketch.ino.hex" "$BOARD_DIR/$sketch.hex"
+        fi
+
+        # Clean up extra build artifacts
+        rm -f "$BOARD_DIR/$sketch.ino.elf" "$BOARD_DIR/$sketch.ino.with_bootloader.hex"
+
+        echo "    -> $BOARD_DIR/$sketch.hex"
+    done
 done
 
 echo ""
-echo "All paradigms compiled successfully."
-ls -lh "$HEX_DIR"/*.hex
+echo "All paradigms compiled successfully for both boards."
+ls -lh "$HEX_DIR"/*/*.hex

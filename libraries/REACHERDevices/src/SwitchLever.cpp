@@ -51,6 +51,14 @@ void SwitchLever::Monitor(uint32_t currentTimestamp) {
   }
 }
 
+void SwitchLever::SetPin(int8_t newPin) {
+  Device::SetPin(newPin);
+  initState = digitalRead(pin);
+  previousState = digitalRead(pin);
+  stableState = digitalRead(pin);
+  lastDebounceTimestamp = 0;
+}
+
 void SwitchLever::SetCallback(InputEventCallback pressCb) {
   callback = pressCb;
 }

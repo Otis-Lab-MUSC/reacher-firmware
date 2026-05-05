@@ -34,6 +34,13 @@ public:
   /// @brief Tick the trigger state machine — call from loop(). Fix: FW-001
   void TickTrigger(uint32_t now);
 
+  /// @brief Reassign the trigger output pin at runtime.
+  /// Drives the old pin LOW (terminating any in-flight trigger pulse),
+  /// applies pinMode(newPin, OUTPUT), and emits a level-`000` config event.
+  /// The timestamp pin is intentionally NOT remappable — see comment on
+  /// `timestampPin` below.
+  void SetTriggerPin(int8_t newPin);
+
   /// @brief Stop scope scanning on session pause; no-op if disarmed or already paused.
   void Pause(uint32_t now);
 
@@ -48,8 +55,12 @@ public:
   byte TimestampPin() const;
 
 private:
-  int8_t triggerPin;              ///< Output pin for trigger pulse
-  int8_t timestampPin;            ///< ISR input pin (INT0, pin 2)
+  int8_t triggerPin;              ///< Output pin for trigger pulse (runtime-remappable via SetTriggerPin)
+  // The timestamp pin is fixed at INT0 (UNO pin 2 / Mega pin 2). Remapping
+  // to INT1 (pin 3) is the only UNO alternative and collides with PIN_CUE
+  // (PWM). Mega has additional INT pins (18-21) but cross-board portability
+  // is preserved by keeping this pin fixed.
+  int8_t timestampPin;            ///< ISR input pin (INT0, pin 2 — fixed)
   volatile bool received;         ///< ISR flag: true when new frame signal captured
   bool armed;                     ///< True when microscope logging is active
   volatile uint32_t timestamp;    ///< ISR-captured frame timestamp (session-relative)
