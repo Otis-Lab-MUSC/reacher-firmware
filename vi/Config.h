@@ -36,7 +36,7 @@ static constexpr uint32_t DEFAULT_TIMEOUT_INTERVAL   = 20000;
 /// @param totalInterval Total interval length (ms) for window cycling
 /// @param timeoutTarget Which lever receives the post-reward timeout
 /// @param traceInterval Delay between cue offset and reward onset (ms)
-inline void configureVariableInterval(Scheduler& sched, Cue& cue, Pump& pump, Laser& laser, uint32_t totalInterval, DeviceType timeoutTarget, uint32_t traceInterval) {
+inline void configureVariableInterval(Scheduler& sched, Cue& cue, Pump& pump, Laser& laser, uint32_t totalInterval, DeviceType timeoutTarget, uint32_t traceInterval, DeviceType pumpTarget = DeviceType::PUMP) {
   Trigger* t = sched.GetTrigger(0);
   if (t) {
     t->type = TriggerType::AVAILABILITY_WINDOW;
@@ -63,7 +63,7 @@ inline void configureVariableInterval(Scheduler& sched, Cue& cue, Pump& pump, La
     c->steps[0].param = cue.Duration();
 
     c->steps[1].type = ActionType::ACTIVATE_DEVICE;
-    c->steps[1].target = DeviceType::PUMP;
+    c->steps[1].target = pumpTarget;
     c->steps[1].offsetMs = cue.Duration() + traceInterval;
     c->steps[1].param = pump.Duration();
 

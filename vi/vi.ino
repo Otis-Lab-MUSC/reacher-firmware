@@ -38,12 +38,14 @@ uint32_t VI_INTERVAL        = 15000;
 // Device instances
 SwitchLever rLever(PIN_LEVER_RH, "RH", DeviceType::LEVER_RH);
 SwitchLever lLever(PIN_LEVER_LH, "LH", DeviceType::LEVER_LH);
-SwitchLever* activeLever = &rLever;
+SwitchLever* activeLever    = &rLever;
 
 Cue         cue(PIN_CUE, CUE_FREQUENCY, CUE_DURATION);
 Cue         cue2(PIN_CUE_2, CUE_FREQUENCY, CUE_DURATION);
 Pump        pump(PIN_PUMP, PUMP_DURATION);
 Pump        pump2(PIN_PUMP_2, PUMP_DURATION);
+Pump*        activePump      = &pump;
+DeviceType   activePumpTarget = DeviceType::PUMP;
 LickCircuit lickCircuit(PIN_LICK_CIRCUIT);
 Laser       laser(PIN_LASER, LASER_FREQUENCY, LASER_DURATION);
 Microscope  microscope(PIN_MICROSCOPE_TRIG, PIN_MICROSCOPE_TS);
@@ -104,7 +106,7 @@ void setup() {
   lLever.SetActiveLever(false);
 
   scheduler.SetTimeoutInterval(TIMEOUT_INTERVAL);
-  configureVariableInterval(scheduler, cue, pump, laser, VI_INTERVAL, DeviceType::LEVER_RH, TRACE_INTERVAL);
+  configureVariableInterval(scheduler, cue, *activePump, laser, VI_INTERVAL, DeviceType::LEVER_RH, TRACE_INTERVAL, activePumpTarget);
 
   SendIdentification();
   wdt_enable(WDTO_8S);
@@ -126,7 +128,7 @@ void loop() {
 
 void ReconfigureChain() {
   DeviceType timeoutTarget = (activeLever == &rLever) ? DeviceType::LEVER_RH : DeviceType::LEVER_LH;
-  configureVariableInterval(scheduler, cue, pump, laser, VI_INTERVAL, timeoutTarget, TRACE_INTERVAL);
+  configureVariableInterval(scheduler, cue, *activePump, laser, VI_INTERVAL, timeoutTarget, TRACE_INTERVAL, activePumpTarget);
 }
 
 void StartSession() {
@@ -203,6 +205,7 @@ void ParseCommands() {
           case Cmd::CUE_SET_FREQUENCY:   CUE_FREQUENCY = inputJson["frequency"]; break;
           case Cmd::CUE_SET_DURATION:    CUE_DURATION = inputJson["duration"]; ReconfigureChain(); break;
           case Cmd::PUMP_SET_DURATION:   PUMP_DURATION = inputJson["duration"]; ReconfigureChain(); break;
+          case Cmd::PUMP2_SET_DURATION:  ReconfigureChain(); break;
           case Cmd::LASER_SET_FREQUENCY: LASER_FREQUENCY = inputJson["frequency"]; break;
           case Cmd::LASER_SET_DURATION:  LASER_DURATION = inputJson["duration"]; ReconfigureChain(); break;
         }
@@ -242,6 +245,14 @@ void ParseCommands() {
             TRACE_INTERVAL = inputJson["interval"];
             ReconfigureChain();
             logParamChange(F("CONTROLLER"), F("trace_interval"), TRACE_INTERVAL); break;
+          case Cmd::SET_ACTIVE_PUMP: {
+            bool usePump2 = inputJson["pump2"] | false;
+            activePump = usePump2 ? &pump2 : &pump;
+            activePumpTarget = usePump2 ? DeviceType::PUMP_2 : DeviceType::PUMP;
+            ReconfigureChain();
+            logParamChange(F("CONTROLLER"), F("active_pump"), usePump2 ? F("PUMP2") : F("PUMP"));
+            break;
+          }
 
           // Controller commands
           case Cmd::SESSION_START:

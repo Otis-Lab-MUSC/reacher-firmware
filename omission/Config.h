@@ -32,7 +32,7 @@ static constexpr uint32_t DEFAULT_LASER_DURATION     = 5000;
 /// @param pump Pump device
 /// @param laser Laser device
 /// @param absenceMs Required absence duration (ms) before reward fires
-inline void configureOmission(Scheduler& sched, Cue& cue, Pump& pump, Laser& laser, uint32_t absenceMs) {
+inline void configureOmission(Scheduler& sched, Cue& cue, Pump& pump, Laser& laser, uint32_t absenceMs, DeviceType pumpTarget = DeviceType::PUMP) {
   Trigger* t = sched.GetTrigger(0);
   if (t) {
     t->type = TriggerType::ABSENCE_TIMER;
@@ -57,7 +57,7 @@ inline void configureOmission(Scheduler& sched, Cue& cue, Pump& pump, Laser& las
     c->steps[0].param = cue.Duration();
 
     c->steps[1].type = ActionType::ACTIVATE_DEVICE;
-    c->steps[1].target = DeviceType::PUMP;
+    c->steps[1].target = pumpTarget;
     c->steps[1].offsetMs = 0;
     c->steps[1].param = pump.Duration();
 
