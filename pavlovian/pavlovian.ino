@@ -161,7 +161,7 @@ void loop() {
   scheduler.Update(currentTimestamp);
 
   // Auto-end when all Pavlovian trials are complete
-  if (scheduler.IsComplete()) {
+  if (scheduler.IsComplete() && scheduler.IsSessionActive()) {
     EndSession();
     armToggleDevices(devices, false);
   }
@@ -400,7 +400,7 @@ void StartSession() {
 void EndSession() {
   if (!scheduler.IsSessionActive()) return;  // Already ended
   SESSION_END_TIMESTAMP = millis();
-  microscope.Trigger();
+  microscope.Pause(SESSION_END_TIMESTAMP);
   scheduler.EndSession(SESSION_END_TIMESTAMP);
   digitalWrite(PIN_LASER, LOW);
 

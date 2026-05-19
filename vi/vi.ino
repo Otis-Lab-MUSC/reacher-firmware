@@ -56,6 +56,8 @@ DeviceSet devices = { &rLever, &lLever, &cue, &cue2, &pump, &pump2, &lickCircuit
 
 uint32_t SESSION_START_TIMESTAMP;
 uint32_t SESSION_END_TIMESTAMP;
+bool sessionEndPending = false;
+#define SCOPE_DRAIN_MS 200
 
 
 // Forward declarations
@@ -123,6 +125,10 @@ void loop() {
   scheduler.Update(currentTimestamp);
   microscope.HandleFrameSignal();
   microscope.TickTrigger(currentTimestamp);  // Fix: FW-001
+  if (sessionEndPending && (int32_t)(millis() - SESSION_END_TIMESTAMP) >= SCOPE_DRAIN_MS) {
+    armToggleDevices(devices, false);
+    sessionEndPending = false;
+  }
   ParseCommands();
 }
 
@@ -163,7 +169,7 @@ void StartSession() {
 
 void EndSession() {
   SESSION_END_TIMESTAMP = millis();
-  microscope.Trigger();
+  microscope.Pause(SESSION_END_TIMESTAMP);
   scheduler.EndSession(SESSION_END_TIMESTAMP);
 
   Serial.print(F("{\"level\":\"007\",\"device\":\"CONTROLLER\",\"event\":\"END\",\"timestamp\":"));
@@ -258,7 +264,8 @@ void ParseCommands() {
           case Cmd::SESSION_START:
             StartSession(); setDeviceTimestampOffset(devices, SESSION_START_TIMESTAMP); break;
           case Cmd::SESSION_END:
-            EndSession(); armToggleDevices(devices, false); break;
+            if (!sessionEndPending) { EndSession(); sessionEndPending = true; }
+            break;
           case Cmd::IDENTIFY:
             if (!scheduler.IsSessionActive()) {
               armToggleDevices(devices, false);
