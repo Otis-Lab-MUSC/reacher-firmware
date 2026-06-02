@@ -21,6 +21,7 @@
 #include <Pump.h>
 #include <Laser.h>
 #include <Microscope.h>
+#include <Slm.h>
 #include <Scheduler.h>
 #include <ReacherHelpers.h>
 #include "Config.h"
@@ -49,10 +50,11 @@ DeviceType   activePumpTarget = DeviceType::PUMP;
 LickCircuit lickCircuit(PIN_LICK_CIRCUIT);
 Laser       laser(PIN_LASER, LASER_FREQUENCY, LASER_DURATION);
 Microscope  microscope(PIN_MICROSCOPE_TRIG, PIN_MICROSCOPE_TS);
+Slm         slm(PIN_SLM_TS);
 
 Scheduler scheduler;
 
-DeviceSet devices = { &rLever, &lLever, &cue, &cue2, &pump, &pump2, &lickCircuit, &laser, &microscope };
+DeviceSet devices = { &rLever, &lLever, &cue, &cue2, &pump, &pump2, &lickCircuit, &laser, &microscope, &slm };
 
 uint32_t SESSION_START_TIMESTAMP;
 uint32_t SESSION_END_TIMESTAMP;
@@ -66,6 +68,8 @@ void StartSession();
 void EndSession();
 void ReconfigureChain();
 void SendIdentification();
+
+ISR(PCINT0_vect) { Slm::instance->HandlePCINT(); }
 
 void onLeverPress(DeviceType source, uint32_t timestamp) {
   scheduler.OnInputEvent(source, timestamp);
@@ -125,8 +129,10 @@ void loop() {
   scheduler.Update(currentTimestamp);
   microscope.HandleFrameSignal();
   microscope.TickTrigger(currentTimestamp);  // Fix: FW-001
+  slm.HandleTimestampSignal();
   if (sessionEndPending && (int32_t)(millis() - SESSION_END_TIMESTAMP) >= SCOPE_DRAIN_MS) {
     armToggleDevices(devices, false);
+    slm.ArmToggle(false);
     sessionEndPending = false;
   }
   ParseCommands();
@@ -159,6 +165,7 @@ void StartSession() {
   reportDeviceConfig(F("LASER"), laser.Armed(), LASER_FREQUENCY, LASER_DURATION);
   reportDeviceConfig(F("LICK"), lickCircuit.Armed());
   reportDeviceConfig(F("MICROSCOPE"), microscope.Armed());
+  reportDeviceConfig(F("SLM"), slm.Armed());
   reportDeviceLever(F("LEVER_RH"), rLever.Armed(), rLever.IsReinforced());
   reportDeviceLever(F("LEVER_LH"), lLever.Armed(), lLever.IsReinforced());
 
@@ -262,13 +269,14 @@ void ParseCommands() {
 
           // Controller commands
           case Cmd::SESSION_START:
-            StartSession(); setDeviceTimestampOffset(devices, SESSION_START_TIMESTAMP); break;
+            StartSession(); setDeviceTimestampOffset(devices, SESSION_START_TIMESTAMP); slm.SetOffset(SESSION_START_TIMESTAMP); break;
           case Cmd::SESSION_END:
             if (!sessionEndPending) { EndSession(); sessionEndPending = true; }
             break;
           case Cmd::IDENTIFY:
             if (!scheduler.IsSessionActive()) {
               armToggleDevices(devices, false);
+              slm.ArmToggle(false);
             }
             SendIdentification(); break;
           case Cmd::TEST_CHAIN:
@@ -289,6 +297,13 @@ void ParseCommands() {
             else        microscope.Resume(now);
             logParamChange(F("CONTROLLER"), F("session_paused"), paused);
             break;
+          }
+
+          case Cmd::SLM_ARM:    slm.ArmToggle(true); break;
+          case Cmd::SLM_DISARM: slm.ArmToggle(false); break;
+          case Cmd::SLM_SET_PIN: {
+            uint8_t p = (uint8_t)constrain((int)(inputJson["pin"] | 11), 8, 13);
+            slm.SetPin((int8_t)p); break;
           }
 
           default:

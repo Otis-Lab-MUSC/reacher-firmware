@@ -21,6 +21,9 @@ constexpr int8_t PIN_LEVER_LH        = 13;
 constexpr int8_t PIN_LICK_CIRCUIT    = 5;
 /// Microscope frame timestamp ISR input (INT0)
 constexpr int8_t PIN_MICROSCOPE_TS   = 2;
+/// SLM timestamp PCINT input (PCINT0 group, PB3). Note: pin 11 is also SPI MOSI;
+/// avoid when SPI peripherals are in use. Remappable to any pin 8–13 at runtime.
+constexpr int8_t PIN_SLM_TS          = 11;
 
 /// Primary tone output (PWM capable)
 constexpr int8_t PIN_CUE             = 3;

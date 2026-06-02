@@ -6,7 +6,7 @@
 // Encoding: [Device Prefix][Action Suffix]
 //   Prefix:  1xx=Controller  2xx=Session  3xx=Cue  4xx=Pump
 //            5xx=Lick  6xx=Laser  9xx=Microscope
-//            10xx=RH Lever  13xx=LH Lever
+//            10xx=RH Lever  11xx=SLM  13xx=LH Lever
 //   Suffix:  x00=disarm  x01=arm  x03=test
 //            x71=set frequency  x72=set duration
 //            x74=set timeout  x75=set ratio  x76=set pin
@@ -18,6 +18,7 @@
 //   "006" — Error messages
 //   "007" — Behavioral events
 //   "008" — Microscope frame timestamps
+//   "009" — SLM timestamps
 
 namespace Cmd {
   // --- Controller (1xx) ---
@@ -110,6 +111,12 @@ namespace Cmd {
   constexpr int MICROSCOPE_TEST      = 903;
   // Trigger pin only — timestamp pin (INT0) is fixed for cross-board portability.
   constexpr int MICROSCOPE_SET_TRIG_PIN = 976;
+
+  // --- SLM (11xx) ---
+  constexpr int SLM_DISARM           = 1100;
+  constexpr int SLM_ARM              = 1101;
+  // Timestamp pin is configurable within PCINT0 group (Arduino pins 8–13).
+  constexpr int SLM_SET_PIN          = 1176;
 
   // --- RH Lever (10xx) ---
   constexpr int LEVER_RH_DISARM      = 1000;

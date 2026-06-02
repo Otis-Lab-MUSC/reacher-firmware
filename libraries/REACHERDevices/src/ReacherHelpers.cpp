@@ -34,6 +34,7 @@ ArmSnapshot captureArmState(const DeviceSet& ds) {
   snap.lickCircuit = ds.lickCircuit->Armed();
   snap.laser       = ds.laser ? ds.laser->Armed() : false;
   snap.microscope  = ds.microscope->Armed();
+  snap.slm         = false;
   return snap;
 }
 
@@ -235,6 +236,7 @@ bool handleCommonDeviceCommand(DeviceSet& ds, int command, JsonDocument& inputJs
       uint32_t p = clampParam(inputJson, "pin", 2, 53);
       ds.microscope->SetTriggerPin((int8_t)p); break;
     }
+
     case Cmd::LEVER_RH_SET_PIN: {
       if (!ds.rLever) break;
       uint32_t p = clampParam(inputJson, "pin", 2, 53);

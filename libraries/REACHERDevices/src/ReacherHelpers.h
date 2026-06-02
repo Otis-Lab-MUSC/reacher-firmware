@@ -18,6 +18,7 @@ class Pump;
 class Laser;
 class LickCircuit;
 class Microscope;
+class Slm;
 
 /// @brief Aggregate of device pointers for shared helper functions.
 /// Set unused pointers to nullptr (e.g. laser in pavlovian).
@@ -31,6 +32,7 @@ struct DeviceSet {
   LickCircuit* lickCircuit;
   Laser* laser;         ///< nullptr if not used (pavlovian)
   Microscope* microscope;
+  Slm* slm;             ///< nullptr if SLM plugin not installed
 };
 
 /// @brief Set session-relative timestamp offset on all devices in the set.
@@ -66,6 +68,7 @@ struct ArmSnapshot {
   bool lickCircuit;
   bool laser;
   bool microscope;
+  bool slm;
 };
 
 /// @brief Capture the current arm state of all devices.

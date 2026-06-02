@@ -37,6 +37,9 @@
 #include <Pump.h>
 #include <Laser.h>
 #include <Microscope.h>
+#ifdef __AVR_ATmega2560__
+#include <Slm.h>
+#endif
 #include <ReacherHelpers.h>
 #include "PavlovianScheduler.h"
 
@@ -71,6 +74,9 @@ Pump        pump2(PIN_PUMP_2, DEFAULT_PUMP_DURATION);
 LickCircuit lickCircuit(PIN_LICK_CIRCUIT);
 Laser       laser(PIN_LASER, 40, 5000);
 Microscope  microscope(PIN_MICROSCOPE_TRIG, PIN_MICROSCOPE_TS);
+#ifdef __AVR_ATmega2560__
+Slm         slm(PIN_SLM_TS);
+#endif
 
 // Laser shadow variables
 uint8_t  LASER_FREQUENCY = 40;
@@ -79,7 +85,11 @@ uint32_t LASER_DURATION  = 5000;
 /// Central scheduler instance.
 PavlovianScheduler scheduler;
 
-DeviceSet devices = { &rLever, &lLever, &cue, &cue2, &pump, &pump2, &lickCircuit, &laser, &microscope };
+#ifdef __AVR_ATmega2560__
+DeviceSet devices = { &rLever, &lLever, &cue, &cue2, &pump, &pump2, &lickCircuit, &laser, &microscope, &slm };
+#else
+DeviceSet devices = { &rLever, &lLever, &cue, &cue2, &pump, &pump2, &lickCircuit, &laser, &microscope, nullptr };
+#endif
 
 // Session timestamps
 uint32_t SESSION_START_TIMESTAMP;
@@ -92,6 +102,10 @@ void StartSession();
 void EndSession();
 void ReconfigureScheduler();
 void SendIdentification();
+
+#ifdef __AVR_ATmega2560__
+ISR(PCINT0_vect) { Slm::instance->HandlePCINT(); }
+#endif
 
 /// @brief Callback: forward lever press to scheduler.
 void onLeverPress(DeviceType source, uint32_t timestamp) {
@@ -164,11 +178,17 @@ void loop() {
   if (scheduler.IsComplete() && scheduler.IsSessionActive()) {
     EndSession();
     armToggleDevices(devices, false);
+#ifdef __AVR_ATmega2560__
+    slm.ArmToggle(false);
+#endif
   }
 
   // Microscope frame handling
   microscope.HandleFrameSignal();
   microscope.TickTrigger(currentTimestamp);  // Fix: FW-001
+#ifdef __AVR_ATmega2560__
+  slm.HandleTimestampSignal();
+#endif
 
   // Process serial commands
   ParseCommands();
@@ -307,12 +327,23 @@ void ParseCommands() {
 
           // Controller commands
           case Cmd::SESSION_START:
-            StartSession(); setDeviceTimestampOffset(devices, SESSION_START_TIMESTAMP); break;
+            StartSession(); setDeviceTimestampOffset(devices, SESSION_START_TIMESTAMP);
+#ifdef __AVR_ATmega2560__
+            slm.SetOffset(SESSION_START_TIMESTAMP);
+#endif
+            break;
           case Cmd::SESSION_END:
-            EndSession(); armToggleDevices(devices, false); break;
+            EndSession(); armToggleDevices(devices, false);
+#ifdef __AVR_ATmega2560__
+            slm.ArmToggle(false);
+#endif
+            break;
           case Cmd::IDENTIFY:
             if (!scheduler.IsSessionActive()) {
               armToggleDevices(devices, false);
+#ifdef __AVR_ATmega2560__
+              slm.ArmToggle(false);
+#endif
             }
             SendIdentification(); break;
           case Cmd::SESSION_PAUSE: {
@@ -324,6 +355,15 @@ void ParseCommands() {
             logParamChange(F("CONTROLLER"), F("session_paused"), paused);
             break;
           }
+
+#ifdef __AVR_ATmega2560__
+          case Cmd::SLM_ARM:    slm.ArmToggle(true); break;
+          case Cmd::SLM_DISARM: slm.ArmToggle(false); break;
+          case Cmd::SLM_SET_PIN: {
+            uint8_t p = (uint8_t)constrain((int)(inputJson["pin"] | 11), 8, 13);
+            slm.SetPin((int8_t)p); break;
+          }
+#endif
 
           default:
             Serial.println(F("{\"level\":\"006\",\"desc\":\"Command not found\"}"));
@@ -392,6 +432,9 @@ void StartSession() {
   reportDeviceConfig(F("LASER"), laser.Armed(), LASER_FREQUENCY, LASER_DURATION);
   reportDeviceConfig(F("LICK"), lickCircuit.Armed());
   reportDeviceConfig(F("MICROSCOPE"), microscope.Armed());
+#ifdef __AVR_ATmega2560__
+  reportDeviceConfig(F("SLM"), slm.Armed());
+#endif
   reportDeviceLever(F("LEVER_RH"), rLever.Armed(), rLever.IsReinforced());
   reportDeviceLever(F("LEVER_LH"), lLever.Armed(), lLever.IsReinforced());
 }
