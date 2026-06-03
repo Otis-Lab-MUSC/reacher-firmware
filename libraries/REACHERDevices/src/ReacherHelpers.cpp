@@ -21,6 +21,7 @@ void setDeviceTimestampOffset(DeviceSet& ds, uint32_t ts) {
   ds.lickCircuit->SetOffset(ts);
   if (ds.laser) ds.laser->SetOffset(ts);
   ds.microscope->SetOffset(ts);
+  // SLM is excluded: Slm does not inherit Device; each sketch calls slm.SetOffset() directly.
 }
 
 ArmSnapshot captureArmState(const DeviceSet& ds) {
@@ -34,7 +35,7 @@ ArmSnapshot captureArmState(const DeviceSet& ds) {
   snap.lickCircuit = ds.lickCircuit->Armed();
   snap.laser       = ds.laser ? ds.laser->Armed() : false;
   snap.microscope  = ds.microscope->Armed();
-  snap.slm         = false;
+  snap.slm         = false;  // SLM excluded (Slm does not inherit Device)
   return snap;
 }
 
