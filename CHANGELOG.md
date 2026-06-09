@@ -9,7 +9,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
-- `CUE_SET_LEVER_FILTER (378)`, `CUE2_SET_LEVER_FILTER (388)`, `PUMP_SET_LEVER_FILTER (478)`, `PUMP2_SET_LEVER_FILTER (488)` — runtime lever routing filter; sets `Trigger[0].sourceFilter` at runtime so the reward chain only fires on the specified lever (0 = any, 1 = RH only, 2 = LH only); handlers added to `fr`, `pr`, `vi`, and `omission` sketches; Pavlovian excluded (no lever-based reward routing); all four commands route to `Trigger[0]` per current single-chain architecture — per-device routing is reserved for a future library refactor
+- `CUE_SET_LEVER_FILTER (378)`, `CUE2_SET_LEVER_FILTER (388)`, `PUMP_SET_LEVER_FILTER (478)`, `PUMP2_SET_LEVER_FILTER (488)` — per-device lever routing filter commands; accepted by `fr`, `pr`, `vi`, and `omission` sketches; Pavlovian excluded; value 0 = any lever, 1 = RH only, 2 = LH only
+- `DeviceType sourceFilter` field on the `Action` struct; `Scheduler` stores `_lastInputSource` in `OnInputEvent()` and skips enqueuing actions in `FireChain()` when the press source does not match the action's filter
+
+### Changed
+- Lever routing filter implementation rearchitected from trigger-level to action-level: each chain step carries an independent `sourceFilter`; sketch-level shadow globals (`CUE_SOURCE_FILTER`, `PUMP_SOURCE_FILTER`, `PUMP2_SOURCE_FILTER`) persist filter state across all `ReconfigureChain()` rebuilds; `CUE2_SOURCE_FILTER` removed (`CUE_2` is absent from all four operant chain configurations)
+- Contingency lever promoted to `ACTIVE` via `SetActiveLever(true)` when a per-device filter is assigned, allowing both levers to count toward the ratio threshold while routing outputs independently
+
+### Fixed
+- Per-device output filter wiped on every `ReconfigureChain()` call — shadow globals now thread filter state through all `configureXxx()` rebuilds
+- LH lever presses not counted toward ratio threshold when an LH-contingent output filter was active — `SetActiveLever(true)` now called at filter assignment time
 
 ---
 
