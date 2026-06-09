@@ -32,7 +32,10 @@ static constexpr uint32_t DEFAULT_LASER_DURATION     = 5000;
 /// @param pump Pump device
 /// @param laser Laser device
 /// @param absenceMs Required absence duration (ms) before reward fires
-inline void configureOmission(Scheduler& sched, Cue& cue, Pump& pump, Laser& laser, uint32_t absenceMs, DeviceType pumpTarget = DeviceType::PUMP) {
+/// @param cueFilter Per-action lever source filter for the CUE step (NONE = any)
+/// @param pumpFilter Per-action lever source filter for the PUMP step (NONE = any)
+/// @param pump2Filter Per-action lever source filter when pumpTarget is PUMP_2 (NONE = any)
+inline void configureOmission(Scheduler& sched, Cue& cue, Pump& pump, Laser& laser, uint32_t absenceMs, DeviceType pumpTarget = DeviceType::PUMP, DeviceType cueFilter = DeviceType::NONE, DeviceType pumpFilter = DeviceType::NONE, DeviceType pump2Filter = DeviceType::NONE) {
   Trigger* t = sched.GetTrigger(0);
   if (t) {
     t->type = TriggerType::ABSENCE_TIMER;
@@ -53,13 +56,13 @@ inline void configureOmission(Scheduler& sched, Cue& cue, Pump& pump, Laser& las
 
     c->steps[0].type = ActionType::ACTIVATE_DEVICE;
     c->steps[0].target = DeviceType::CUE;
-    c->steps[0].sourceFilter = DeviceType::NONE;
+    c->steps[0].sourceFilter = cueFilter;
     c->steps[0].offsetMs = 0;
     c->steps[0].param = cue.Duration();
 
     c->steps[1].type = ActionType::ACTIVATE_DEVICE;
     c->steps[1].target = pumpTarget;
-    c->steps[1].sourceFilter = DeviceType::NONE;
+    c->steps[1].sourceFilter = (pumpTarget == DeviceType::PUMP_2) ? pump2Filter : pumpFilter;
     c->steps[1].offsetMs = 0;
     c->steps[1].param = pump.Duration();
 

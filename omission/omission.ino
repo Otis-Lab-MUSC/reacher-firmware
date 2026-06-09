@@ -35,6 +35,11 @@ uint32_t LASER_DURATION     = DEFAULT_LASER_DURATION;
 bool     LASER_RH_ONLY_MODE = false;
 uint32_t OMISSION_INTERVAL  = 20000;
 
+// Per-device lever source filter shadows — survive ReconfigureChain()
+DeviceType CUE_SOURCE_FILTER   = DeviceType::NONE;
+DeviceType PUMP_SOURCE_FILTER  = DeviceType::NONE;
+DeviceType PUMP2_SOURCE_FILTER = DeviceType::NONE;
+
 // Device instances
 SwitchLever rLever(PIN_LEVER_RH, "RH", DeviceType::LEVER_RH);
 SwitchLever lLever(PIN_LEVER_LH, "LH", DeviceType::LEVER_LH);
@@ -139,7 +144,7 @@ void loop() {
 }
 
 void ReconfigureChain() {
-  configureOmission(scheduler, cue, *activePump, laser, OMISSION_INTERVAL, activePumpTarget);
+  configureOmission(scheduler, cue, *activePump, laser, OMISSION_INTERVAL, activePumpTarget, CUE_SOURCE_FILTER, PUMP_SOURCE_FILTER, PUMP2_SOURCE_FILTER);
   if (LASER_RH_ONLY_MODE) {
     Chain* c = scheduler.GetChain(0);
     if (c && c->numSteps >= 3) c->steps[2].type = ActionType::NONE;
@@ -326,17 +331,12 @@ void ParseCommands() {
             DeviceType srcFilter = DeviceType::NONE;
             if (val == 1) srcFilter = DeviceType::LEVER_RH;
             else if (val == 2) srcFilter = DeviceType::LEVER_LH;
-            DeviceType targetDevice = DeviceType::NONE;
-            if (command == Cmd::CUE_SET_LEVER_FILTER)        targetDevice = DeviceType::CUE;
-            else if (command == Cmd::CUE2_SET_LEVER_FILTER)  targetDevice = DeviceType::CUE_2;
-            else if (command == Cmd::PUMP_SET_LEVER_FILTER)  targetDevice = DeviceType::PUMP;
-            else if (command == Cmd::PUMP2_SET_LEVER_FILTER) targetDevice = DeviceType::PUMP_2;
-            Chain* c = scheduler.GetChain(0);
-            if (c) {
-              for (uint8_t i = 0; i < c->numSteps; i++) {
-                if (c->steps[i].target == targetDevice) { c->steps[i].sourceFilter = srcFilter; break; }
-              }
-            }
+            if (command == Cmd::CUE_SET_LEVER_FILTER)        CUE_SOURCE_FILTER  = srcFilter;
+            else if (command == Cmd::PUMP_SET_LEVER_FILTER)  PUMP_SOURCE_FILTER = srcFilter;
+            else if (command == Cmd::PUMP2_SET_LEVER_FILTER) PUMP2_SOURCE_FILTER = srcFilter;
+            ReconfigureChain();
+            if (srcFilter == DeviceType::LEVER_LH)      lLever.SetActiveLever(true);
+            else if (srcFilter == DeviceType::LEVER_RH) rLever.SetActiveLever(true);
             logParamChange(F("CONTROLLER"), F("lever_filter"), (uint32_t)val);
             break;
           }
