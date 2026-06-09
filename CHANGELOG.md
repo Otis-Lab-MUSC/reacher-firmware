@@ -8,13 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+---
+
+## [2.1.0] - 2026-06-09
+
 ### Added
 - `CUE_SET_LEVER_FILTER (378)`, `CUE2_SET_LEVER_FILTER (388)`, `PUMP_SET_LEVER_FILTER (478)`, `PUMP2_SET_LEVER_FILTER (488)` — per-device lever routing filter commands; accepted by `fr`, `pr`, `vi`, and `omission` sketches; Pavlovian excluded; value 0 = any lever, 1 = RH only, 2 = LH only
 - `DeviceType sourceFilter` field on the `Action` struct; `Scheduler` stores `_lastInputSource` in `OnInputEvent()` and skips enqueuing actions in `FireChain()` when the press source does not match the action's filter
+- `CUE_SET_ONSET_DELAY (377)`, `CUE2_SET_ONSET_DELAY (387)`, `PUMP_SET_ONSET_DELAY (477)`, `PUMP2_SET_ONSET_DELAY (487)` — per-device onset delay commands (ms from trigger to device activation); sketch-local shadow globals (`CUE_ONSET_DELAY`, `PUMP_ONSET_DELAY`, `PUMP2_ONSET_DELAY`) persist delay across all `ReconfigureChain()` rebuilds; applied as `offsetMs` additive post-fixup after `configureXxx()` in each sketch; accepted by `fr`, `pr`, `vi`, and `omission`; Pavlovian excluded
 
 ### Changed
 - Lever routing filter implementation rearchitected from trigger-level to action-level: each chain step carries an independent `sourceFilter`; sketch-level shadow globals (`CUE_SOURCE_FILTER`, `PUMP_SOURCE_FILTER`, `PUMP2_SOURCE_FILTER`) persist filter state across all `ReconfigureChain()` rebuilds; `CUE2_SOURCE_FILTER` removed (`CUE_2` is absent from all four operant chain configurations)
 - Contingency lever promoted to `ACTIVE` via `SetActiveLever(true)` when a per-device filter is assigned, allowing both levers to count toward the ratio threshold while routing outputs independently
+- Board compile target changed from Arduino UNO (ATmega328P, 32 KB flash) to Arduino Mega 2560 (ATmega2560, 256 KB flash); `compile.sh` builds `hex/mega/` only; `hex/uno/` directory removed from repository; `CLAUDE.md` updated to reflect Mega as primary hardware target
 
 ### Fixed
 - Per-device output filter wiped on every `ReconfigureChain()` call — shadow globals now thread filter state through all `configureXxx()` rebuilds

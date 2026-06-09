@@ -65,9 +65,11 @@ namespace Cmd {
   constexpr int CUE_SET_DURATION     = 372;
   constexpr int CUE_SET_TRACE        = 373;  // deprecated
   constexpr int CUE_SET_PIN          = 376;
+  constexpr int CUE_SET_ONSET_DELAY  = 377;  // Cue onset delay from trigger (ms); operant paradigms
   constexpr int CUE_SET_LEVER_FILTER  = 378;  // Per-device lever routing (0=any, 1=RH_only, 2=LH_only)
   constexpr int CUE2_SET_FREQUENCY   = 381;
   constexpr int CUE2_SET_DURATION    = 382;
+  constexpr int CUE2_SET_ONSET_DELAY  = 387;  // Cue2 onset delay (stored; cue2 absent from operant chains)
   constexpr int CUE2_SET_LEVER_FILTER = 388;
   constexpr int CUE2_SET_PIN         = 386;
 
@@ -81,9 +83,11 @@ namespace Cmd {
   constexpr int PUMP_SET_DURATION    = 472;
   constexpr int PUMP_SET_TRACE       = 473;  // deprecated
   constexpr int PUMP_SET_PIN         = 476;
+  constexpr int PUMP_SET_ONSET_DELAY  = 477;  // Pump onset delay from reward-window start (ms)
   constexpr int PUMP_SET_LEVER_FILTER  = 478;  // Per-device lever routing (0=any, 1=RH_only, 2=LH_only)
   constexpr int PUMP2_SET_DURATION   = 482;
   constexpr int PUMP2_SET_PIN        = 486;
+  constexpr int PUMP2_SET_ONSET_DELAY  = 487;  // Pump2 onset delay
   constexpr int PUMP2_SET_LEVER_FILTER = 488;
 
   // --- Lick Circuit (5xx) ---

@@ -15,9 +15,8 @@ LIB_DIR="$SCRIPT_DIR/libraries"
 
 mkdir -p "$HEX_DIR"
 
-for board in uno mega; do
+for board in mega; do
     case "$board" in
-        uno)  FQBN="arduino:avr:uno" ;;
         mega) FQBN="arduino:avr:mega:cpu=atmega2560" ;;
     esac
 
@@ -45,5 +44,5 @@ for board in uno mega; do
 done
 
 echo ""
-echo "All paradigms compiled successfully for both boards."
+echo "All paradigms compiled successfully for MEGA."
 ls -lh "$HEX_DIR"/*/*.hex

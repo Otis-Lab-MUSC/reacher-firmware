@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Operant-conditioning firmware for Arduino UNO (ATmega328P, 2 KB RAM, 32 KB flash). Five sketches share one C++ library and produce five `.hex` files consumed by the REACHER backend.
+Operant-conditioning firmware for Arduino Mega 2560 (ATmega2560, 8 KB RAM, 256 KB flash). Five sketches share one C++ library and produce five `.hex` files consumed by the REACHER backend.
 
 For the wider Suite (paradigm names, command-code ranges, event levels, serial framing), see `../CLAUDE.md`. The README.md here is the canonical reference for hardware pinout, paradigm semantics, command-code list, and Pavlovian parameters — read it before authoring any sketch-level changes.
 
@@ -13,12 +13,12 @@ For the wider Suite (paradigm names, command-code ranges, event levels, serial f
 arduino-cli core install arduino:avr  # one-time: install AVR toolchain
 doxygen Doxyfile                    # regenerate docs/
 
-# Single sketch (FQBN per board: arduino:avr:uno or arduino:avr:mega:cpu=atmega2560):
-arduino-cli compile --fqbn arduino:avr:uno --libraries libraries --output-dir hex/uno fr/fr.ino
+# Single sketch (FQBN: arduino:avr:mega:cpu=atmega2560):
+arduino-cli compile --fqbn arduino:avr:mega:cpu=atmega2560 --libraries libraries --output-dir hex/mega fr/fr.ino
 # arduino-cli emits <sketch>.ino.hex; compile.sh renames to <sketch>.hex — match that when scripting
 
 # Manual upload (backend normally handles this; path includes the board subdir):
-arduino-cli upload -p /dev/ttyUSB0 --fqbn arduino:avr:uno --input-file hex/uno/fr.hex
+arduino-cli upload -p /dev/ttyUSB0 --fqbn arduino:avr:mega:cpu=atmega2560 --input-file hex/mega/fr.hex
 ```
 
 There is no test framework — verification is done in-loop on hardware. The committed `hex/<board>/*.hex` files are tracked artifacts the backend ships; **recompile and commit them** when firmware logic or library code changes (see commit `ebf7487` for the pattern: a single chore commit that recompiles all paradigms after a shared-library fix). The backend's uploader resolves `hex/<board>/<paradigm>.hex` by board, so both subdirs must stay in sync.
@@ -80,8 +80,8 @@ The library exposes per-device pin reassignment via the `*_SET_PIN` family (all 
 
 ## Conventions
 
-- **Memory**: avoid `String`, prefer `F("...")` flash strings for all literal serial output, keep new arrays inside the existing `MAX_*` budgets. UNO (ATmega328P) is the tight target at 2 KB RAM / 32 KB flash; the same `.ino` also compiles for mega 2560 (8 KB / 256 KB) and must stay inside the UNO budget so both board targets continue to fit.
+- **Memory**: avoid `String`, prefer `F("...")` flash strings for all literal serial output, keep new arrays inside the existing `MAX_*` budgets. Target board is Mega 2560 (ATmega2560, 8 KB RAM / 256 KB flash).
 - **Serial**: print one JSON object per line, terminated with `\n`. Use the existing level conventions (`000` config / `001` state / `006` error / `007` behavioral / `008` frame).
 - **Versioning**: `library.properties` (`v2.0.0`) and the `version` field in each sketch's `SendIdentification()` must match.
-- **Hex artifacts**: `hex/<board>/<paradigm>.hex` is committed for both `uno` and `mega`. The companion `*.ino.eep` and `*.ino.with_bootloader.bin` files are also tracked (`.gitignore` does not exclude them); leave them in place unless you are recompiling.
+- **Hex artifacts**: `hex/mega/<paradigm>.hex` is committed. The companion `*.ino.eep` and `*.ino.with_bootloader.bin` files are also tracked (`.gitignore` does not exclude them); leave them in place unless you are recompiling.
 - **Bug-fix tags**: in-code comments like `Fix: FW-001` / `Bug 2.2` reference issues tracked outside the repo — preserve them when editing surrounding code.
