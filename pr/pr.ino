@@ -164,6 +164,7 @@ void ReconfigureChain() {
       c1->numSteps = 1;
       c1->steps[0].type = ActionType::ACTIVATE_DEVICE;
       c1->steps[0].target = DeviceType::LASER;
+      c1->steps[0].sourceFilter = DeviceType::NONE;
       c1->steps[0].offsetMs = laser.OnsetDelay();
       c1->steps[0].param = laser.Duration();
     }
@@ -356,8 +357,17 @@ void ParseCommands() {
             DeviceType srcFilter = DeviceType::NONE;
             if (val == 1) srcFilter = DeviceType::LEVER_RH;
             else if (val == 2) srcFilter = DeviceType::LEVER_LH;
-            Trigger* t = scheduler.GetTrigger(0);
-            if (t) t->sourceFilter = srcFilter;
+            DeviceType targetDevice = DeviceType::NONE;
+            if (command == Cmd::CUE_SET_LEVER_FILTER)        targetDevice = DeviceType::CUE;
+            else if (command == Cmd::CUE2_SET_LEVER_FILTER)  targetDevice = DeviceType::CUE_2;
+            else if (command == Cmd::PUMP_SET_LEVER_FILTER)  targetDevice = DeviceType::PUMP;
+            else if (command == Cmd::PUMP2_SET_LEVER_FILTER) targetDevice = DeviceType::PUMP_2;
+            Chain* c = scheduler.GetChain(0);
+            if (c) {
+              for (uint8_t i = 0; i < c->numSteps; i++) {
+                if (c->steps[i].target == targetDevice) { c->steps[i].sourceFilter = srcFilter; break; }
+              }
+            }
             logParamChange(F("CONTROLLER"), F("lever_filter"), (uint32_t)val);
             break;
           }

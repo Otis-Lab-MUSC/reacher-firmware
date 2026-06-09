@@ -53,16 +53,19 @@ inline void configureOmission(Scheduler& sched, Cue& cue, Pump& pump, Laser& las
 
     c->steps[0].type = ActionType::ACTIVATE_DEVICE;
     c->steps[0].target = DeviceType::CUE;
+    c->steps[0].sourceFilter = DeviceType::NONE;
     c->steps[0].offsetMs = 0;
     c->steps[0].param = cue.Duration();
 
     c->steps[1].type = ActionType::ACTIVATE_DEVICE;
     c->steps[1].target = pumpTarget;
+    c->steps[1].sourceFilter = DeviceType::NONE;
     c->steps[1].offsetMs = 0;
     c->steps[1].param = pump.Duration();
 
     c->steps[2].type = ActionType::ACTIVATE_DEVICE;
     c->steps[2].target = DeviceType::LASER;
+    c->steps[2].sourceFilter = DeviceType::NONE;
     c->steps[2].offsetMs = 0;
     c->steps[2].param = laser.Duration();
   }

@@ -156,6 +156,7 @@ private:
 
   PressClass lastPressClassRH;  ///< Classification stored on press-down, logged on release
   PressClass lastPressClassLH;  ///< Classification stored on press-down, logged on release
+  DeviceType _lastInputSource;  ///< Lever source of the most recent OnInputEvent call
 
   /// @brief Classify a lever press as ACTIVE, INACTIVE, or TIMEOUT.
   PressClass ClassifyPress(DeviceType source, uint32_t timestamp);

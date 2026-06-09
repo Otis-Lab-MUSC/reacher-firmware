@@ -9,19 +9,19 @@ For the wider Suite (paradigm names, command-code ranges, event levels, serial f
 ## Commands
 
 ```bash
-./compile.sh                        # builds all 5 paradigms -> hex/{fr,pr,vi,omission,pavlovian}.hex
+./compile.sh                        # builds all 5 paradigms × both boards -> hex/{uno,mega}/<paradigm>.hex
 arduino-cli core install arduino:avr  # one-time: install AVR toolchain
 doxygen Doxyfile                    # regenerate docs/
 
-# Single sketch:
-arduino-cli compile --fqbn arduino:avr:uno --libraries libraries --output-dir hex fr/fr.ino
+# Single sketch (FQBN per board: arduino:avr:uno or arduino:avr:mega:cpu=atmega2560):
+arduino-cli compile --fqbn arduino:avr:uno --libraries libraries --output-dir hex/uno fr/fr.ino
 # arduino-cli emits <sketch>.ino.hex; compile.sh renames to <sketch>.hex — match that when scripting
 
-# Manual upload (backend normally handles this):
-arduino-cli upload -p /dev/ttyUSB0 --fqbn arduino:avr:uno --input-file hex/fr.hex
+# Manual upload (backend normally handles this; path includes the board subdir):
+arduino-cli upload -p /dev/ttyUSB0 --fqbn arduino:avr:uno --input-file hex/uno/fr.hex
 ```
 
-There is no test framework — verification is done in-loop on hardware. The committed `hex/` files are tracked artifacts the backend ships; **recompile and commit them** when firmware logic or library code changes (see commit `ebf7487` for the pattern: a single chore commit that recompiles all paradigms after a shared-library fix).
+There is no test framework — verification is done in-loop on hardware. The committed `hex/<board>/*.hex` files are tracked artifacts the backend ships; **recompile and commit them** when firmware logic or library code changes (see commit `ebf7487` for the pattern: a single chore commit that recompiles all paradigms after a shared-library fix). The backend's uploader resolves `hex/<board>/<paradigm>.hex` by board, so both subdirs must stay in sync.
 
 ## Architecture
 
@@ -29,10 +29,11 @@ There is no test framework — verification is done in-loop on hardware. The com
 
 Each paradigm directory (`fr/`, `pr/`, `vi/`, `omission/`, `pavlovian/`) is an Arduino sketch with the same skeleton:
 
-1. Instantiate one of each device (`SwitchLever`, `Cue`, `Pump`, `Laser`, `LickCircuit`, `Microscope`) at the pins fixed in `libraries/REACHERDevices/src/Pins.h`.
-2. Build a `DeviceSet` aggregate (from `ReacherHelpers.h`) of pointers — pass `nullptr` for unused devices (e.g. `laser` in pavlovian).
-3. Register devices with the paradigm's scheduler instance.
-4. In `loop()`: `wdt_reset()` → `Monitor()` inputs → `scheduler.Update(now)` → `microscope.HandleFrameSignal()` → `microscope.TickTrigger(now)` → `ParseCommands()`.
+1. Instantiate devices at the pins declared in `libraries/REACHERDevices/src/Pins.h`: two `SwitchLever`s (RH/LH), two `Cue`s (`cue`, `cue2`), two `Pump`s (`pump`, `pump2`), `LickCircuit`, `Laser`, `Microscope`. Pin assignments are compile-time defaults; they can be remapped at runtime (see "Runtime pin & pump overrides" below).
+2. Hold an `activePump*` pointer (default `&pump`) and an `activePumpTarget` `DeviceType`. The chain configuration uses these so `SET_ACTIVE_PUMP` (221) can swap pumps mid-session — every `configureXxx()` call must take the active pump, not `pump` directly.
+3. Build a `DeviceSet` aggregate (from `ReacherHelpers.h`) of pointers — pass `nullptr` for unused devices (e.g. `laser` in pavlovian).
+4. Register devices with the paradigm's scheduler instance.
+5. In `loop()`: `wdt_reset()` → `Monitor()` inputs → `scheduler.Update(now)` → `microscope.HandleFrameSignal()` → `microscope.TickTrigger(now)` → `ParseCommands()`.
 
 The 8-second watchdog (`wdt_enable(WDTO_8S)`) is enabled at the end of `setup()` — every sketch must call `wdt_reset()` first thing in `loop()`.
 
@@ -73,10 +74,14 @@ Levers fire callbacks via function pointers (`SetCallback` / `SetReleaseCallback
 
 `ReacherHelpers.{h,cpp}` provides cross-paradigm helpers operating on a `DeviceSet`: `setDeviceTimestampOffset`, `armToggleDevices`, `captureArmState` / `restoreArmState` (preserve arm state across session boundaries), `reportDeviceConfig` overloads for the level-`000` config dump emitted at session start, and `handleCommonDeviceCommand`. Adding a device-class command should go through `handleCommonDeviceCommand` so all sketches inherit it.
 
+### Runtime pin & pump overrides
+
+The library exposes per-device pin reassignment via the `*_SET_PIN` family (all suffixed `x76`: `CUE_SET_PIN=376`, `CUE2_SET_PIN=386`, `PUMP_SET_PIN=476`, `PUMP2_SET_PIN=486`, `LICK_SET_PIN=576`, `LASER_SET_PIN=676`, `MICROSCOPE_SET_TRIG_PIN`, `LEVER_RH_SET_PIN=1076`, `LEVER_LH_SET_PIN=1376`). `handleCommonDeviceCommand` clamps the pin number to `[2, 53]` and calls `Device::SetPin` / `SwitchLever::SetPin` / `Microscope::SetTriggerPin`, which re-applies `pinMode` and clears state. The backend is responsible for validating board/role/collision rules — firmware only enforces the numeric range. `SET_ACTIVE_PUMP` (221) is handled in the sketch (not in `handleCommonDeviceCommand`) because it swaps the sketch-local `activePump`/`activePumpTarget` and must trigger `ReconfigureChain()`. Both override paths are intended to run at session start before arming.
+
 ## Conventions
 
-- **Memory**: avoid `String`, prefer `F("...")` flash strings for all literal serial output, keep new arrays inside the existing `MAX_*` budgets. Total RAM is 2 KB.
+- **Memory**: avoid `String`, prefer `F("...")` flash strings for all literal serial output, keep new arrays inside the existing `MAX_*` budgets. UNO (ATmega328P) is the tight target at 2 KB RAM / 32 KB flash; the same `.ino` also compiles for mega 2560 (8 KB / 256 KB) and must stay inside the UNO budget so both board targets continue to fit.
 - **Serial**: print one JSON object per line, terminated with `\n`. Use the existing level conventions (`000` config / `001` state / `006` error / `007` behavioral / `008` frame).
 - **Versioning**: `library.properties` (`v2.0.0`) and the `version` field in each sketch's `SendIdentification()` must match.
-- **Hex artifacts**: `hex/*.hex` is committed; `hex/*.eep` and `hex/*.with_bootloader.bin` are produced by `compile.sh` but should not be committed (see `.gitignore`).
+- **Hex artifacts**: `hex/<board>/<paradigm>.hex` is committed for both `uno` and `mega`. The companion `*.ino.eep` and `*.ino.with_bootloader.bin` files are also tracked (`.gitignore` does not exclude them); leave them in place unless you are recompiling.
 - **Bug-fix tags**: in-code comments like `Fix: FW-001` / `Bug 2.2` reference issues tracked outside the repo — preserve them when editing surrounding code.

@@ -29,6 +29,7 @@ Scheduler::Scheduler() {
   pauseStart = 0;
   lastPressClassRH = PressClass::INACTIVE;
   lastPressClassLH = PressClass::INACTIVE;
+  _lastInputSource = DeviceType::NONE;
 
   for (uint8_t i = 0; i < MAX_TRIGGERS; i++) {
     triggers[i].enabled = false;
@@ -99,6 +100,7 @@ void Scheduler::OnInputEvent(DeviceType source, uint32_t timestamp) {
   // Only handle lever events for triggering
   if (source != DeviceType::LEVER_RH && source != DeviceType::LEVER_LH) return;
 
+  _lastInputSource = source;
   PressClass cls = ClassifyPress(source, timestamp);
 
   // Store classification for logging on release
@@ -157,6 +159,7 @@ void Scheduler::FireChain(uint8_t chainIndex, uint32_t now) {
   for (uint8_t i = 0; i < chain.numSteps; i++) {
     const Action& action = chain.steps[i];
     if (action.type == ActionType::NONE) continue;
+    if (action.sourceFilter != DeviceType::NONE && action.sourceFilter != _lastInputSource) continue;
 
     if (action.offsetMs == 0) {
       ExecuteAction(action, now);
@@ -274,7 +277,11 @@ void Scheduler::LogLeverPress(DeviceType source, PressClass cls) {
     case PressClass::TIMEOUT:  clsStr = F("TIMEOUT");  break;
   }
 
-  Serial.print(F("{\"level\":\"007\",\"device\":\"SWITCH_LEVER\",\"pin\":"));
+  const __FlashStringHelper* leverDevice =
+    (source == DeviceType::LEVER_RH) ? F("LEVER_RH") : F("LEVER_LH");
+  Serial.print(F("{\"level\":\"007\",\"device\":\""));
+  Serial.print(leverDevice);
+  Serial.print(F("\",\"pin\":"));
   Serial.print(lever->Pin());
   Serial.print(F(",\"event\":\"PRESS\",\"class\":\""));
   Serial.print(clsStr);
@@ -294,11 +301,11 @@ void Scheduler::LogDeviceActivation(DeviceType target, uint32_t startTs, uint32_
 
   switch (target) {
     case DeviceType::CUE:
-      device = F("CUE"); event = F("TONE"); pinNum = cue->Pin(); break;
+      device = F("CUE_1"); event = F("TONE"); pinNum = cue->Pin(); break;
     case DeviceType::CUE_2:
       device = F("CUE_2"); event = F("TONE"); pinNum = cue2->Pin(); break;
     case DeviceType::PUMP:
-      device = F("PUMP"); event = F("INFUSION"); pinNum = pump->Pin(); break;
+      device = F("PUMP_1"); event = F("INFUSION"); pinNum = pump->Pin(); break;
     case DeviceType::PUMP_2:
       device = F("PUMP_2"); event = F("INFUSION"); pinNum = pump2->Pin(); break;
     case DeviceType::LASER:

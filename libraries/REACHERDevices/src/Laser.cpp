@@ -9,6 +9,7 @@ Laser::Laser(int8_t pin, uint32_t frequency, uint32_t duration)
   : Device(pin, OUTPUT, "LASER") {
   this->frequency = frequency;
   this->duration = duration;
+  this->onsetDelay = 0;
   startTimestamp = 0;
   endTimestamp = 0;
   halfCycleStartTimestamp = 0;

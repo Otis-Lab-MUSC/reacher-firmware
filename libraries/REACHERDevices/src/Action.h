@@ -26,10 +26,11 @@ enum class ActionType : uint8_t {
 
 /// @brief Single step in a reward chain.
 struct Action {
-  ActionType type;      ///< What kind of action to execute
-  DeviceType target;    ///< Which device to act on
-  uint32_t   offsetMs;  ///< Delay from trigger fire time (0 = immediate)
-  uint32_t   param;     ///< Duration for ACTIVATE, timeout length for SET_TIMEOUT
+  ActionType type;          ///< What kind of action to execute
+  DeviceType target;        ///< Which device to act on
+  DeviceType sourceFilter;  ///< Lever that must have caused the press (NONE = any)
+  uint32_t   offsetMs;      ///< Delay from trigger fire time (0 = immediate)
+  uint32_t   param;         ///< Duration for ACTIVATE, timeout length for SET_TIMEOUT
 };
 
 /// @brief Ordered sequence of actions fired by a trigger.

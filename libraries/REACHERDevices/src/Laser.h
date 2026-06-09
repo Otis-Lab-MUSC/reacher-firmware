@@ -37,6 +37,8 @@ public:
 
   void SetFrequency(uint32_t frequency);
   void SetDuration(uint32_t duration);
+  inline void SetOnsetDelay(uint32_t delayMs) { onsetDelay = delayMs; }
+  inline uint32_t OnsetDelay() const { return onsetDelay; }
 
   /// @brief Set operating mode.
   /// @param contingent true = CONTINGENT (fires only via chain), false = INDEPENDENT (free-running cycle)
@@ -49,6 +51,7 @@ public:
 private:
   uint32_t frequency;               ///< Oscillation frequency in Hz (1 = continuous)
   uint32_t duration;                ///< Default activation duration in ms
+  uint32_t onsetDelay;              ///< Delay (ms) from RH press to laser onset in RH-only mode
   uint32_t startTimestamp;          ///< Current activation window start
   uint32_t endTimestamp;            ///< Current activation window end
   uint32_t halfCycleStartTimestamp; ///< Current half-cycle start for oscillation
