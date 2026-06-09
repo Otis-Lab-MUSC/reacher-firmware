@@ -65,8 +65,10 @@ namespace Cmd {
   constexpr int CUE_SET_DURATION     = 372;
   constexpr int CUE_SET_TRACE        = 373;  // deprecated
   constexpr int CUE_SET_PIN          = 376;
+  constexpr int CUE_SET_LEVER_FILTER  = 378;  // Per-device lever routing (0=any, 1=RH_only, 2=LH_only)
   constexpr int CUE2_SET_FREQUENCY   = 381;
   constexpr int CUE2_SET_DURATION    = 382;
+  constexpr int CUE2_SET_LEVER_FILTER = 388;
   constexpr int CUE2_SET_PIN         = 386;
 
   // --- Pump (4xx) ---
@@ -79,8 +81,10 @@ namespace Cmd {
   constexpr int PUMP_SET_DURATION    = 472;
   constexpr int PUMP_SET_TRACE       = 473;  // deprecated
   constexpr int PUMP_SET_PIN         = 476;
+  constexpr int PUMP_SET_LEVER_FILTER  = 478;  // Per-device lever routing (0=any, 1=RH_only, 2=LH_only)
   constexpr int PUMP2_SET_DURATION   = 482;
   constexpr int PUMP2_SET_PIN        = 486;
+  constexpr int PUMP2_SET_LEVER_FILTER = 488;
 
   // --- Lick Circuit (5xx) ---
   constexpr int LICK_DISARM          = 500;
@@ -93,9 +97,11 @@ namespace Cmd {
   constexpr int LASER_TEST           = 603;
   constexpr int LASER_SET_FREQUENCY  = 671;
   constexpr int LASER_SET_DURATION   = 672;
+  constexpr int LASER_SET_ONSET_DELAY = 673;  // Delay (ms) from RH press to laser onset in RH-only mode
   constexpr int LASER_SET_PIN        = 676;
   constexpr int LASER_MODE_CONTINGENT  = 681;
   constexpr int LASER_MODE_INDEPENDENT = 682;
+  constexpr int LASER_TRIGGER_RH_ONLY  = 684;  // RH lever press fires laser only (no cue, no pump)
 
   // Pavlovian laser trial assignment
   constexpr int PAV_LASER_CS_PLUS      = 691;  // Fire on CS+ trials only

@@ -32,6 +32,7 @@ uint32_t CUE_FREQUENCY      = DEFAULT_CUE_FREQUENCY;
 uint32_t PUMP_DURATION      = DEFAULT_PUMP_DURATION;
 uint8_t  LASER_FREQUENCY    = DEFAULT_LASER_FREQUENCY;
 uint32_t LASER_DURATION     = DEFAULT_LASER_DURATION;
+bool     LASER_RH_ONLY_MODE = false;
 uint32_t OMISSION_INTERVAL  = 20000;
 
 // Device instances
@@ -139,6 +140,33 @@ void loop() {
 
 void ReconfigureChain() {
   configureOmission(scheduler, cue, *activePump, laser, OMISSION_INTERVAL, activePumpTarget);
+  if (LASER_RH_ONLY_MODE) {
+    Chain* c = scheduler.GetChain(0);
+    if (c && c->numSteps >= 3) c->steps[2].type = ActionType::NONE;
+    Trigger* t1 = scheduler.GetTrigger(1);
+    if (t1) {
+      t1->type = TriggerType::PRESS_COUNT;
+      t1->chainIndex = 1;
+      t1->enabled = true;
+      t1->threshold = 1;
+      t1->initialThreshold = 1;
+      t1->pressCount = 0;
+      t1->prStep = 0;
+      t1->sourceFilter = DeviceType::LEVER_RH;
+      t1->probability = 100;
+    }
+    Chain* c1 = scheduler.GetChain(1);
+    if (c1) {
+      c1->numSteps = 1;
+      c1->steps[0].type = ActionType::ACTIVATE_DEVICE;
+      c1->steps[0].target = DeviceType::LASER;
+      c1->steps[0].offsetMs = laser.OnsetDelay();
+      c1->steps[0].param = laser.Duration();
+    }
+  } else {
+    Trigger* t1 = scheduler.GetTrigger(1);
+    if (t1) t1->enabled = false;
+  }
 }
 
 void StartSession() {
@@ -215,9 +243,15 @@ void ParseCommands() {
           case Cmd::PUMP2_SET_DURATION:  ReconfigureChain(); break;
           case Cmd::LASER_SET_FREQUENCY: LASER_FREQUENCY = inputJson["frequency"]; break;
           case Cmd::LASER_SET_DURATION:  LASER_DURATION = inputJson["duration"]; ReconfigureChain(); break;
+          case Cmd::LASER_MODE_CONTINGENT: LASER_RH_ONLY_MODE = false; ReconfigureChain(); break;
         }
       } else {
         switch (command) {
+          case Cmd::LASER_SET_ONSET_DELAY: {
+            uint32_t d = (uint32_t)inputJson["delay"]; if (d > 60000) d = 60000;
+            laser.SetOnsetDelay(d); if (LASER_RH_ONLY_MODE) ReconfigureChain(); break;
+          }
+          case Cmd::LASER_TRIGGER_RH_ONLY: LASER_RH_ONLY_MODE = true; ReconfigureChain(); break;
           // RH lever commands
           case Cmd::LEVER_RH_ARM:          rLever.ArmToggle(true); break;
           case Cmd::LEVER_RH_DISARM:       rLever.ArmToggle(false); break;
@@ -280,6 +314,20 @@ void ParseCommands() {
             if (paused) microscope.Pause(now);
             else        microscope.Resume(now);
             logParamChange(F("CONTROLLER"), F("session_paused"), paused);
+            break;
+          }
+
+          case Cmd::CUE_SET_LEVER_FILTER:
+          case Cmd::CUE2_SET_LEVER_FILTER:
+          case Cmd::PUMP_SET_LEVER_FILTER:
+          case Cmd::PUMP2_SET_LEVER_FILTER: {
+            int val = inputJson["filter"] | 0;
+            DeviceType srcFilter = DeviceType::NONE;
+            if (val == 1) srcFilter = DeviceType::LEVER_RH;
+            else if (val == 2) srcFilter = DeviceType::LEVER_LH;
+            Trigger* t = scheduler.GetTrigger(0);
+            if (t) t->sourceFilter = srcFilter;
+            logParamChange(F("CONTROLLER"), F("lever_filter"), (uint32_t)val);
             break;
           }
 
