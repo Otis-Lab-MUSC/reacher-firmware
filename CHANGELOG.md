@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- `CUE_SET_LEVER_FILTER (378)`, `CUE2_SET_LEVER_FILTER (388)`, `PUMP_SET_LEVER_FILTER (478)`, `PUMP2_SET_LEVER_FILTER (488)` — runtime lever routing filter; sets `Trigger[0].sourceFilter` at runtime so the reward chain only fires on the specified lever (0 = any, 1 = RH only, 2 = LH only); handlers added to `fr`, `pr`, `vi`, and `omission` sketches; Pavlovian excluded (no lever-based reward routing); all four commands route to `Trigger[0]` per current single-chain architecture — per-device routing is reserved for a future library refactor
+
 ---
 
 ## [2.0.0] - 2025-04-08
