@@ -1,5 +1,10 @@
 # CLAUDE.md
 
+> ⚠️ **ARCHIVED (June 2026).** This repo is read-only. Active firmware
+> development moved into the `reacher` repo at `reacher/firmware/` (hex at
+> `reacher/src/reacher/hex/<board>/`). Do not make changes here — edit in
+> `Otis-Lab-MUSC/reacher` instead.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 Operant-conditioning firmware for Arduino Mega 2560 (ATmega2560, 8 KB RAM, 256 KB flash). Five sketches share one C++ library and produce five `.hex` files consumed by the REACHER backend.

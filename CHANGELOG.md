@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- **Repository archived (June 2026).** Active firmware development moved into the [`reacher`](https://github.com/Otis-Lab-MUSC/reacher) repo under `firmware/`; compiled hex now lives at `reacher/src/reacher/hex/<board>/` and ships in the `reacher` PyPI package. This repo is read-only — open firmware issues and PRs against `Otis-Lab-MUSC/reacher`. README and CLAUDE.md carry migration banners.
+
+### Removed
+- Orphaned `.github/workflows/update_assets.yml` (hardcoded a stale `v2.0.0` tag and zipped directories that no longer exist).
+
 ---
 
 ## [2.1.0] - 2026-06-09

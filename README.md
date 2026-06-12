@@ -1,5 +1,13 @@
 # REACHER — Arduino Firmware
 
+> ⚠️ **ARCHIVED — June 2026.** Active firmware development has moved into the
+> [`reacher`](https://github.com/Otis-Lab-MUSC/reacher) repository under
+> [`firmware/`](https://github.com/Otis-Lab-MUSC/reacher/tree/develop/firmware).
+> Compiled hex artifacts now live at `reacher/src/reacher/hex/<board>/` and ship
+> inside the `reacher` PyPI package. **This repository is read-only;** open
+> firmware issues and PRs against `Otis-Lab-MUSC/reacher`. The hex files here
+> remain downloadable for legacy builds but are no longer updated.
+
 **Operant conditioning controller firmware for Arduino UNO (ATmega328P)**
 
 [![Version](https://img.shields.io/badge/version-2.0.0-blue)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware)
