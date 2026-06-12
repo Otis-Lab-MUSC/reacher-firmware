@@ -1,8 +1,8 @@
 /**
  * @file pavlovian.ino
- * @brief Main sketch for REACHER v2.0.0 Pavlovian (classical conditioning) controller.
+ * @brief Main sketch for REACHER v2.1.0 Pavlovian (classical conditioning) controller.
  *
- * @mainpage REACHER v2.0.0 Pavlovian Firmware
+ * @mainpage REACHER v2.1.0 Pavlovian Firmware
  *
  * Classical conditioning controller firmware for Arduino Uno (ATmega328P, 2KB RAM, 32KB Flash).
  *
@@ -119,7 +119,7 @@ void onLeverRelease(DeviceType source) {
 
 /// @brief Send SCPI-style identification JSON (reusable for boot, *IDN?, and Cmd::IDENTIFY).
 void SendIdentification() {
-  Serial.println(F("{\"level\":\"000\",\"device\":\"CONTROLLER\",\"sketch\":\"pavlovian.ino\",\"version\":\"v2.0.0\",\"baud_rate\":115200,\"schedule\":\"PAVLOVIAN\"}"));
+  Serial.println(F("{\"level\":\"000\",\"device\":\"CONTROLLER\",\"sketch\":\"pavlovian.ino\",\"version\":\"v2.1.0\",\"baud_rate\":115200,\"schedule\":\"PAVLOVIAN\"}"));
 }
 
 /// @brief Arduino setup — initialize serial, register devices, configure Pavlovian defaults.

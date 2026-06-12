@@ -6,17 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [Unreleased]
+## [2.1.0] - 2026-06-12
 
-### Changed
-- **Repository archived (June 2026).** Active firmware development moved into the [`reacher`](https://github.com/Otis-Lab-MUSC/reacher) repo under `firmware/`; compiled hex now lives at `reacher/src/reacher/hex/<board>/` and ships in the `reacher` PyPI package. This repo is read-only — open firmware issues and PRs against `Otis-Lab-MUSC/reacher`. README and CLAUDE.md carry migration banners.
-
-### Removed
-- Orphaned `.github/workflows/update_assets.yml` (hardcoded a stale `v2.0.0` tag and zipped directories that no longer exist).
-
----
-
-## [2.1.0] - 2026-06-09
+_Terminal release of the standalone `reacher-firmware` repository. Active
+firmware development continues in [`reacher`](https://github.com/Otis-Lab-MUSC/reacher)
+under `firmware/`._
 
 ### Added
 - `CUE_SET_LEVER_FILTER (378)`, `CUE2_SET_LEVER_FILTER (388)`, `PUMP_SET_LEVER_FILTER (478)`, `PUMP2_SET_LEVER_FILTER (488)` — per-device lever routing filter commands; accepted by `fr`, `pr`, `vi`, and `omission` sketches; Pavlovian excluded; value 0 = any lever, 1 = RH only, 2 = LH only
@@ -24,9 +18,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `CUE_SET_ONSET_DELAY (377)`, `CUE2_SET_ONSET_DELAY (387)`, `PUMP_SET_ONSET_DELAY (477)`, `PUMP2_SET_ONSET_DELAY (487)` — per-device onset delay commands (ms from trigger to device activation); sketch-local shadow globals (`CUE_ONSET_DELAY`, `PUMP_ONSET_DELAY`, `PUMP2_ONSET_DELAY`) persist delay across all `ReconfigureChain()` rebuilds; applied as `offsetMs` additive post-fixup after `configureXxx()` in each sketch; accepted by `fr`, `pr`, `vi`, and `omission`; Pavlovian excluded
 
 ### Changed
+- **Repository archived (June 2026).** Active firmware development moved into the [`reacher`](https://github.com/Otis-Lab-MUSC/reacher) repo under `firmware/`; compiled hex now lives at `reacher/src/reacher/hex/<board>/` and ships in the `reacher` PyPI package. This repo is read-only — open firmware issues and PRs against `Otis-Lab-MUSC/reacher`. README and CLAUDE.md carry migration banners.
+- Reconciled firmware version strings to `2.1.0` across `library.properties`, all five sketch `SendIdentification()` serial reports, and sketch documentation headers (previously a mix of `2.0.0`/`2.1.0`).
 - Lever routing filter implementation rearchitected from trigger-level to action-level: each chain step carries an independent `sourceFilter`; sketch-level shadow globals (`CUE_SOURCE_FILTER`, `PUMP_SOURCE_FILTER`, `PUMP2_SOURCE_FILTER`) persist filter state across all `ReconfigureChain()` rebuilds; `CUE2_SOURCE_FILTER` removed (`CUE_2` is absent from all four operant chain configurations)
 - Contingency lever promoted to `ACTIVE` via `SetActiveLever(true)` when a per-device filter is assigned, allowing both levers to count toward the ratio threshold while routing outputs independently
 - Board compile target changed from Arduino UNO (ATmega328P, 32 KB flash) to Arduino Mega 2560 (ATmega2560, 256 KB flash); `compile.sh` builds `hex/mega/` only; `hex/uno/` directory removed from repository; `CLAUDE.md` updated to reflect Mega as primary hardware target
+
+### Removed
+- Orphaned `.github/workflows/update_assets.yml` (hardcoded a stale `v2.0.0` tag and zipped directories that no longer exist).
 
 ### Fixed
 - Per-device output filter wiped on every `ReconfigureChain()` call — shadow globals now thread filter state through all `configureXxx()` rebuilds

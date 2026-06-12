@@ -2,16 +2,24 @@
 
 > ⚠️ **ARCHIVED — June 2026.** Active firmware development has moved into the
 > [`reacher`](https://github.com/Otis-Lab-MUSC/reacher) repository under
-> [`firmware/`](https://github.com/Otis-Lab-MUSC/reacher/tree/develop/firmware).
+> [`firmware/`](https://github.com/Otis-Lab-MUSC/reacher/tree/main/firmware).
 > Compiled hex artifacts now live at `reacher/src/reacher/hex/<board>/` and ship
 > inside the `reacher` PyPI package. **This repository is read-only;** open
 > firmware issues and PRs against `Otis-Lab-MUSC/reacher`. The hex files here
 > remain downloadable for legacy builds but are no longer updated.
+>
+> **Final release:** [`v2.1.0`](https://github.com/Otis-Lab-MUSC/reacher-firmware/releases/tag/v2.1.0)
+> is the terminal release of this standalone repository.
+>
+> 📖 **Citing this firmware?** The version referenced in the published protocol
+> is [`v1.0.1-alpha`](https://github.com/Otis-Lab-MUSC/reacher-firmware/releases/tag/v1.0.1-alpha)
+> ("Version for Protocol paper"). That release is preserved unchanged for
+> reproducibility — cite it, not `v2.1.0`, when reproducing the paper.
 
-**Operant conditioning controller firmware for Arduino UNO (ATmega328P)**
+**Operant conditioning controller firmware for Arduino Mega 2560 (ATmega2560)**
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue)](https://github.com/Otis-Lab-MUSC/REACHER-Firmware)
-[![Platform](https://img.shields.io/badge/platform-Arduino%20UNO-teal)](https://www.arduino.cc/)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue)](https://github.com/Otis-Lab-MUSC/reacher-firmware/releases/tag/v2.1.0)
+[![Platform](https://img.shields.io/badge/platform-Arduino%20Mega%202560-teal)](https://www.arduino.cc/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Changelog](https://img.shields.io/badge/changelog-CHANGELOG.md-orange)](CHANGELOG.md)
 [![REACHER Suite](https://img.shields.io/badge/REACHER_Suite-member-orange)](https://github.com/Otis-Lab-MUSC)
@@ -24,7 +32,7 @@
 
 ## Overview
 
-This repository contains Arduino C++ firmware implementing five behavioral paradigms for head-fixed rodent operant conditioning experiments. Each paradigm is compiled into a standalone `.hex` file that can be uploaded to an Arduino UNO via the REACHER frontend UI or manually via `arduino-cli`/`avrdude`.
+This repository contains Arduino C++ firmware implementing five behavioral paradigms for head-fixed rodent operant conditioning experiments. Each paradigm is compiled into a standalone `.hex` file that can be uploaded to an Arduino Mega 2560 via the REACHER frontend UI or manually via `arduino-cli`/`avrdude`.
 
 **Paradigms:**
 - **Fixed Ratio (FR)** — reward after N active lever presses
@@ -52,7 +60,7 @@ The firmware receives configuration commands from the backend, executes behavior
 
 | Component | Description |
 |---|---|
-| Arduino UNO | ATmega328P microcontroller |
+| Arduino Mega 2560 | ATmega2560 microcontroller |
 | USB cable | Type-A to Type-B for serial connection |
 | Levers | Two momentary switches (right-hand and left-hand) |
 | Syringe pumps | Two relay-driven pumps (primary and secondary) |
@@ -334,10 +342,10 @@ cd reacher-firmware
 ./compile.sh
 ```
 
-The script compiles all five paradigms (`fr`, `pr`, `vi`, `omission`, `pavlovian`) using the local `libraries/` directory and outputs `.hex` files to the `hex/` directory:
+The script compiles all five paradigms (`fr`, `pr`, `vi`, `omission`, `pavlovian`) using the local `libraries/` directory and outputs `.hex` files to the `hex/mega/` directory:
 
 ```
-hex/
+hex/mega/
 ├── fr.hex
 ├── pr.hex
 ├── vi.hex
@@ -345,7 +353,7 @@ hex/
 └── pavlovian.hex
 ```
 
-Target board: `arduino:avr:uno` (Arduino UNO, ATmega328P).
+Target board: `arduino:avr:mega:cpu=atmega2560` (Arduino Mega 2560, ATmega2560).
 
 ---
 
@@ -363,13 +371,13 @@ The backend handles the upload via `avrdude` automatically.
 ### Manually via arduino-cli
 
 ```bash
-arduino-cli upload -p /dev/ttyUSB0 --fqbn arduino:avr:uno --input-file hex/fr.hex
+arduino-cli upload -p /dev/ttyUSB0 --fqbn arduino:avr:mega:cpu=atmega2560 --input-file hex/mega/fr.hex
 ```
 
 ### Manually via avrdude
 
 ```bash
-avrdude -p atmega328p -c arduino -P /dev/ttyUSB0 -b 115200 -U flash:w:hex/fr.hex:i
+avrdude -p atmega2560 -c wiring -P /dev/ttyUSB0 -b 115200 -U flash:w:hex/mega/fr.hex:i
 ```
 
 ---

@@ -1,6 +1,6 @@
 /**
  * @file fr.ino
- * @brief REACHER v2.0.0 Fixed Ratio (FR) operant conditioning controller.
+ * @brief REACHER v2.1.0 Fixed Ratio (FR) operant conditioning controller.
  *
  * N active lever presses produce a reward (cue -> pump + laser).
  * The ratio is configurable via serial command (SET_RATIO).
@@ -90,7 +90,7 @@ void onLeverRelease(DeviceType source) {
 }
 
 void SendIdentification() {
-  Serial.println(F("{\"level\":\"000\",\"device\":\"CONTROLLER\",\"sketch\":\"fr.ino\",\"version\":\"v2.0.0\",\"baud_rate\":115200,\"schedule\":\"FIXED_RATIO\"}"));
+  Serial.println(F("{\"level\":\"000\",\"device\":\"CONTROLLER\",\"sketch\":\"fr.ino\",\"version\":\"v2.1.0\",\"baud_rate\":115200,\"schedule\":\"FIXED_RATIO\"}"));
 }
 
 void setup() {

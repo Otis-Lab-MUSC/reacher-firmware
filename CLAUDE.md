@@ -87,6 +87,6 @@ The library exposes per-device pin reassignment via the `*_SET_PIN` family (all 
 
 - **Memory**: avoid `String`, prefer `F("...")` flash strings for all literal serial output, keep new arrays inside the existing `MAX_*` budgets. Target board is Mega 2560 (ATmega2560, 8 KB RAM / 256 KB flash).
 - **Serial**: print one JSON object per line, terminated with `\n`. Use the existing level conventions (`000` config / `001` state / `006` error / `007` behavioral / `008` frame).
-- **Versioning**: `library.properties` (`v2.0.0`) and the `version` field in each sketch's `SendIdentification()` must match.
+- **Versioning**: `library.properties` (`2.1.0`) and the `version` field in each sketch's `SendIdentification()` must match. This repository is archived; `v2.1.0` is its terminal release.
 - **Hex artifacts**: `hex/mega/<paradigm>.hex` is committed. The companion `*.ino.eep` and `*.ino.with_bootloader.bin` files are also tracked (`.gitignore` does not exclude them); leave them in place unless you are recompiling.
 - **Bug-fix tags**: in-code comments like `Fix: FW-001` / `Bug 2.2` reference issues tracked outside the repo — preserve them when editing surrounding code.

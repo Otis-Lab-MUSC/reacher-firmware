@@ -1,6 +1,6 @@
 /**
  * @file omission.ino
- * @brief REACHER v2.0.0 Omission operant conditioning controller.
+ * @brief REACHER v2.1.0 Omission operant conditioning controller.
  *
  * Reward fires after the animal withholds lever pressing for a configurable
  * absence interval. Any press resets the timer. No timeout is applied.
@@ -89,7 +89,7 @@ void onLeverRelease(DeviceType source) {
 }
 
 void SendIdentification() {
-  Serial.println(F("{\"level\":\"000\",\"device\":\"CONTROLLER\",\"sketch\":\"omission.ino\",\"version\":\"v2.0.0\",\"baud_rate\":115200,\"schedule\":\"OMISSION\"}"));
+  Serial.println(F("{\"level\":\"000\",\"device\":\"CONTROLLER\",\"sketch\":\"omission.ino\",\"version\":\"v2.1.0\",\"baud_rate\":115200,\"schedule\":\"OMISSION\"}"));
 }
 
 void setup() {

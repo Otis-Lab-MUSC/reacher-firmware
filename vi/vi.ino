@@ -1,6 +1,6 @@
 /**
  * @file vi.ino
- * @brief REACHER v2.0.0 Variable Interval (VI) operant conditioning controller.
+ * @brief REACHER v2.1.0 Variable Interval (VI) operant conditioning controller.
  *
  * A random availability window is placed within each fixed-length interval.
  * A lever press during the window produces a reward.
@@ -91,7 +91,7 @@ void onLeverRelease(DeviceType source) {
 }
 
 void SendIdentification() {
-  Serial.println(F("{\"level\":\"000\",\"device\":\"CONTROLLER\",\"sketch\":\"vi.ino\",\"version\":\"v2.0.0\",\"baud_rate\":115200,\"schedule\":\"VARIABLE_INTERVAL\"}"));
+  Serial.println(F("{\"level\":\"000\",\"device\":\"CONTROLLER\",\"sketch\":\"vi.ino\",\"version\":\"v2.1.0\",\"baud_rate\":115200,\"schedule\":\"VARIABLE_INTERVAL\"}"));
 }
 
 void setup() {
