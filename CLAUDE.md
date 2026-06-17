@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Operant-conditioning firmware for Arduino Mega 2560 (ATmega2560, 8 KB RAM, 256 KB flash). Five sketches share one C++ library and produce five `.hex` files consumed by the REACHER backend.
 
-For the wider Suite (paradigm names, command-code ranges, event levels, serial framing), see `../CLAUDE.md`. The README.md here is the canonical reference for hardware pinout, paradigm semantics, command-code list, and Pavlovian parameters — read it before authoring any sketch-level changes.
+For the wider Workbench (paradigm names, command-code ranges, event levels, serial framing), see `../CLAUDE.md`. The README.md here is the canonical reference for hardware pinout, paradigm semantics, command-code list, and Pavlovian parameters — read it before authoring any sketch-level changes.
 
 ## Commands
 
